@@ -1,0 +1,489 @@
+Rank,Player,Team,Bye,POS,ESPN,Sleeper,NFL,RTSports,FFC,Fantrax,AVG
+1,Todd Gurley,II,,RB1,1,,,1,,1,1
+2,Le'Veon Bell ,,,RB2,2,,,3,,2,2.4
+3,David Johnson,,,RB3,3,,,2,,3,2.6
+4,Ezekiel Elliott,,,RB4,4,,,4,,4,4
+5,Antonio Brown,,,WR1,5,,,6,,5,5.2
+6,Alvin Kamara,NO,6,RB5,7,,,5,,6,6.2
+7,Saquon Barkley,PHI,9,RB6,6,,,7,,7,6.6
+8,DeAndre Hopkins,BAL,10,WR2,9,,,10,,8,8.8
+9,Leonard Fournette,,,RB7,12,,,9,,12,10
+10,Kareem Hunt,KC,12,RB8,11,,,8,,9,10.2
+11,Odell Beckham Jr.,,,WR3,10,,,12,,11,11
+12,Melvin Gordon,III,,RB9,14,,,11,,10,11.2
+13,Julio Jones,,,WR4,8,,,14,,13,12.6
+14,Dalvin Cook,,,RB10,13,,,15,,15,14.2
+15,Christian McCaffrey,SF,11,RB11,16,,,13,,17,14.8
+16,Michael Thomas,,,WR5,17,,,16,,14,15.8
+17,Keenan Allen,LAC,8,WR6,15,,,17,,16,16.4
+18,Davante Adams,LAR,12,WR7,21,,,19,,18,18.8
+19,Devonta Freeman,,,RB12,20,,,18,,20,19.2
+20,A.J. Green ,,,WR8,19,,,21,,19,20.2
+21,Rob Gronkowski,,,TE1,18,,,20,,23,20.6
+22,Mike Evans,TB,5,WR9,23,,,24,,21,23.4
+23,Jordan Howard,,,RB13,26,,,23,,24,23.6
+24,Joe Mixon,HOU,10,RB14,27,,,22,,25,23.8
+25,Travis Kelce,KC,12,TE2,25,,,26,,26,26.6
+26,LeSean McCoy,,,RB15,24,,,28,,22,26.8
+27,Tyreek Hill,MIA,11,WR10,31,,,25,,28,26.8
+28,Aaron Rodgers,PIT,7,QB1,22,,,30,,34,28.2
+29,T.Y. Hilton,,,WR11,29,,,27,,30,28.2
+30,Stefon Diggs,NE,11,WR12,32,,,32,,31,29.8
+31,Adam Thielen,CAR,4,WR13,34,,,29,,27,31.8
+32,Larry Fitzgerald,,,WR14,30,,,37,,32,33.6
+33,Kenyan Drake,,,RB16,35,,,31,,35,34.4
+34,Amari Cooper,,,WR15,36,,,35,,37,34.6
+35,Zach Ertz,WAS,4,TE3,33,,,34,,33,35
+36,Doug Baldwin,,,WR16,39,,,39,,29,37
+37,Alex Collins ,,,RB17,43,,,33,,41,37.4
+38,Jarvis Landry,,,WR17,40,,,36,,45,38.4
+39,Royce Freeman,,,RB18,37,,,38,,56,41.2
+40,Derrick Henry,BAL,10,RB19,42,,,41,,36,42.2
+41,Demaryius Thomas ,,,WR18,38,,,45,,38,43.2
+42,Jay Ajayi ,,,RB20,44,,,40,,46,43.8
+43,JuJu Smith-Schuster,KC,12,WR19,51,,,42,,47,44
+44,Brandin Cooks,NO,6,WR20,47,,,44,,39,45.4
+45,Golden Tate,,,WR21,45,,,43,,42,45.8
+46,Lamar Miller,,,RB21,57,,,46,,49,46.8
+47,Tom Brady,,,QB2,28,,,57,,59,47.8
+48,Deshaun Watson,CLE,11,QB3,50,,,47,,54,47.8
+49,Allen Robinson,II,,WR22,41,,,51,,44,48
+50,Josh Gordon ,,,WR23,49,,,52,,43,48.6
+51,Mark Ingram II ,,,RB22,60,,,48,,48,52.2
+52,Russell Wilson,NYG,9,QB4,53,,,56,,53,54.4
+53,Jimmy Graham,,,TE4,56,,,50,,61,54.4
+54,Marvin Jones Jr. ,,,WR24,55,,,53,,51,54.8
+55,Chris Hogan,,,WR25,54,,,54,,73,55
+56,Greg Olsen,,,TE5,48,,,58,,62,56.4
+57,Dion Lewis,,,RB23,58,,,49,,52,56.4
+58,Marshawn Lynch ,,,RB24,52,,,68,,76,61.4
+59,Cam Newton ,,,QB5,46,,,65,,75,63.4
+60,Corey Davis,,,WR26,70,,,60,,65,63.6
+61,Carlos Hyde,,,RB25,75,,,59,,69,65.8
+62,Michael Crabtree,,,WR27,61,,,71,,58,66.4
+63,Evan Engram,DEN,10,TE6,62,,,75,,60,66.4
+64,Marquise Goodwin,,,WR28,67,,,55,,95,67
+65,Emmanuel Sanders ,,,WR29,63,,,67,,71,67
+66,Rex Burkhead,,,RB26,66,,,66,,81,69.8
+67,Drew Brees,,,QB6,69,,,76,,79,71.4
+68,Tevin Coleman,,,RB27,72,,,69,,64,71.8
+69,Julian Edelman ,,,WR30,91,,,70,,66,72.2
+70,Delanie Walker ,,,TE7,59,,,78,,72,73
+71,Alshon Jeffery,,,WR31,88,,,83,,50,73.4
+72,Kyle Rudolph,,,TE8,71,,,81,,78,77.2
+73,Kerryon Johnson ,,,RB28,107,,,72,,86,77.8
+74,Jamaal Williams,,,RB29,98,,,79,,92,78
+75,William Fuller V ,,,WR32,92,,,63,,80,79.8
+76,Sammy Watkins,,,WR33,74,,,94,,63,80.2
+77,Carson Wentz ,,,QB7,73,,,88,,77,81.2
+78,Robert Woods,PIT,7,WR34,64,,,93,,68,82.4
+79,Sony Michel,,,RB30,125,,,77,,57,82.8
+80,Devin Funchess,,,WR35,77,,,92,,67,82.8
+81,Rashaad Penny,,,RB31,112,,,90,,40,83.6
+82,Jordan Reed ,,,TE9,79,,,64,,99,84.6
+83,Cooper Kupp,SEA,7,WR36,89,,,91,,85,85
+84,Trey Burton ,,,TE10,111,,,82,,90,85.6
+85,Tarik Cohen,,,RB32,105,,,84,,70,85.6
+86,Duke Johnson Jr.,,,RB33,76,,,80,,88,86.6
+87,Kirk Cousins,ATL,8,QB8,87,,,97,,93,88
+88,Jamison Crowder,,,WR37,102,,,74,,84,88.4
+89,Robbie Chosen,SF,11,WR38,83,,,89,,98,89.8
+90,Chris Carson,,,RB34,82,,,62,,148,90.4
+91,Andrew Luck,,,QB9,81,,,95,,114,92
+92,Pierre Garcon ,,,WR39,86,,,87,,74,92.6
+93,Jordy Nelson,,,WR40,100,,,101,,87,93.2
+94,Isaiah Crowell ,,,RB35,106,,,73,,94,94.8
+95,Matthew Stafford,LAR,12,QB10,104,,,86,,103,97
+96,Randall Cobb,,,WR41,101,,,103,,91,99.4
+97,Ben Roethlisberger,,,QB11,78,,,100,,108,100.6
+98,Nelson Agholor,,,WR42,110,,,104,,96,102
+99,Marlon Mack,,,RB36,153,,,98,,83,104.8
+100,Jimmy Garoppolo,LAR,12,QB12,108,,,109,,102,105.2
+101,Sterling Shepard,TB,5,WR43,93,,,114,,100,105.6
+102,Peyton Barber,,,RB37,97,,,106,,162,106.4
+103,Matt Ryan,,,QB13,99,,,105,,116,107
+104,Jack Doyle ,,,TE11,103,,,113,,106,108.6
+105,Chris Thompson,,,RB38,80,,,61,,233,109
+106,Philip Rivers,,,QB14,118,,,111,,110,109
+107,Ronald Jones,II,,RB39,171,,,102,,55,112.4
+108,David Njoku,CLE,11,TE12,117,,,107,,129,112.6
+109,Kelvin Benjamin,,,WR44,109,,,112,,105,113.8
+110,Kenny Stills,,,WR45,123,,,117,,118,115.8
+111,James White,,,RB40,121,,,108,,133,116
+112,Aaron Jones r.,MIN,10 S,RB41,146,,,110,,104,116.8
+113,Patrick Mahomes II,KC,12,QB15,122,,,120,,120,120.8
+114,Jared Goff,DET,6,QB16,120,,,130,,111,121
+115,DeVante Parker,,,WR46,151,,,116,,89,125.2
+116,Allen Hurns,,,WR47,128,,,118,,113,125.2
+117,Adrian Peterson,,,RB42,90,,,140,,214,125.4
+118,Nick Chubb,HOU,10,RB43,156,,,124,,97,127.4
+119,C.J. Anderson,,,RB44,168,,,99,,101,130.2
+120,Greg Zuerlein,,,K1,96,,,158,,119,134.2
+121,Alex Smith ,,,QB17,116,,,153,,127,134.4
+122,Matt Breida ,,,RB45,127,,,132,,161,134.8
+123,Calvin Ridley,TEN,8,WR48,158,,,135,,128,135.6
+124,Stephen Gostkowski,,,K2,94,,,156,,132,136.2
+125,Keelan Cole Sr.,,,WR49,133,,,136,,181,136.4
+126,George Kittle,SF,11,TE13,163,,,129,,117,136.8
+127,Ty Montgomery,II,,RB46,154,,,131,,109,137.2
+128,Marcus Mariota,WAS,4,QB18,131,,,147,,124,137.4
+129,Tyler Eifert ,,,TE14,136,,,133,,134,137.4
+130,Jacksonville Jaguars,DST,9,DST1,65,,,96,,,86
+131,Derek Carr,,,QB19,114,,,142,,143,138.4
+132,DJ Moore,CHI,5,WR50,178,,,123,,122,139
+133,Giovani Bernard,,,RB47,167,,,141,,126,141.4
+134,Dak Prescott,DAL,8,QB20,113,,,150,,141,141.8
+135,Justin Tucker,,,K3,124,,,161,,137,142.2
+136,Bilal Powell ,,,RB48,165,,,149,,150,142.4
+137,Latavius Murray,,,RB49,159,,,146,,144,142.6
+138,Michael Gallup,WAS,4,WR51,157,,,121,,158,144.2
+139,Kenny Golladay,,,WR52,150,,,152,,139,144.6
+140,Corey Clement,,,RB50,160,,,144,,131,144.8
+141,Alfred Morris,,,RB51,68,,,173,,249,145
+142,Josh Doctson,,,WR53,126,,,151,,147,148.2
+143,Tyler Lockett,TEN,8,WR54,140,,,168,,155,150
+144,Los Angeles Rams,DST,12,DST2,84,,,115,,,104.8
+145,Cameron Meredith ,,,WR55,177,,,125,,135,153
+146,Theo Riddick,,,RB52,172,,,126,,123,154.4
+147,Minnesota Vikings,DST,10,DST3,95,,,119,,,112
+148,Philadelphia Eagles,DST,9,DST4,85,,,127,,,114
+149,LeGarrette Blount,,,RB53,144,,,164,,138,162
+150,Jordan Wilkins,,,RB54,170,,,145,,194,165.8
+151,Anthony Miller,BAL,10,WR56,185,,,166,,170,166
+152,Chris Godwin,TB,5,WR57,176,,,155,,191,166.6
+153,James Conner,ARI,9,RB55,119,,,180,,227,169.2
+154,Mike Williams,,,WR58,162,,,122,,372,177.2
+155,John Brown,,,WR59,188,,,154,,234,173.2
+156,Baltimore Ravens,DST,10,DST5,115,,,138,,,132.8
+157,Los Angeles Chargers,DST,8,DST6,147,,,134,,,132.8
+158,Mitchell Trubisky,BUF,11,QB21,155,,,218,,157,175.8
+159,Wil Lutz,DEN,10,K4,181,,,169,,172,176.4
+160,Matt Bryant,,,K5,137,,,177,,190,178.2
+161,Chris Boswell,PIT,7,K6,132,,,176,,207,178.6
+162,Harrison Butker,KC,12,K7,193,,,167,,177,179.4
+163,Houston Texans,DST,10,DST7,129,,,137,,,138.3
+164,John Ross,,,WR60,141,,,191,,246,180.2
+165,Devontae Booker,,,RB56,,,,128,,121,141
+166,Jake Elliott,PHI,9,K8,189,,,178,,164,185.4
+167,O.J. Howard,,,TE15,,,,160,,142,147.8
+168,Danny Amendola,,,WR61,149,,,225,,193,187.6
+169,Denver Broncos,DST,10,DST8,164,,,139,,,151.5
+170,Courtland Sutton,DEN,10,WR62,180,,,216,,215,194.4
+171,Robbie Gould,,,K9,187,,,185,,199,194.4
+172,Mohamed Sanu Sr.,,,WR63,130,,,204,,149,158
+173,Austin Seferian-Jenkins,,,TE16,161,,,143,,156,161.3
+174,Dez Bryant ,,,WR64,173,,,189,,115,161.5
+175,Rishard Matthews,,,WR65,175,,,186,,125,163.3
+176,New Orleans Saints,DST,6,DST9,174,,,157,,,164.3
+177,Jameis Winston,NYG,9,QB22,,,,171,,159,164.5
+178,Matt Prater,,,K10,190,,,201,,210,202.2
+179,DeSean Jackson,,,WR66,184,,,192,,136,168.3
+180,Dede Westbrook,,,WR67,,,,148,,184,168.5
+181,Chicago Bears,DST,5,DST10,152,,,188,,,169.8
+182,Jared Cook,,,TE17,148,,,197,,165,171
+183,Paul Richardson Jr. ,,,WR68,142,,,172,,154,171.3
+184,New England Patriots,DST,11,DST11,134,,,175,,,171.8
+185,Pittsburgh Steelers,DST,7,DST12,145,,,179,,,175.3
+186,Mason Crosby,,,K11,179,,,226,,212,209.2
+187,Eric Ebron,,,TE18,,,,195,,168,175.5
+188,Cameron Brate,,,TE19,169,,,181,,146,175.8
+189,Eli Manning,,,QB23,,,,193,,169,176.5
+190,Austin Ekeler,WAS,4,RB57,,,,159,,189,178.3
+191,Carolina Panthers,DST,4,DST13,182,,,194,,,179.3
+192,Charles Clay,,,TE20,139,,,202,,174,179.5
+193,Benjamin Watson,,,TE21,143,,,208,,176,187.3
+194,Geronimo Allison ,,,WR69,,,,207,,217,190.8
+195,Tyrod Taylor,NYJ,11,QB24,138,,,238,,196,196.8
+196,Ricky Seals-Jones,,,TE22,,,,220,,188,198.5
+197,Arizona Cardinals,DST,9,DST14,166,,,222,,,199.3
+198,Marqise Lee ,,,WR70,,,,203,,107,156
+199,D'Onta Foreman,,,RB58,,,,163,,130,164.3
+200,Antonio Gates,,,TE23,135,,,243,,284,214.3
+201,Adam Vinatieri,,,K12,191,,,269,,319,240.4
+202,Doug Martin,,,RB59,,,,162,,153,173.3
+203,Nyheim Miller-Hines,LAC,8,RB60,,,,182,,145,178.7
+204,Mike Gesicki,CIN,9,TE24,,,,174,,182,179.7
+205,Javorius Allen,,,RB61,,,,183,,186,182.3
+206,Tyrell Williams,,,WR71,,,,198,,179,183
+207,Daniel Carlson,LV,,K13,,,,228,,221,223.8
+208,Blake Bortles,,,QB25,,,,206,,166,184
+209,Andy Dalton,CAR,4,QB26,,,,190,,173,184.3
+210,Ted Ginn Jr.,,,WR72,,,,247,,163,187.7
+211,Case Keenum,CHI,5,QB27,,,,209,,167,188
+212,Mike Wallace ,,,WR73,186,,,240,,218,227.8
+213,Christian Kirk,HU,10 O,WR74,,,,214,,171,189
+214,Martavis Bryant ,,,WR75,,,,205,,140,190.3
+215,Vance McDonald,,,TE25,,,,212,,175,193.7
+216,T.J. Yeldon,,,RB62,,,,165,,220,195.3
+217,Austin Hooper,NE,11,TE26,,,,199,,178,195.7
+218,Robert Kelley,,,RB63,,,,219,,195,201
+219,Hayden Hurst,,,TE27,,,,200,,200,204.3
+220,Graham Gano,NYG,9,K14,192,,,260,,270,239.8
+221,Frank Gore ,,,RB64,,,,217,,180,208.7
+222,Spencer Ware,,,RB65,,,,210,,211,209.7
+223,Samaje Perine,CIN,9,RB66,,,,187,,198,210.3
+224,Chris Ivory,,,RB67,,,,221,,192,214.3
+225,Atlanta Falcons,DST,8,DST15,,,,227,,,216.3
+226,Ryan Tannehill,,,QB28,,,,237,,187,217
+227,Donte Moncrief,,,WR76,,,,235,,205,220.3
+228,Tennessee Titans,DST,8,DST16,183,,,246,,,221.3
+229,James Washington,,,WR77,,,,239,,228,227.7
+230,Kalen Ballage,,,RB68,,,,232,,204,228.7
+231,Joe Flacco,CLE,11,QB29,,,,248,,216,229
+232,Jeremy Hill ,,,RB69,,,,211,,219,234.3
+233,Terrance Williams,,,WR78,,,,256,,229,234.3
+234,Baker Mayfield,TB,5,QB30,,,,262,,243,235.7
+235,Ryan Succop,,,K15,,,,215,,242,240
+236,Taywan Taylor,,,WR79,,,,231,,251,240.7
+237,Quincy Enunwa,,,WR80,,,,229,,237,242.3
+238,Kenneth Dixon,,,RB70,,,,251,,202,245
+239,Chase Edmonds,,,RB71,,,,224,,257,245
+240,Tre'Quan Smith,,,WR81,,,,234,,253,246.7
+241,Darren Sproles,,,RB72,,,,241,,222,247.7
+242,Cole Beasley,,,WR82,,,,264,,231,248
+243,Phillip Dorsett II,LV,,WR83,,,,213,,267,248.3
+244,Kansas City Chiefs,DST,12,DST17,,,,184,,,202
+245,John Kelly Jr.,,,RB73,,,,245,,266,252
+246,Seattle Seahawks,DST,7,DST18,,,,196,,,207.5
+247,Jonathan Stewart,,,RB74,,,,244,,230,255
+248,Terrelle Pryor Sr.,,,WR84,,,,254,,213,255.7
+249,Lamar Jackson,BAL,10,QB31,,,,311,,223,255.7
+250,Dallas Goedert,PHI,9,TE28,,,,266,,259,255.7
+251,Sam Darnold,SEA,7,QB32,,,,318,,254,256.7
+252,Cordarrelle Patterson,,,RB75,,,,287,,203,258.7
+253,Brandon Marshall,,,WR85,,,,242,,248,259
+254,Brandon McManus,GB,7,K16,,,,249,,278,260.7
+255,Sam Bradford,,,QB33,,,,279,,255,261.7
+256,Josh Lambo,,,K17,,,,282,,240,263.7
+257,Rod Smith,,,RB76,,,,259,,272,265
+258,Dante Pettis,N,6 O,WR86,,,,276,,250,265.3
+259,Jermaine Kearse,,,WR87,,,,310,,206,265.7
+260,Dan Bailey,,,K18,,,,223,,343,266
+261,Pharoh Cooper,,,WR88,,,,,,112,112
+262,Jake Butt ,,,TE29,,,,295,,224,267.3
+263,Detroit Lions,DST,6,DST19,,,,233,,,235.5
+264,Tavon Austin,,,WR89,,,,315,,209,275
+265,Vernon Davis,,,TE30,,,,308,,258,276
+266,Nick Foles,,,QB34,,,,261,,282,276
+267,Corey Coleman,,,WR90,,,,293,,241,276.3
+268,Travis Benjamin,,,WR91,,,,281,,252,276.7
+269,Albert Wilson ,,,WR92,,,,275,,247,277.3
+270,Ryan Grant ,,,WR93,,,,230,,369,286
+271,Alex Erickson,,,WR94,,,,,,151,151
+272,Antonio Callaway,,,WR95,,,,271,,292,280.7
+273,Ameer Abdullah,SF,11,RB77,,,,274,,279,280.7
+274,Hunter Henry,NE,11,TE31,,,,,,461,307.5
+275,Dallas Cowboys,DST,8,DST20,,,,257,,,250
+276,Josh Rosen,,,QB35,,,,341,,277,282
+277,Ryan Griffin,,,TE32,,,,305,,245,282
+278,Ryan Switzer,,,WR96,,,,,,160,160
+279,C.J. Prosise ,,,RB78,,,,258,,283,284.7
+280,Josh Allen,BUF,11,QB36,,,,332,,275,285
+281,Stephen Hauschka,,,K19,,,,299,,290,285
+282,Green Bay Packers,DST,7,DST21,,,,255,,,256
+283,Wayne Gallman Jr.,,,RB79,,,,265,,301,286.3
+284,Ka'imi Fairbairn,HOU,10,K20,,,,,,232,258
+285,Cleveland Browns,DST,11,DST22,,,,263,,,259.5
+286,Nick Vannett,MIN,10,TE33,,,,335,,294,288.3
+287,DJ Chark Jr.,ATL,8,WR97,,,,319,,264,290.3
+288,Jakeem Grant Sr.,,,WR98,,,,,,183,183
+289,Ed Dickson,,,TE34,,,,344,,235,291
+290,Mike Gillislee,,,RB80,,,,267,,304,291
+291,Andre Roberts,,,WR99,,,,,,185,185
+292,Dustin Hopkins,CLE,11,K21,,,,292,,313,293.3
+293,Kevin White ,,,WR100,,,,277,,299,293.3
+294,Laquon Treadwell,IND,9,WR101,,,,250,,322,294.7
+295,Phil Dawson ,,,K22,,,,278,,339,296
+296,Jordan Matthews,,,TE35,,,,,,201,201
+297,Jaylen Samuels,,,RB81,,,,321,,225,273
+298,Willie Snead,IV,,WR102,,,,,,238,273
+299,Corey Grant ,,,RB82,,,,314,,271,297.3
+300,Luke Willson,,,TE36,,,,337,,256,298.7
+301,Chris Warren,III,,RB83,,,,253,,,276
+302,Trevor Davis,,,WR103,,,,,,208,208
+303,Kai Forbath,LAR,12,K23,,,,284,,269,276.5
+304,Buffalo Bills,DST,11,DST23,,,,316,,,277.5
+305,Malcolm Brown ,,,RB84,,,,252,,305,278.5
+306,Elijah McGuire,,,RB85,,,,317,,244,280.5
+307,Cincinnati Bengals,DST,9,DST24,,,,285,,,280.5
+308,Sebastian Janikowski,,,K24,,,,294,,355,305.7
+309,Zay Jones,ARI,9,WR104,,,,296,,268,282
+310,Caleb Sturgis,,,K25,,,,312,,354,306
+311,Geoff Swaim ,,,TE37,,,,,,289,283
+312,New York Giants,DST,9,DST25,,,,288,,,283
+313,Taylor Gabriel,,,WR105,,,,333,,236,284.5
+314,Jesse James,,,TE38,,,,,,263,284.5
+315,Jonathan Williams,,,RB86,,,,280,,,285
+316,Virgil Green,,,TE39,,,,339,,280,305.7
+317,J'Mon Moore,,,WR106,,,,270,,310,290
+318,Brandon Zylstra,,,WR107,,,,,,239,239
+319,Cairo Santos,CHI,5,K26,,,,,,363,305
+320,Jake Kumerow,,,WR108,,,,302,,291,296.5
+321,Alfred Blue,,,RB87,,,,290,,370,321.7
+322,Washington Commanders,DST,4,DST26,,,,336,,,298
+323,Torrey Smith,,,WR109,,,,272,,324,298
+324,San Francisco 49ers,DST,11,DST27,,,,328,,,300
+325,J.J. Nelson,,,WR110,,,,297,,303,300
+326,Stephen Anderson,,,TE40,,,,343,,260,301.5
+327,Tampa Bay Buccaneers,DST,5,DST28,,,,331,,,302.5
+328,Mark Andrews,BAL,10,TE41,,,,,,261,261
+329,Adam Shaheen,,,TE42,,,,,,262,262
+330,Tyler Kroft ,,,TE43,,,,334,,273,303.5
+331,Rico Gathers,,,TE44,,,,,,265,265
+332,Boston Scott,,,RB88,,,,268,,406,337
+333,Jaron Brown,,,WR111,,,,338,,311,320
+334,Gerald Everett,,,TE45,,,,342,,274,308
+335,Tyler Boyd,,,WR112,,,,307,,371,329
+336,Brett Maher,,,K27,,,,273,,393,333
+337,Curtis Samuel,BUF,11,WR113,,,,,,276,276
+338,Blake Jarwin,,,TE46,,,,,,281,281
+339,Adam Humphries,,,WR114,,,,,,335,313.5
+340,Joe Williams,,,RB89,,,,330,,298,314
+341,Jalen Richard,,,RB90,,,,301,,327,314
+342,Wendell Smallwood,,,RB91,,,,283,,381,332
+343,Cameron Artis-Payne,,,RB92,,,,,,285,285
+344,John Conner,,,RB93,,,,286,,,286
+345,Travaris Cadet,,,RB94,,,,,,286,286
+346,Trent Taylor,SF,11,WR115,,,,322,,309,315.5
+347,Chester Rogers,,,WR116,,,,,,287,287
+348,Keke Coutee,,,WR117,,,,,,288,288
+349,Cody Parkey,,,K28,,,,289,,392,340.5
+350,Shane Vereen,,,RB95,,,,291,,,291
+351,Garrett Celek,,,TE47,,,,,,293,293
+352,Christine Michael,,,RB96,,,,298,,341,319.5
+353,Stevan Ridley,,,RB97,,,,324,,315,319.5
+354,Brice Butler,,,WR118,,,,,,296,296
+355,Matt Barkley,,,QB37,,,,,,297,297
+356,Jeremy Maclin ,,,WR119,,,,,,300,300
+357,Chandler Catanzaro,,,K29,,,,300,,414,357
+358,Charles Sims,,,RB98,,,,,,302,302
+359,Phillip Lindsay,,,RB99,,,,303,,344,323.5
+360,J.D. McKissic,,,RB100,,,,323,,325,324
+361,Aldrick Rosas,,,K30,,,,304,,357,330.5
+362,New York Jets,DST,11,DST29,,,,306,,,306
+363,Jonnu Smith,PIT,7,TE48,,,,,,306,306
+364,Jacoby Brissett,ARI,9,QB38,,,,,,307,307
+365,Josh McCown,,,QB39,,,,,,308,308
+366,DeAndre Washington,,,RB101,,,,309,,401,355
+367,AJ McCarron,,,QB40,,,,,,312,312
+368,Miami Dolphins,DST,11,DST30,,,,313,,,313
+369,Kenny Britt,,,WR120,,,,,,314,314
+370,Jacquizz Rodgers,,,RB102,,,,,,316,316
+371,Ryan Fitzpatrick,,,QB41,,,,,,317,317
+372,Dwayne Allen,,,TE49,,,,,,318,318
+373,Robert Turbin ,,,RB103,,,,,,320,320
+374,Kyle Juszczyk,SF,11,RB104,,,,320,,422,371
+375,Brandon LaFell ,,,WR121,,,,,,321,321
+376,Brian Hoyer,,,QB42,,,,,,323,323
+377,Las Vegas Raiders,DST,,DST31,,,,325,,,325
+378,Steven Jackson,,,RB105,,,,,,326,326
+379,Tyler Higbee,LAR,12,TE50,,,,326,,385,355.5
+380,Marcus Murphy ,,,RB106,,,,327,,366,346.5
+381,Peyton Hillis,,,RB107,,,,,,328,328
+382,Orleans Darkwa,,,RB108,,,,,,329,329
+383,Jordan Akins,,,TE51,,,,329,,356,342.5
+384,Mark Walton,,,RB109,,,,,,330,330
+385,Michael Roberts,,,TE52,,,,,,331,331
+386,Chad Williams,,,WR122,,,,,,332,332
+387,Cody Latimer,,,WR123,,,,,,333,333
+388,Tyler Ervin,,,RB110,,,,,,334,334
+389,Jordan Leggett,,,TE53,,,,,,336,336
+390,Xavier Grimble,,,TE54,,,,,,337,337
+391,Chris Johnson ,,,RB111,,,,,,338,338
+392,Wes Welker,,,WR124,,,,,,340,340
+393,Jeff Heuerman ,,,TE55,,,,340,,395,367.5
+394,Brock Osweiler,,,QB43,,,,,,342,342
+395,Dennis Pitta,,,TE56,,,,,,345,345
+396,,,,1,,,,,,346,346
+397,Randy Moss,,,WR125,,,,,,347,347
+398,Tajae Sharpe,,,WR126,,,,,,348,348
+399,Tony Romo,,,QB44,,,,,,349,349
+400,Knowshon Moreno,,,RB112,,,,,,350,350
+401,Marques Colston,,,WR127,,,,,,351,351
+402,Akeem Hunt,,,RB113,,,,,,352,352
+403,Malcolm Mitchell,,,WR128,,,,,,353,353
+404,Kendall Wright,,,WR129,,,,,,358,358
+405,Coby Fleener,,,TE57,,,,,,360,360
+406,Rashard Higgins,,,WR130,,,,,,361,361
+407,Damoun Patterson,,,WR131,,,,,,362,362
+408,Landry Jones,,,QB45,,,,,,364,364
+409,Thomas Rawls,,,RB114,,,,,,365,365
+410,Trenton Cannon,,,RB115,,,,,,367,367
+411,Clive Walford,,,TE58,,,,,,368,368
+412,Marcedes Lewis,,,TE59,,,,,,373,373
+413,C.J. Beathard,,,QB46,,,,,,374,374
+414,Tommylee Lewis,,,WR132,,,,,,375,375
+415,Equanimeous St. Brown,SF,11,WR133,,,,,,376,376
+416,Justin Hardy,,,WR134,,,,,,377,377
+417,Teddy Bridgewater,TB,5,QB47,,,,,,378,378
+418,Justin Watson,HOU,10,WR135,,,,,,379,379
+419,Johnny Manziel,,,QB48,,,,,,380,380
+420,Mike Boone,MIA,11,RB116,,,,,,382,382
+421,Mark Sanchez,,,QB49,,,,,,383,383
+422,Nathan Peterman,,,QB50,,,,,,384,384
+423,Eddy Pineiro,,,K31,,,,,,386,386
+424,Colin Kaepernick,,,QB51,,,,,,387,387
+425,Aaron Hernandez,,,TE60,,,,,,388,388
+426,Mike Davis,,,RB117,,,,,,389,389
+427,Shelton Gibson,,,WR136,,,,,,390,390
+428,Deonte Thompson,,,WR137,,,,,,391,391
+429,Matt Cassel,,,QB52,,,,,,394,394
+430,DaeSean Hamilton,,,WR138,,,,,,396,396
+431,Zane Gonzalez,,,K32,,,,,,397,397
+432,Javon Wims,,,WR139,,,,,,398,398
+433,Derek Watt,,,RB118,,,,,,399,399
+434,Terrance West,,,RB119,,,,,,400,400
+435,Kerwynn Williams,,,RB120,,,,,,402,402
+436,C.J. Ham,MIN,10,RB121,,,,,,403,403
+437,Bennie Fowler,III,,WR140,,,,,,404,404
+438,Seth Roberts,,,WR141,,,,,,405,405
+439,Bruce Ellington,,,WR142,,,,,,407,407
+440,Charcandrick West,,,RB122,,,,,,408,408
+441,Mack Hollins,NE,11,WR143,,,,,,409,409
+442,Brandon Tate,,,WR144,,,,,,410,410
+443,Dwayne Harris,,,WR145,,,,,,411,411
+444,Jacob Hollister,,,TE61,,,,,,412,412
+445,Brett Hundley,,,QB53,,,,,,413,413
+446,Roc Thomas,,,RB123,,,,,,415,415
+447,Roberto Aguayo,,,K33,,,,,,416,416
+448,Marquez Valdes-Scantling,SEA,7,WR146,,,,,,417,417
+449,Braxton Berrios,HOU,10,WR147,,,,,,418,418
+450,Richie James Jr.,,,WR148,,,,,,419,419
+451,Justin Davis,,,RB124,,,,,,420,420
+452,Braxton Miller,,,WR149,,,,,,421,421
+453,Amara Darboh,,,WR150,,,,,,423,423
+454,T.J. Jones,,,WR151,,,,,,424,424
+455,Jason Sanders,MIA,11,K34,,,,,,425,425
+456,Jeremy Kerley,,,WR152,,,,,,426,426
+457,Chris Conley,,,WR153,,,,,,427,427
+458,Niles Paul,,,TE62,,,,,,428,428
+459,Keith Smith,,,RB125,,,,,,429,429
+460,Patrick DiMarco,,,RB126,,,,,,430,430
+461,Andy Janovich,,,RB127,,,,,,431,431
+462,Joe Webb,III,,QB54,,,,,,432,432
+463,Nick Boyle,,,TE63,,,,,,433,433
+464,Chris Moore,WAS,4,WR154,,,,,,434,434
+465,Jermaine Gresham,,,TE64,,,,,,435,435
+466,Justin Hunter ,,,WR155,,,,,,436,436
+467,Demarcus Robinson,SF,11,WR156,,,,,,437,437
+468,Brandon Weeden,,,QB55,,,,,,438,438
+469,Demetrius Harris ,,,TE65,,,,,,439,439
+470,Seth DeValve,,,TE66,,,,,,440,440
+471,Nate Sudfeld,,,QB56,,,,,,441,441
+472,Lee Smith,,,TE67,,,,,,442,442
+473,Lance Kendricks,,,TE68,,,,,,443,443
+474,Eli Rogers ,,,WR157,,,,,,444,444
+475,A.J. Derby,,,TE69,,,,,,445,445
+476,Benny Cunningham Jr.,,,RB128,,,,,,446,446
+477,Chad Hansen,,,WR158,,,,,,447,447
+478,De'Anthony Thomas,,,WR159,,,,,,448,448
+479,Jamize Olawale,,,RB129,,,,,,449,449
+480,Chris Herndon,IV,,TE70,,,,,,450,450
+481,Nick O'Leary,,,TE71,,,,,,451,451
+482,Logan Paulsen,,,TE72,,,,,,452,452
+483,Geno Smith,LV,,QB57,,,,,,453,453
+484,Mason Rudolph,PIT,7,QB58,,,,,,454,454
+485,Josh Hill,,,TE73,,,,,,455,455
+486,Blaine Gabbert,,,QB59,,,,,,456,456
+487,Kendrick Bourne,NE,11,WR160,,,,,,457,457
+488,Josh Reynolds,NYJ,11,WR161,,,,,,458,458
