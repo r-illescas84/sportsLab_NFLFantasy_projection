@@ -1,0 +1,32 @@
+"rank","gsis_id","nombre","carries_totales","carries_por_partido","carries_por_partido_equipo","posicion","equipo","run_share_pct"
+1,"00-0027939","Cam Newton",91,6.1,28.4,"QB","CAR",20
+2,"00-0028118","Tyrod Taylor",96,6.4,30.9,"QB","BUF",19.4
+3,"00-0023459","Aaron Rodgers",68,4.2,23.5,"QB","GB",18.1
+4,"00-0029263","Russell Wilson",72,4.5,25.2,"QB","SEA",17.9
+5,"00-0029668","Andrew Luck",64,4.6,25.6,"QB","IND",15.6
+6,"00-0027974","Colin Kaepernick",70,6.4,28.8,"QB","SF",15.2
+7,"00-0031407","Blake Bortles",59,3.7,24.6,"QB","JAX",15
+8,"00-0032268","Marcus Mariota",60,4,29.8,"QB","TEN",12.6
+9,"00-0031503","Jameis Winston",54,3.6,28.4,"QB","TB",11.9
+10,"00-0023436","Alex Smith",48,3.2,25.8,"QB","KC",11.7
+11,"00-0033077","Dak Prescott",57,3.8,31.2,"QB","DAL",11.4
+12,"00-0032950","Carson Wentz",47,2.9,27.6,"QB","PHI",10.7
+13,"00-0026498","Matthew Stafford",37,2.8,21.9,"QB","DET",10.6
+14,"00-0027973","Andy Dalton",46,3.3,27.9,"QB","CIN",10.3
+15,"00-0029701","Ryan Tannehill",39,3.5,25.3,"QB","MIA",9.6
+16,"00-0029604","Kirk Cousins",35,2.5,23.8,"QB","WAS",9.2
+17,"00-0031280","Derek Carr",39,2.6,27.1,"QB","LV",9
+18,"00-0029665","Robert Griffin III",31,6.2,21.9,"QB","CLE",8.9
+19,"00-0026143","Matt Ryan",37,2.6,26.4,"QB","ATL",8.7
+20,"00-0027948","Blaine Gabbert",40,6.7,28.8,"QB","SF",8.7
+21,"00-0023682","Ryan Fitzpatrick",33,2.4,26.2,"QB","NYJ",7.9
+22,"00-0032156","Trevor Siemian",29,2.9,25.7,"QB","DEN",7.1
+23,"00-0029682","Brock Osweiler",30,2.3,28.5,"QB","HOU",6.6
+24,"00-0019596","Tom Brady",28,2.5,30.1,"QB","NE",5.8
+25,"00-0020531","Drew Brees",23,2.1,25.4,"QB","NO",5.7
+26,"00-0026158","Joe Flacco",21,1.6,22.9,"QB","BAL",5.7
+27,"00-0028986","Case Keenum",21,3,23.5,"QB","LA",5.6
+28,"00-0022803","Eli Manning",22,2.2,24.9,"QB","NYG",5.5
+29,"00-0027854","Sam Bradford",20,2,23.9,"QB","MIN",5.2
+30,"00-0022924","Ben Roethlisberger",16,1.8,25.6,"QB","PIT",3.9
+31,"00-0033119","Jacoby Brissett",16,5.3,30.1,"QB","NE",3.3

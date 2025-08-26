@@ -1,0 +1,37 @@
+"rank","gsis_id","nombre","carries_totales","carries_por_partido","carries_por_partido_equipo","posicion","equipo","run_share_pct"
+1,"00-0034796","Lamar Jackson",178,11.9,37.5,"QB","BAL",29.7
+2,"00-0034857","Josh Allen",110,7.3,29.1,"QB","BUF",23.6
+3,"00-0035228","Kyler Murray",93,5.8,24.8,"QB","ARI",23.5
+4,"00-0033537","Deshaun Watson",82,5.5,27.1,"QB","HOU",18.9
+5,"00-0035289","Gardner Minshew",67,4.8,24.4,"QB","JAX",17.2
+6,"00-0029263","Russell Wilson",75,4.7,30.1,"QB","SEA",15.6
+7,"00-0023682","Ryan Fitzpatrick",54,3.9,21.8,"QB","MIA",15.5
+8,"00-0031503","Jameis Winston",61,3.8,25.8,"QB","TB",14.8
+9,"00-0032950","Carson Wentz",64,4.3,28.6,"QB","PHI",14
+10,"00-0035710","Daniel Jones",45,3.5,22.6,"QB","NYG",12.4
+11,"00-0033869","Mitchell Trubisky",48,3.7,24.7,"QB","CHI",12.2
+12,"00-0033119","Jacoby Brissett",56,3.7,29.5,"QB","IND",11.9
+13,"00-0033077","Dak Prescott",52,3.5,28.1,"QB","DAL",11.6
+14,"00-0033873","Patrick Mahomes",43,3.3,23.4,"QB","KC",11.5
+15,"00-0023459","Aaron Rodgers",47,2.9,25.8,"QB","GB",11.4
+16,"00-0029701","Ryan Tannehill",44,3.7,27.9,"QB","TEN",9.9
+17,"00-0026143","Matt Ryan",35,2.3,22.7,"QB","ATL",9.6
+18,"00-0031345","Jimmy Garoppolo",46,3.1,31.1,"QB","SF",9.2
+19,"00-0034869","Sam Darnold",33,2.5,23.9,"QB","NYJ",8.6
+20,"00-0027973","Andy Dalton",33,2.8,24.1,"QB","CIN",8.5
+21,"00-0033106","Jared Goff",34,2.6,25.2,"QB","LA",8.4
+22,"00-0034577","Kyle Allen",32,2.9,24.2,"QB","CAR",8.3
+23,"00-0031237","Teddy Bridgewater",29,3.2,25.4,"QB","NO",7.1
+24,"00-0034855","Baker Mayfield",28,2.2,24.6,"QB","CLE",7.1
+25,"00-0033357","Taysom Hill",28,2.2,25.4,"QB","NO",6.9
+26,"00-0029604","Kirk Cousins",31,2.6,29.8,"QB","MIN",6.5
+27,"00-0031280","Derek Carr",27,1.9,27.3,"QB","LV",6.2
+28,"00-0035232","Dwayne Haskins",21,3,22.3,"QB","WAS",5.9
+29,"00-0019596","Tom Brady",26,2.6,28.1,"QB","NE",5.8
+30,"00-0032268","Marcus Mariota",24,4,27.9,"QB","TEN",5.4
+31,"00-0032436","Jeff Driskel",22,7.3,25.4,"QB","DET",5.4
+32,"00-0034771","Mason Rudolph",21,2.6,24.7,"QB","PIT",5.3
+33,"00-0035577","Devlin Hodges",21,2.6,24.7,"QB","PIT",5.3
+34,"00-0026498","Matthew Stafford",20,2.9,25.4,"QB","DET",4.9
+35,"00-0035704","Drew Lock",18,3.6,25.6,"QB","DEN",4.4
+36,"00-0029665","Robert Griffin III",20,4,37.5,"QB","BAL",3.3
