@@ -1,0 +1,5 @@
+# Claude Code local tool state (not project content)
+.claude/
+
+# Duplicate data mirror superseded by data/weekly_data/ - see "Weekly projections" as new project home
+Weekly projections/WR/data/
