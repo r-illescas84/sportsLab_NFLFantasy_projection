@@ -1,0 +1,13 @@
+FROM python:3.13-slim
+
+WORKDIR /workspace
+
+COPY docker/requirements.txt /tmp/requirements.txt
+
+# --no-deps: nfl_data_py fija pandas/numpy viejos que no aplican aquí
+RUN pip install --no-cache-dir --no-deps nfl_data_py==0.3.3 \
+    && pip install --no-cache-dir -r /tmp/requirements.txt
+
+EXPOSE 8888
+
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--no-browser"]

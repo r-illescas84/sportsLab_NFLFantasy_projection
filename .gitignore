@@ -3,3 +3,5 @@
 
 # Duplicate data mirror superseded by data/weekly_data/ - see "Weekly projections" as new project home
 Weekly projections/WR/data/
+
+.ipynb_checkpoints/
