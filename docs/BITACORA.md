@@ -50,6 +50,22 @@ hallazgos nuevos documentados (mal mapeo de `gsis_id` en QB y TE, datos duplicad
 `targets_jugador()` truena sin datos, scripts copiados sin adaptar).
 
 **Fase 1 completa (Gen1 + Gen2).** Scripts de reconstrucción en `_fase1_replica/gen1_{qb,rb,te,wr}/`.
+ADR 0001 + `HALLAZGOS.md` (18 hallazgos) commiteados y pusheados.
 
-**Pendiente:** commit de todo lo avanzado (ADR, `HALLAZGOS.md`, bitácora, scripts de
-reconstrucción). Después: arrancar Fase 2 (gobernanza) y Fase 3 (actualización) en paralelo.
+---
+
+Replanteado el rumbo: no ir directo al modelo — primero entender los datos a fondo (industria +
+evidencia propia), como un producto de datos, no solo un modelo. Investigación con fuentes
+(TDSP, Datasheets/Model Cards, metodología de PFF, líneas de Vegas y EPA como señales
+predictivas) documentada en el plan. Verificado contra los datos reales: `spread_line`/
+`total_line` (Vegas) con 100% de cobertura 2016-2023, y EPA/`target_share`/`wopr` ya disponibles
+en `import_weekly_data()` — ninguna de las dos se usa hoy en el pipeline.
+
+Arrancada la Fase 2 (entendimiento de datos): `docs/data/DATASHEET.md` con auditoría de las 6
+dimensiones de calidad, y ADR `0002-fuente-de-datos.md` (se sigue con `nflverse`, sin scouting
+propietario por ahora). Escaneo sistemático de los 4 archivos finales (278 jugadores): 7 casos
+reales de corrupción en `Team` (2.5%, patrón `HOU`→`"HU"`/`NO`→`"N"`) + 12 de convención distinta
+pero válida (`JAC`/`LAR`) — 2 hallazgos nuevos agregados a `HALLAZGOS.md`.
+
+**Pendiente:** commit de esto (Datasheet + ADR 0002 + hallazgos nuevos). Después: Fase 3 (EDA +
+feature engineering informado por el Datasheet).

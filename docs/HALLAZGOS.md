@@ -5,6 +5,27 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
 
 ---
 
+- [ ] 🔴 **`weekly_stats.ipynb` depende de un endpoint que se retrasa (`import_weekly_data()`),
+  cuando podría calcular lo mismo desde `import_pbp_data()` (siempre al día).** Verificado en
+  vivo en semana 3 de la temporada 2026: `import_schedules()`, `import_pbp_data()` y
+  `import_depth_charts()` ya estaban al día (el *depth chart* con datos de ese mismo día), pero
+  `import_weekly_data([2026])` regresó error 404 — el resumen semanal de `nflverse` todavía no
+  se había publicado para la temporada en curso. Con el pipeline actual, esto bloquea correr
+  cualquier semana mientras ese endpoint no se publique, aunque los datos crudos (PBP) para
+  calcular las mismas stats ya existen. Gen1 (R) nunca tuvo este problema porque siempre agregó
+  desde PBP directo, no desde un resumen. El pipeline nuevo en Python debe hacer lo mismo.
+
+- [ ] 🔴 **Corrupción sistemática de códigos de equipo en el archivo de ADP de origen**, revisado
+  en los 4 archivos finales (QB/RB/TE/WR, 278 jugadores): 7 casos reales de corrupción (2.5%),
+  con un patrón específico — `HOU` (Houston) aparece truncado a `"HU"` en 3 jugadores distintos
+  (Nick Chubb, Tank Dell, Christian Kirk) y `NO` (New Orleans) a `"N"` en 2 (Taysom Hill, Rashid
+  Shaheed) — sugiere un find-replace o regex roto en el proceso que generó
+  `data/adp_full_gsispos_*.csv`, no errores aislados. Además, a Mark Ingram (Jr.) le quedó
+  `"II"` — el sufijo de su propio nombre — pegado en la columna `Team`, y a Donta Foreman
+  `"RB79"` (posición+número, ya documentado antes). Aparte de la corrupción real, 12 filas más
+  (4.3%) usan una convención de equipo distinta pero válida (`JAC` en vez de `JAX`, `LAR` en vez
+  de `LA`) — no es un error, pero sí una inconsistencia que conviene normalizar.
+
 - [ ] **Notebook `weekly_stats.ipynb` duplicado** en dos rutas (`Weekly projections/WR/notebooks/`
   y `data/weekly_data/`), idéntico en lógica, solo cambia dónde guarda el CSV. La copia de
   `Weekly projections/WR/notebooks/` apunta a una carpeta ya marcada como "duplicado superado"
