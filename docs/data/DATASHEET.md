@@ -6,10 +6,11 @@ construir features o modelos sobre ellos.
 
 ## Fuente
 
-**`nflverse`** (vía `nfl_data_py` en Python / `nflfastR`+`nflreadr` en R) — ecosistema abierto de
-datos de la NFL, mantenido por la comunidad. Confirmado en esta fase que ambos wrappers leen
-exactamente la misma fuente (verificado con Josh Allen 2023: 577 intentos/385 completos/4306
-yardas/29 TDs, idéntico en ambos).
+**`nflverse`** — ecosistema abierto de datos de la NFL, mantenido por la comunidad. Se puede leer
+desde R (`nflfastR`+`nflreadr`) o Python. La verificación de que ambos leen la misma fuente
+(Josh Allen 2023: 577 intentos/385 completos/4306 yardas/29 TDs, idéntico en R y Python) se hizo
+con `nfl_data_py`, el wrapper de Python usado durante la Fase 1-3 de este proyecto — pero **el
+pipeline nuevo usa `nflreadpy`** (ver "Riesgo de dependencia" abajo), su sucesor activo.
 
 **Alternativas consideradas y por qué no se usan (todavía):**
 - Sportradar / Stats Perform / SIS — datos de scouting propietarios (grades, tracking), de paga.
@@ -22,6 +23,25 @@ yardas/29 TDs, idéntico en ambos).
 **Decisión:** `nflverse` es la fuente única por ahora — es gratuita, abierta, y ya cubre línea de
 Vegas y clima además de *play-by-play*. No se justifica pagar por una fuente de scouting
 propietaria en esta etapa del proyecto.
+
+## Riesgo de dependencia (verificado, no asumido)
+
+- **`nflverse` no es una fuente propia — es un cliente que descarga datos ya armados** del
+  repositorio `nflverse-data` en GitHub, actualizado por automatización (GitHub Actions). Si el
+  proyecto dejara de mantenerse, no perdemos acceso de un día para otro, pero sí dejaríamos de
+  recibir datos nuevos.
+- **`nfl_data_py` (el paquete que se iba a usar) está oficialmente descontinuado** — su propio
+  repositorio indica que no habrá más mantenimiento, y recomienda migrar a `nflreadpy` (el
+  sucesor activo, mismo ecosistema). Decisión: el pipeline nuevo usa `nflreadpy`, no `nfl_data_py`
+  (ver ADR `0002-fuente-de-datos.md`).
+- **Las líneas de Vegas son la pieza más frágil de toda la fuente**: vienen del dataset de
+  calendario mantenido por una sola persona de la comunidad (`nflverse/nfldata`, originalmente
+  Lee Sharpe), como "líneas de cierre" de consenso de mercado — no se especifica de qué casa de
+  apuestas. Es más frágil que el *play-by-play* (que sale de fuentes más directas/oficiales).
+- **Mitigación decidida**: el pipeline nuevo guarda sus propias copias (*snapshots*) de lo que
+  descarga, para no depender de que la fuente seguirá disponible hacia atrás en el tiempo. Si
+  algún día esto se vuelve un bloqueo real, existen alternativas de pago (ej. The Odds API) para
+  líneas de apuestas — pero sin historial gratuito hacia atrás como el que ya tiene `nflverse`.
 
 ## Auditoría por las 6 dimensiones de calidad de datos
 
@@ -42,12 +62,15 @@ Detalle técnico completo de cada hallazgo en [`../HALLAZGOS.md`](../HALLAZGOS.m
   problemas de exactitud/validez/unicidad encontrados están en el archivo de **ADP de origen**
   (`data/adp_full_gsispos_*.csv` y sus derivados), no en la fuente de datos en sí.
 - El pipeline nuevo (`pipeline/players.py`, según el plan) debe reconstruir el mapeo
-  jugador→`gsis_id` directamente desde `nfl_data_py.import_players()`/rosters, no heredar el
+  jugador→`gsis_id` directamente desde `nflreadpy.load_players()`/`load_rosters()`, no heredar el
   archivo de ADP con estos errores ya confirmados.
 - Los "nulos" en las features nuevas candidatas (clima, EPA, target share) son mayoritariamente
   estructurales (no aplica), no datos faltantes reales — no requieren imputación agresiva, sí un
   indicador explícito de "no aplica" (ej. domo, sin targets esa semana).
-- **El pipeline nuevo debe calcular stats semanales desde `import_pbp_data()`, no depender de
-  `import_weekly_data()`** — el PBP está al día (verificado en semana 3 de 2026), el resumen
-  semanal tiene rezago y puede no estar publicado cuando se necesita correr la semana en curso.
-  Es literalmente lo que ya hace Gen1 (R): agrega desde PBP directo, nunca de un resumen.
+- **El pipeline nuevo debe calcular stats semanales desde `load_pbp()`, no depender de
+  `load_player_stats()`** — el PBP está al día (verificado en semana 3 de 2026 con el equivalente
+  en `nfl_data_py`), el resumen semanal tiene rezago y puede no estar publicado cuando se
+  necesita correr la semana en curso. Es literalmente lo que ya hace Gen1 (R): agrega desde PBP
+  directo, nunca de un resumen.
+- `nflreadpy` regresa `Polars` DataFrames por defecto (no `pandas`) — usar `.to_pandas()` al
+  integrar con el resto del pipeline, que sigue en `pandas`.
