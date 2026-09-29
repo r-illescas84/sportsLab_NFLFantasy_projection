@@ -8,3 +8,4 @@ Weekly projections/WR/data/
 _fase1_replica/
 .Rhistory
 catboost_info/
+.DS_Store
