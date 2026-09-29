@@ -10,7 +10,9 @@ Cada posición vive en su propia subcarpeta, con la misma forma general:
 
 ```
 <posicion>/
-  notebooks/   # un notebook por target a predecir, más uno que orquesta el merge
+  notebooks/
+    _reference/  # punto de partida heredado, congelado — no se edita, solo se consulta
+    ...          # los notebooks activos del pipeline (features, modelado, ensamblado semanal)
   outputs/     # predicciones ya generadas, por año y semana
   data/        # snapshots propios de los datos descargados (no el dato "en vivo" sin guardar)
   models/      # modelos entrenados + una Model Card por target
