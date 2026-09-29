@@ -2,6 +2,8 @@ pandas==2.3.3
 numpy==2.5.0
 appdirs==1.4.4
 fastparquet==2026.5.0
+nflreadpy==0.1.5
+pyarrow==25.0.1
 matplotlib==3.11.1
 seaborn==0.13.2
 sportypy==1.0.0

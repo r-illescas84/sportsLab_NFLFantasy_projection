@@ -179,3 +179,39 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   filas), mientras el resto de los años se corta entre el #290 y el #488. Cualquier análisis que
   compare "percentil de ADP" o conteo de jugadores rankeados a través de temporadas estaría
   comparando un "top 1000" contra un "top 300-500" sin normalizar.
+
+- [ ] 🔴 **`nflreadpy.load_depth_charts()` cambia de esquema entre 2024 y 2025 — sin columna
+  compartida de temporada/semana entre ambos.** Verificado pidiendo cada año por separado:
+  2022-2024 regresan `season`/`week`/`game_type`/`position`/`depth_team` (formato histórico,
+  reconstruido por semana). 2025 en adelante — confirmado también para 2026, la temporada en
+  curso — regresan un esquema completamente distinto: `dt`/`team`/`pos_grp`/`pos_rank`/`pos_abb`,
+  **sin `season` ni `week` en absoluto**. Al pedir un rango que cruza el límite (`load_depth_charts([2024, 2025])`)
+  la librería concatena ambos esquemas en una sola tabla: el resultado tiene ~94% de nulos en
+  `position`/`depth_team`, que a simple vista parece un hueco de datos pero en realidad es que
+  esas 554,215 filas (las de 2025) nunca tuvieron esas columnas — el dato real vive en `pos_abb`/
+  `pos_grp`/`pos_rank` para esas filas. Cualquier código escrito contra el esquema viejo (como
+  `wrs_rec_tds/yds/receptions.ipynb`, que usan `import_depth_charts()` de `nfl_data_py` para
+  sacar el top-3 de WR por `pos_rank` de la semana en curso) truena o produce nulos silenciosos
+  si se apunta directo a la temporada en curso sin un adaptador. Acción: el pipeline nuevo
+  necesita una función que detecte el esquema por temporada (`season <= 2024` vs. `>= 2025`) y
+  normalice ambos a las mismas columnas antes de usarlos juntos.
+
+- [ ] 🔴 **Al construir el adaptador del hallazgo anterior, aparecieron 3 trampas más — ninguna
+  truena, las 3 producen un resultado silenciosamente incorrecto si no se conocen:**
+  1. **Esquema viejo — `position` sola no identifica el rol de ataque.** Un jugador puede tener
+     `position="WR"` en una fila con `formation="Special Teams"` (ej. como regresador de
+     despejes, `depth_position="PR"`), que no es su rol de receptor. Filtrar solo por `position`
+     mezcla a ese jugador con los WR de ataque reales. Hace falta `formation=="Offense"` **y**
+     `depth_position==<posición>` juntos.
+  2. **Esquema nuevo — `pos_grp` no es la posición del jugador.** Son paquetes de formación
+     (`"3WR 1TE"`, `"Base 4-3 D"`, `"Special Teams"`), no posiciones individuales. La posición
+     real vive en `pos_abb`/`pos_name` (`"WR"` / `"Wide Receiver"`). Filtrar por `pos_grp=="WR"`
+     no encuentra nada (ese valor no existe en la columna).
+  3. **Esquema viejo — existe una "semana 19" etiquetada `game_type=="REG"`**, incluso en
+     equipos que no llegaron a playoffs (confirmado con Atlanta 2024, que terminó 8-9 y no jugó
+     postemporada). Parece un snapshot extra de fin de temporada mal etiquetado, no un partido
+     real. Filtrar por `game_type=="REG"` no es suficiente por sí solo — hace falta acotar
+     también `week <= 18`.
+
+  Las dos funciones ya corregidas: `cargar_depth_charts_historico()` y
+  `cargar_depth_charts_actual()` en `weekly/wr/src/data.py`.

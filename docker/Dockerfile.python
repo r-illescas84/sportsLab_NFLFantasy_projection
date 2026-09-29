@@ -8,6 +8,10 @@ COPY docker/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --no-deps nfl_data_py==0.3.3 \
     && pip install --no-cache-dir -r /tmp/requirements.txt
 
+# nflreadpy cachea en disco lo que descarga — mismo patrón que nfldata_cache para nfl_data_py
+ENV NFLREADPY_CACHE=filesystem
+ENV NFLREADPY_CACHE_DIR=/root/.cache/nflreadpy
+
 EXPOSE 8888
 
 CMD ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--no-browser"]

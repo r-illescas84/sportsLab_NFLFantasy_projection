@@ -103,3 +103,22 @@ Reorganización ejecutada:
 
 **Pendiente:** commit de la reorganización. Después: Fase 2 del nuevo plan — construcción de
 datos (migrar a `nflreadpy`, un solo módulo de features en vez de triplicado).
+
+## 2026-09-29 — Fase 2 completa
+
+Construcción de datos sobre `nflreadpy`, con verificación real en cada paso (no solo "ya
+funciona"). Detalle completo del avance y los hallazgos en `docs/PLAN.md` (Registro por fase) y
+`docs/HALLAZGOS.md` — aquí solo el resumen de continuidad:
+
+- `weekly/wr/src/data.py` (6 funciones, 5 fuentes) y `weekly/wr/src/features.py` (promedios de
+  jugador sin fuga, verificado fila por fila) — nuevos.
+- 3 notebooks nuevos en `weekly/wr/notebooks/`, cada uno ejecutado de punta a punta.
+- Docker actualizado: `nflreadpy` + `pyarrow`, cache nativo configurado.
+- Datasheet y `HALLAZGOS.md` actualizados con los hallazgos de esta fase (rezago, esquema roto
+  de `depth_charts`, trampas de filtrado, tipos de dato).
+
+Todo este bloque se subió junto en un solo corte, a propósito — se acordó no comitear cada paso
+suelto de esta fase para no llenar el historial de commits pequeños.
+
+**Pendiente:** Fase 3 — EDA de WR (empezar por explicar cada target con un ejemplo real, decidir
+`last3` vs `last5` con evidencia).

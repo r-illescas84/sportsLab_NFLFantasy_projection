@@ -9,6 +9,7 @@ services:
       - .:/workspace
       - pip_cache:/root/.cache/pip
       - nfldata_cache:/root/.cache/nfl_data_py
+      - nflreadpy_cache:/root/.cache/nflreadpy
     working_dir: /workspace
     ports:
       - "8888:8888"
@@ -25,4 +26,5 @@ services:
 volumes:
   pip_cache:
   nfldata_cache:
+  nflreadpy_cache:
   renv_cache:
