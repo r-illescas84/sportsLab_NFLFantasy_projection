@@ -122,3 +122,29 @@ suelto de esta fase para no llenar el historial de commits pequeños.
 
 **Pendiente:** Fase 3 — EDA de WR (empezar por explicar cada target con un ejemplo real, decidir
 `last3` vs `last5` con evidencia).
+
+## 2026-09-30 — Fase 3 completa
+
+EDA de WR, 6 notebooks en `weekly/wr/notebooks/` (`04` a `09`). Detalle completo y hallazgos en
+`docs/PLAN.md` (Registro por fase) — aquí solo el resumen de continuidad:
+
+- Primer intento (4 notebooks) guiado por hipótesis puntuales, no sistemático — se corrigió con
+  un notebook de revisión multivariable sobre **todas** las columnas de las 5 fuentes (150+39+46),
+  no solo las ya conocidas.
+- Ese mismo notebook multivariable había quedado mal ordenado (revisaba relaciones entre
+  variables antes de revisar cada variable por sí sola) — se reordenaron y renombraron los 6
+  notebooks para seguir la secuencia correcta: univariado → bivariado → multivariado → síntesis.
+  Las introducciones y referencias cruzadas de cada uno se reescribieron para que coincidan con
+  el orden final, no solo se renombraron los archivos.
+- Hallazgos que cambian decisiones de Fase 4: `draft_pick` es mejor predictor que edad/experiencia;
+  `last3` es consistentemente la ventana más débil de las 4 en los 3 targets (no solo yardas);
+  `racr` es numéricamente inestable (no solo débil en correlación); la dureza defensiva del rival
+  no aporta en ninguna forma de medirla; `features.py` ahora calcula `last3` y `last5` juntas, sin
+  decidir cuál usar de antemano.
+- `weekly/wr/src/features.py` actualizado (ambas ventanas) y su notebook de verificación
+  reejecutado para reflejarlo.
+
+Todo el bloque se sube junto, mismo criterio que la Fase 2.
+
+**Pendiente:** Fase 4 — feature engineering informado (ventana `last3`/`last5` con evidencia de
+modelo, feature de ofensiva de equipo, qué hacer con `racr` y con las semanas sin target).

@@ -26,17 +26,23 @@ def _promedio_movil_desfasado(serie, ventana):
     return serie.shift(1).rolling(ventana, min_periods=1).mean()
 
 
-def agregar_promedios_jugador(stats, columnas, ventana=3, id_col="player_id"):
-    """Agrega, para cada columna en `columnas`, 3 promedios del propio
+def agregar_promedios_jugador(stats, columnas, ventanas=(3, 5), id_col="player_id"):
+    """Agrega, para cada columna en `columnas`, los promedios del propio
     jugador calculados SOLO con semanas anteriores a la fila actual:
 
     - {columna}_season_avg : promedio de la temporada en curso, hasta antes
       de esta semana (se reinicia cada temporada).
-    - {columna}_last{ventana}_avg : promedio movil de las ultimas `ventana`
-      apariciones del jugador, sin reiniciar por temporada (refleja forma
-      reciente real, no un corte artificial en el calendario).
+    - {columna}_last{N}_avg : un promedio movil por cada N en `ventanas` (por
+      default 3 y 5), de las ultimas N apariciones del jugador, sin reiniciar
+      por temporada (refleja forma reciente real, no un corte artificial en
+      el calendario).
     - {columna}_career_avg : promedio de toda la carrera del jugador hasta
       antes de esta semana.
+
+    No se decide aqui cual ventana (3, 5, u otra) es "la correcta" -- se
+    calculan todas las que se pidan y se deja que el analisis/modelo de las
+    fases siguientes muestre con evidencia cual aporta, igual que ya se hizo
+    con Vegas/clima (se probaron, no se asumieron).
 
     Se usa groupby(...).transform() -- no groupby().apply() con
     reset_index manual, que es exactamente el patron que causo el bug de
@@ -54,9 +60,10 @@ def agregar_promedios_jugador(stats, columnas, ventana=3, id_col="player_id"):
         df[f"{col}_season_avg"] = df.groupby([id_col, "season"])[col].transform(
             _promedio_expandido_desfasado
         )
-        df[f"{col}_last{ventana}_avg"] = df.groupby(id_col)[col].transform(
-            lambda s: _promedio_movil_desfasado(s, ventana)
-        )
+        for ventana in ventanas:
+            df[f"{col}_last{ventana}_avg"] = df.groupby(id_col)[col].transform(
+                lambda s, v=ventana: _promedio_movil_desfasado(s, v)
+            )
         df[f"{col}_career_avg"] = df.groupby(id_col)[col].transform(
             _promedio_expandido_desfasado
         )

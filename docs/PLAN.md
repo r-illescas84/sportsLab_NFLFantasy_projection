@@ -21,7 +21,7 @@ sin depender de correr notebooks a mano uno por uno.
 |---|---|---|---|
 | 1. Reorganización | Mover `annual/` (en pausa) y `weekly/wr/`; aislar el pipeline heredado como referencia congelada | Estructura de carpetas, 2 hallazgos de duplicidad cerrados | ✅ Cerrada 2026-09-28 |
 | 2. Construcción de datos | Migrar a `nflreadpy` (mapeo verificado, consulta directa, cache nativo de la librería); un módulo de datos + uno de features en `.py`, sin triplicar; auditoría de calidad por fuente con criterio de acción | `weekly/wr/src/data.py`, `features.py`, sección nueva en el Datasheet + notebook de verificación | ✅ Cerrada 2026-09-29 |
-| 3. EDA de WR | Explicar cada target con un ejemplo real antes de graficar; distribución de los 3 targets; decidir `last3` vs `last5` con evidencia | Notebook de EDA + decisión documentada de la ventana | Pendiente |
+| 3. EDA de WR | Explicar cada target con ejemplo real; distribución de los 3 targets; EDA general, por equipo, de un jugador destacado, multivariable sistemático, y perfil de forma de cada variable | 6 notebooks de EDA | ✅ Cerrada 2026-09-30 |
 | 4. Feature engineering informado | Auditar qué ya está disponible y sin usar (EPA, `air_yards`, `wopr`); no forzar Vegas/clima | Lista de features con su justificación, en `features.py` | Pendiente |
 | 5. Modelado comparado | Patrón de `03_modelo_predictivo` (Baseline/Ridge/RandomForest/XGBoost, split temporal) + cuantiles | `modeling.py` parametrizado por `target` + Model Card por target | Pendiente |
 | 6. Estabilidad / ciclo de vida | `tracking.csv` por corrida; chequeo recurrente de las 6 dimensiones de calidad | Historial de métricas, visible si el modelo se degrada | Pendiente |
@@ -72,3 +72,47 @@ sin depender de correr notebooks a mano uno por uno.
 - Docker: `nflreadpy` + `pyarrow` instalados, cache nativo de la librería configurado
   (`nflreadpy_cache`, mismo patrón que `nfl_data_py`) — no se construyó un sistema propio de
   snapshots en CSV.
+
+### Fase 3 — EDA de WR (cerrada 2026-09-30)
+
+6 notebooks en `weekly/wr/notebooks/`, cada uno respondiendo una pregunta propia. **Reordenados
+una vez** a mitad de la fase: el primer orden mezclaba univariado y multivariado sin criterio (un
+notebook de "perfil de cada variable" quedó numerado *después* del de correlaciones, cuando debía
+ir antes). El orden final sigue la secuencia metodológica correcta — univariado → bivariado →
+multivariado → síntesis:
+
+- **`04_eda_targets.ipynb`** (univariado — los targets): touchdowns es fundamentalmente distinto
+  a recepciones/yardas — 82% en cero incluso sobre receptores activos (con ≥1 target esa semana).
+- **`05_eda_perfil_variables.ipynb`** (univariado — todas las demás variables candidatas): con
+  asimetría/curtosis/regla IQR formales — `racr` es numéricamente inestable (curtosis 241 en
+  crudo, 605 al promediar — promediar lo empeora, no lo arregla); `carries`/`rushing_yards` no
+  mejoran de forma ni promediados; 2 falsos positivos metodológicos documentados (touchdowns y
+  `rest` marcan muchos "outliers" por IQR que en realidad son la forma esperada de un conteo raro
+  o de un calendario con bye weeks/partidos de jueves, no errores de datos).
+- **`06_eda_general.ipynb`** (bivariado — contexto vs. targets): la experiencia importa pero no
+  linealmente — recepciones, yardas *y* touchdowns suben hasta 3-5 años de experiencia y bajan
+  después (verificado en los 3, no solo yardas). `air_yards_share`/`wopr` fuera de [0,1] es
+  aritmética real sobre un denominador pequeño, no error. Fuga verificada con evidencia (0.72
+  circular → 0.47 real). Vegas/clima confirmado sin efecto, con código propio en el repo.
+- **`07_eda_equipos.ipynb`** (bivariado — equipo vs. targets): ofensiva de equipo estable entre
+  temporadas (correlación 0.40 2024→2025); dureza defensiva contra WR casi aleatoria entre
+  temporadas (0.02) — primera evidencia real para la decisión de agregados de equipo pospuesta en
+  Fase 2.
+- **`08_eda_multivariable.ipynb`** (multivariado — todas las variables entre sí y contra los
+  targets, sistemático): `draft_pick` correlaciona más que edad/experiencia (nunca antes
+  considerado); un cambio de QB titular golpea la producción (~16% menos yardas, 594 casos) pero
+  la calidad continua del QB casi no importa; `target_share`/`air_yards_share`/`wopr`
+  correlacionadas 0.82-0.97 entre sí (redundantes para Ridge); acarreos de WR (jet sweeps) no
+  predicen nada de su rendimiento como receptor; dureza defensiva confirmada sin efecto también
+  dentro de la misma temporada y contra targets, no solo yardas entre temporadas.
+- **`09_eda_jugador_destacado.ipynb`** (síntesis narrativa, cierre de la fase): Ja'Marr Chase,
+  elegido por datos (mayor rango real entre receptores de volumen alto), con visualización de
+  campo (`sportypy`) mostrando que su semana boom fue volumen+profundidad+acierto juntos, no una
+  sola jugada de suerte.
+- Todos los notebooks tienen referencias cruzadas "anterior/siguiente" consistentes con el orden
+  final — no se dejaron hallazgos aislados sin reconciliar entre sí.
+
+**Pendiente:** Fase 4 — feature engineering informado por todo lo anterior: decidir `last3` vs
+`last5` con evidencia de modelo (no solo correlación individual), construir el feature de
+ofensiva de equipo (evidencia real de que aporta), y resolver qué hacer con `racr` (excluir o
+acotar) y con las filas sin ningún target (entrenar solo con semanas activas o con todas).
