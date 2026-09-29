@@ -69,3 +69,37 @@ pero válida (`JAC`/`LAR`) — 2 hallazgos nuevos agregados a `HALLAZGOS.md`.
 
 **Pendiente:** commit de esto (Datasheet + ADR 0002 + hallazgos nuevos). Después: Fase 3 (EDA +
 feature engineering informado por el Datasheet).
+
+---
+
+EDA de la Fuente 3 (archivo de ADP): confirmado que el cruce manual de `gsis_id` falla
+silenciosamente para jugadores reales en 4 de 11 años (se mezclan con el marcador de defensas),
+colisiones de identidad confirmadas en 2018/2019/2024 (no solo el caso ya conocido), y
+profundidad de ranking inconsistente entre años (2019 rankea hasta #1047, el resto #290-488). 3
+hallazgos nuevos + Datasheet actualizado, commiteados y pusheados.
+
+## 2026-09-28 (tarde) — Alcance redefinido por el equipo
+
+El equipo revisó el avance y redefinió el alcance: **lo anual queda en pausa** (la temporada ya
+empezó, no tiene uso ahora mismo) y **el foco es WR semanal, de principio a fin** — Ricky se hizo
+cargo de las demás posiciones y usará este trabajo como guía cuando entregue su notebook. Ver
+ADR `0003-alcance-wr-semanal.md`.
+
+Verificado (no asumido) que `nflreadpy` sí tiene equivalente directo para las 6 funciones de
+`nfl_data_py` que usa el pipeline de WR — incluyendo `import_weekly_data` (`load_player_stats`
+con `summary_level="week"`), que una primera revisión superficial había marcado como "sin
+equivalente". Pendiente de verificar en vivo si comparte el mismo rezago ya documentado.
+
+Reorganización ejecutada:
+- `QB/`, `RB/`, `TE/`, `WR/`, `DST/`, `K/`, `Rookies/`, `Models/`, `extras/`, `renv/`,
+  `renv.lock`, `.Rprofile` → `annual/` (con `git mv`, historial conservado).
+- Pipeline WR vivo (`Weekly projections/WR/notebooks/{wr_merge_stats,wrs_rec_tds,wrs_rec_yds,
+  wrs_receptions}.ipynb` + `outputs/2025/`) → `weekly/wr/`.
+- Retirados del control de versiones: `data/weekly_data/` completo (copia atrasada, confirmado
+  con la reorganización) y los 6 notebooks huérfanos sin consumidor real (`career_avg`,
+  `last5_avg`, `season_avg`, `player_shares`, `weekly_stats`, `wrs_xgboost`) — resuelve 2
+  hallazgos de duplicidad ya documentados.
+- READMEs nuevos en `weekly/`, `annual/`, y raíz actualizado con la estructura completa.
+
+**Pendiente:** commit de la reorganización. Después: Fase 2 del nuevo plan — construcción de
+datos (migrar a `nflreadpy`, un solo módulo de features en vez de triplicado).

@@ -26,16 +26,23 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   (4.3%) usan una convención de equipo distinta pero válida (`JAC` en vez de `JAX`, `LAR` en vez
   de `LA`) — no es un error, pero sí una inconsistencia que conviene normalizar.
 
-- [ ] **Notebook `weekly_stats.ipynb` duplicado** en dos rutas (`Weekly projections/WR/notebooks/`
+- [x] **Notebook `weekly_stats.ipynb` duplicado** en dos rutas (`Weekly projections/WR/notebooks/`
   y `data/weekly_data/`), idéntico en lógica, solo cambia dónde guarda el CSV. La copia de
   `Weekly projections/WR/notebooks/` apunta a una carpeta ya marcada como "duplicado superado"
-  en `.gitignore` (`Weekly projections/WR/data/`). Acción sugerida: quedarse con una sola copia
-  (la de `data/weekly_data/`) y borrar la otra.
+  en `.gitignore` (`Weekly projections/WR/data/`).
+  **Resuelto (2026-09-28, reorg a `weekly/wr/`):** la revisión a fondo mostró que la acción
+  sugerida original estaba al revés — `data/weekly_data/` era la copia **atrasada** (sin el fix
+  de deduplicar `game_id`, solo semanas 7-8 corridas), y `Weekly projections/WR/` era la viva
+  (54 archivos, semanas 7-18). Se conservó esa y se retiró `data/weekly_data/` por completo,
+  junto con `weekly_stats.ipynb` mismo — confirmado que ni él ni la familia de notebooks que
+  alimenta (`career_avg`, `last5_avg`, `season_avg`, `player_shares`) tienen consumidor real en
+  el pipeline que sí corre (`wr_merge_stats.ipynb` solo ejecuta `wrs_rec_tds/yds/receptions`).
 
-- [ ] **Predicciones semanales duplicadas** en dos carpetas idénticas byte a byte:
+- [x] **Predicciones semanales duplicadas** en dos carpetas idénticas byte a byte:
   `Weekly projections/WR/outputs/2025/` y `data/weekly_data/weekly_predictions/2025/`
-  (confirmado con `diff` en `wrs_complete_week7.csv` y `wrs_rec_yds_pred_week_7.csv`). Acción
-  sugerida: quedarse con una sola ubicación canónica.
+  (confirmado con `diff` en `wrs_complete_week7.csv` y `wrs_rec_yds_pred_week_7.csv`).
+  **Resuelto (2026-09-28):** mismo cambio que el hallazgo anterior — `Weekly projections/WR/outputs/2025/`
+  ahora vive en `weekly/wr/outputs/2025/`; `data/weekly_data/weekly_predictions/` se retiró.
 
 - [ ] **`last5_avg.ipynb` truena en pandas 2.3.3 (celdas de equipo, no la de jugador)**: las celdas
   de `team_defense_last5_avg`/`team_offense_last5_avg` hacen
