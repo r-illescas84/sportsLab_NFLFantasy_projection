@@ -146,3 +146,29 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   No corrompe los valores (ambas copias traen el mismo dato), pero rompe cualquier acceso por
   nombre de columna (`df['carries_season_avg']` devuelve 2 columnas, no 1). Acción sugerida:
   quitar los nombres repetidos de la lista `cols`.
+
+- [ ] 🔴 **El marcador `"--"` de `gsis_id` (reservado para defensas de equipo) se filtra a
+  jugadores reales sin cruce exitoso, en 4 de los 11 años del archivo de ADP.** En
+  `data/adp_full_gsispos_*.csv`, `"--"` es válido para las 32 filas de defensa (`POS` empieza
+  con `DST`) — pero de 2021 a 2024 también aparece en jugadores individuales cuyo cruce manual
+  de `gsis_id` falló: 16 casos en 2021, 14 en 2022, 10 en 2023, 6 en 2024. No son siempre
+  suplentes irrelevantes — ejemplo 2024: **DJ Chark Jr.**, receptor con una temporada de 1000+
+  yardas en su carrera, cayó a ADP #284 por lesiones y quedó sin `gsis_id`, indistinguible de
+  una defensa para cualquier cruce por id. En 2015-2020 y 2025 el cruce fue completo (0 casos)
+  — el problema es específico de esos 4 años.
+
+- [ ] 🔴 **La colisión de `gsis_id` ya documentada arriba (Brian Robinson Jr./Brock Purdy, y el
+  triple de Colby Parkinson/Donta Foreman/Jeff Wilson Jr.) no se originó en `agg_ricky.ipynb` ni
+  es exclusiva de 2024 — está directamente en `data/adp_full_gsispos_2024.csv`, y el mismo
+  patrón aparece también en 2018 y 2019.** 2018: `00-0032135` compartido entre Jesse James y Joe
+  Williams, y `00-0034419` entre Braxton Berrios y Richie James Jr. 2019: `00-0030108`
+  duplicado para "Ryan Griffin" con y sin espacio final en el nombre — mismo jugador, dos filas.
+  2024 suma un tercer caso además de los ya conocidos: `00-0035640` compartido entre Michael
+  Pittman Jr. y DK Metcalf, dos titulares reales. Confirma que el archivo de origen nunca fue
+  validado por unicidad de `gsis_id` en ningún año.
+
+- [ ] **La profundidad del ranking de ADP no es consistente entre años — rompe cualquier
+  comparación de tendencia.** `adp_full_gsispos_2019.csv` rankea hasta el jugador #1047 (1034
+  filas), mientras el resto de los años se corta entre el #290 y el #488. Cualquier análisis que
+  compare "percentil de ADP" o conteo de jugadores rankeados a través de temporadas estaría
+  comparando un "top 1000" contra un "top 300-500" sin normalizar.
