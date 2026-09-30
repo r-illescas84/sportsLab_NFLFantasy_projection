@@ -180,7 +180,7 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   compare "percentil de ADP" o conteo de jugadores rankeados a través de temporadas estaría
   comparando un "top 1000" contra un "top 300-500" sin normalizar.
 
-- [ ] 🔴 **`nflreadpy.load_depth_charts()` cambia de esquema entre 2024 y 2025 — sin columna
+- [x] 🔴 **`nflreadpy.load_depth_charts()` cambia de esquema entre 2024 y 2025 — sin columna
   compartida de temporada/semana entre ambos.** Verificado pidiendo cada año por separado:
   2022-2024 regresan `season`/`week`/`game_type`/`position`/`depth_team` (formato histórico,
   reconstruido por semana). 2025 en adelante — confirmado también para 2026, la temporada en
@@ -195,6 +195,13 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   si se apunta directo a la temporada en curso sin un adaptador. Acción: el pipeline nuevo
   necesita una función que detecte el esquema por temporada (`season <= 2024` vs. `>= 2025`) y
   normalice ambos a las mismas columnas antes de usarlos juntos.
+  **Resuelto (2026-09-30, `21_unificacion_depth_chart.ipynb`):** `data.cargar_depth_charts_unificado()`
+  mapea cada `dt` (esquema 2025+) al próximo partido real de ese equipo (`pd.merge_asof`,
+  `direction="forward"`, contra el calendario) y se queda con el snapshot más cercano al partido
+  por equipo-semana. Verificado con 2 casos reales (Marvin Harrison Jr., Ja'Marr Chase, ambos WR1
+  casi toda la temporada 2025) y sin filas duplicadas jugador-equipo-semana. Cobertura de
+  `depth_team` sobre filas WR reales de 2025 sube de 0% a ~97%. Integrada en
+  `features.construir_tabla_modelado` — ya no es una limitación de los modelos guardados.
 
 - [ ] 🔴 **Al construir el adaptador del hallazgo anterior, aparecieron 3 trampas más — ninguna
   truena, las 3 producen un resultado silenciosamente incorrecto si no se conocen:**
@@ -226,3 +233,21 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   cualquier cruce por `(season, week, team, gsis_id)` duplicaba esas filas en silencio. Fix:
   `cargar_depth_charts_historico()` ahora se queda con el mejor rango (`depth_team` mínimo) por
   jugador-semana antes de regresar el resultado.
+
+- [ ] 🔴 **Los CSVs de predicciones del pipeline heredado (`weekly/wr/outputs/2025/*_pred_week_N.csv`
+  y `wrs_complete_weekN.csv`) tienen filas duplicadas por jugador-semana, con predicciones
+  distintas entre sí.** Confirmado semana por semana (7 a 18 de 2025): semanas 7, 8 y 10 sin
+  duplicar; semana 9 duplica solo `receiving_tds` (1.89x); semana 11 y 13-17 duplican levemente
+  (1.02x-1.06x); semana 12 duplica exactamente al doble (2.00x); semana 18 duplica 1.85x en los 3
+  targets a la vez (`wrs_complete_week18.csv`: 730 filas para 96 jugadores únicos, 7.6x). No es un
+  patrón uniforme — parece que algunas corridas del pipeline heredado guardaron más de un
+  *snapshot* de depth chart del mismo día para la misma semana, sin deduplicar antes de aplicar el
+  modelo. La dispersión entre duplicados del mismo jugador-semana es real, no cosmética: mediana
+  ~27% de diferencia relativa entre las filas duplicadas, hasta 2-3 veces esa magnitud en casos
+  extremos (ejemplo real: Adonai Mitchell, semana 18, `predicted_receiving_tds` = 0.345 / 0.250 /
+  0.149 en sus 3 filas). Se descubrió al construir el benchmark de Fase 5
+  (`weekly/wr/notebooks/16_benchmark_vs_legado.ipynb`) contra las predicciones reales ya guardadas
+  — tomar "la primera fila" a ciegas habría introducido un error arbitrario en la comparación. Se
+  resolvió ahí con una regla explícita (promediar los duplicados por jugador-semana antes de
+  calcular cualquier métrica), pero el defecto de origen sigue sin corregirse en el pipeline
+  heredado — queda fuera de alcance de este proyecto, documentado aquí para quien lo retome.

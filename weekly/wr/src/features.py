@@ -22,7 +22,7 @@ notebooks/11_seleccion_features.ipynb:
 | Ventana last3 | Promedio de sus ultimos 3 partidos | Incluir, secundaria | Aporta menos que last5/season en los 3 targets (nb 11) |
 | Ventana career | Promedio de toda su carrera hasta antes de esa semana | Conservar, no priorizar en modelado | Redundante frente a last5+season en conjunto, pese a buena correlacion aislada en Fase 3 (nb 11) |
 | target_share/air_yards_share/wopr juntas en Ridge | Las 3 miden participacion del jugador de formas distintas, muy correlacionadas entre si | Usar columnas_por_modelo("ridge") | Colinealidad 0.82-0.97 (nb 08, Fase 3) |
-| depth_team | Su lugar en la alineacion del equipo (1=titular/WR1, 2=WR2...) -- mas bajo es mejor | Incluir | Señal fuerte y nueva en recepciones/yardas (nb 11); 0% cobertura en 2025+ hasta unificar esquemas |
+| depth_team | Su lugar en la alineacion del equipo (1=titular/WR1, 2=WR2...) -- mas bajo es mejor | Incluir | Señal fuerte y nueva en recepciones/yardas (nb 11); cobertura en 2025+ resuelta via data.cargar_depth_charts_unificado (nb 21, ~97% de cobertura real, antes 0%) |
 | draft_pick | En que numero fue seleccionado en el draft (mas bajo = elegido antes); al no drafteado se le asigna peor que el ultimo pick real | Incluir (imputado: peor pick real + 1) | Confirmado con evidencia de modelo, no solo correlacion (nb 11) |
 | edad / anios_experiencia (+ _sq/_bucket para lineales) | Edad del jugador esa temporada / cuantas temporadas lleva en la NFL | Incluir | Confirmado con evidencia de modelo (nb 11); transformacion no lineal es especifica para Ridge |
 | racr_acotado | Eficiencia de conversion de yardas aereas (yardas recibidas / yardas de aire), con tope para evitar valores extremos | Se mantiene calculado, sin evidencia fuerte | No destaco en la evaluacion conjunta (nb 11) |
@@ -257,14 +257,138 @@ def agregar_interaccion(stats, col_a, col_b, nombre=None):
     return df
 
 
+COLUMNAS_BASE_MODELADO = [
+    "receptions", "targets", "receiving_yards", "receiving_air_yards",
+    "receiving_yards_after_catch", "receiving_first_downs", "receiving_tds",
+    "receiving_2pt_conversions", "receiving_10", "receiving_16", "receiving_20", "receiving_40",
+    "target_share", "air_yards_share", "wopr", "receiving_epa", "fantasy_points_ppr",
+    "yards_per_target", "catch_rate", "air_yards_per_target", "racr_acotado",
+]
+"""Columnas base a las que se les calculan los promedios rezagados
+(agregar_promedios_jugador) -- exactamente las mismas 20 evaluadas en
+notebooks/11_seleccion_features.ipynb."""
+
+FEATURES_SELECCIONADAS_ARBOL = sorted({
+    # Union de las 15 variables mas importantes de cada uno de los 3 targets
+    # (11_seleccion_features.ipynb, seccion 4.2 -- 32 variables, evidencia real).
+    "depth_team", "draft_pick", "target_share_last5_avg", "wopr_last5_avg",
+    "fantasy_points_ppr_last5_avg", "targets_season_avg", "receptions_season_avg",
+    "receiving_yards_season_avg", "receiving_first_downs_last5_avg", "wopr_last3_avg",
+    "targets_last5_avg", "air_yards_share_season_avg", "receiving_yards_career_avg",
+    "receiving_yards_last3_avg", "receiving_air_yards_season_avg", "targets_last3_avg",
+    "receptions_last3_avg", "receiving_10_last3_avg", "fantasy_points_ppr_season_avg",
+    "receiving_tds_season_avg", "receiving_16_last5_avg", "receiving_epa_last3_avg",
+    "receptions_career_avg", "fantasy_points_ppr_last3_avg", "catch_rate_career_avg",
+    "receiving_20_last3_avg", "receiving_first_downs_career_avg", "target_share_last3_avg",
+    "receptions_last5_avg", "target_share_career_avg", "air_yards_share_career_avg",
+    "air_yards_share_last3_avg",
+    # Confirmadas con evidencia de modelo individual aunque quedaron justo fuera
+    # del top 15 (11_seleccion_features.ipynb, seccion 6): edad 0.067/0.003/0.001,
+    # anios_experiencia 0.017/0.000/0.000 en yardas/recepciones/TDs.
+    "edad", "anios_experiencia",
+})
+"""Feature set de arbol (RF/XGBoost/HistGradientBoosting) para Fase 5 -- 34
+columnas. No incluye `career_avg` (redundante frente a last5+season en
+conjunto, ver seccion 5 de 11_seleccion_features.ipynb) ni las variables
+descartadas (volatilidad, cambio de QB/equipo, interacciones, rest/div_game,
+dureza defensiva, Vegas/clima)."""
+
+_COLINEALES_PARTICIPACION = {
+    "target_share_last5_avg", "target_share_last3_avg", "target_share_career_avg",
+    "air_yards_share_season_avg", "air_yards_share_last3_avg", "air_yards_share_career_avg",
+}
+
+
 def columnas_por_modelo(tipo="ridge"):
-    """Evita la colinealidad 0.82-0.97 de target_share/air_yards_share/wopr
-    (08_eda_multivariable.ipynb, wopr es combinacion ponderada exacta de las
-    otras 2). 'ridge': solo wopr (ya las combina) + receiving_epa (la mas
-    independiente del grupo, 0.35-0.48 de correlacion con las demas). 'arbol':
-    las 4 originales -- la redundancia no perjudica a RandomForest/XGBoost."""
-    if tipo == "ridge":
-        return ["wopr", "receiving_epa"]
+    """Feature set completo de Fase 5 por familia de modelo. 'arbol': las 34
+    de FEATURES_SELECCIONADAS_ARBOL -- la colinealidad de target_share/
+    air_yards_share/wopr (0.82-0.97, 08_eda_multivariable.ipynb) no perjudica
+    a RandomForest/XGBoost/HistGradientBoosting. 'ridge': se quitan las
+    versiones de target_share/air_yards_share (se conserva wopr, que ya las
+    combina, mas receiving_epa -- la mas independiente del grupo) y se agrega
+    la version no lineal de experiencia (anios_experiencia_sq/_bucket), que
+    solo un modelo lineal necesita -- un arbol ya captura la curva del dato
+    crudo."""
     if tipo == "arbol":
-        return ["target_share", "air_yards_share", "wopr", "receiving_epa"]
+        return list(FEATURES_SELECCIONADAS_ARBOL)
+    if tipo == "ridge":
+        base = [c for c in FEATURES_SELECCIONADAS_ARBOL if c not in _COLINEALES_PARTICIPACION]
+        return base + ["anios_experiencia_sq", "anios_experiencia_bucket"]
     raise ValueError(f"tipo desconocido: {tipo!r}")
+
+
+def construir_tabla_modelado(seasons=range(2016, 2026), filas_extra=None):
+    """Arma la tabla WR completa lista para modelar -- todas las variables
+    construidas y seleccionadas en Fase 4 (ver tabla del docstring de modulo).
+    Encapsula el bloque que antes se repetia a mano en
+    notebooks/11_seleccion_features.ipynb (celdas 6-9), para que los
+    notebooks de Fase 5 no lo tripliquen -- mismo motivo que ya llevo a
+    agregar_promedios_jugador() en Fase 2.
+
+    `filas_extra`: DataFrame opcional con filas "placeholder" (mismo esquema
+    que cargar_stats_semanales(), columnas de estadisticas en NaN) para una
+    semana que todavia no se juega -- se agregan a `stats` ANTES de calcular
+    cualquier promedio, para que agregar_promedios_jugador() (shift(1) antes
+    de promediar) les calcule sus features rezagadas usando solo la historia
+    real ya jugada, sin duplicar la logica de esta funcion en otro lugar (ver
+    notebooks/18_validacion_temporada_actual.ipynb). Se marcan con
+    `es_prediccion=True` para poder separarlas despues del resto de filas
+    reales (`es_prediccion=False`).
+
+    Requiere `data.py` en el mismo path (mismo patron ya usado en todo el
+    proyecto: sys.path.insert(0, "../src"); import data, features)."""
+    import data
+
+    seasons = list(seasons)
+    stats = data.cargar_stats_semanales(seasons)
+    jugadores = data.cargar_jugadores()
+    calendario = data.cargar_calendario(seasons)
+    depth = data.cargar_depth_charts_unificado(seasons, calendario=calendario)
+    qb_titular = data.identificar_qb_titular(stats)
+    wr = stats[stats["position"] == "WR"].copy()
+    wr["es_prediccion"] = False
+    if filas_extra is not None:
+        filas_extra = filas_extra.copy()
+        filas_extra["es_prediccion"] = True
+        wr = pd.concat([wr, filas_extra], ignore_index=True)
+
+    wr = calcular_ratios_eficiencia(wr)
+    wr["racr"] = (wr["receiving_yards"] / wr["receiving_air_yards"]).where(
+        wr["receiving_air_yards"] > 0
+    )
+    wr = acotar_variable(wr, "racr", percentil=0.99)
+    wr = agregar_promedios_jugador(wr, COLUMNAS_BASE_MODELADO, ventanas=(3, 5))
+    wr = agregar_volatilidad_jugador(wr, ["receiving_yards", "targets"], ventana=5)
+    wr = agregar_edad_experiencia(wr, jugadores)
+    wr = agregar_experiencia_no_lineal(wr)
+    wr = agregar_draft_pick(wr, jugadores)
+
+    cal_home = calendario[
+        ["season", "week", "home_team", "home_rest", "div_game", "roof", "surface"]
+    ].rename(columns={"home_team": "team", "home_rest": "rest"})
+    cal_away = calendario[
+        ["season", "week", "away_team", "away_rest", "div_game", "roof", "surface"]
+    ].rename(columns={"away_team": "team", "away_rest": "rest"})
+    cal_long = pd.concat([cal_home, cal_away], ignore_index=True)
+    wr = wr.merge(cal_long, on=["season", "week", "team"], how="left")
+
+    wr = wr.merge(
+        depth[["season", "week", "team", "player_id", "depth_team"]],
+        on=["season", "week", "team", "player_id"],
+        how="left",
+    )
+
+    wr = agregar_ofensiva_equipo(wr, columnas=("receiving_yards", "targets"), ventanas=(3, 5))
+    wr = agregar_cambio_qb_titular(wr, qb_titular)
+    wr["cambio_qb_titular_num"] = wr["cambio_qb_titular"].astype("float")
+    wr["cambio_equipo_num"] = wr["cambio_equipo"].astype("float")
+
+    wr = agregar_interaccion(
+        wr, "target_share_last5_avg", "equipo_receiving_yards_season_avg",
+        "target_share_x_ofensiva_equipo",
+    )
+    wr = agregar_interaccion(wr, "draft_pick", "anios_experiencia", "draft_pick_x_experiencia")
+    wr = agregar_interaccion(
+        wr, "cambio_qb_titular_num", "target_share_last5_avg", "cambio_qb_x_target_share"
+    )
+    return wr

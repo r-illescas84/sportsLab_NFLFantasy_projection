@@ -23,7 +23,7 @@ sin depender de correr notebooks a mano uno por uno.
 | 2. Construcción de datos | Migrar a `nflreadpy` (mapeo verificado, consulta directa, cache nativo de la librería); un módulo de datos + uno de features en `.py`, sin triplicar; auditoría de calidad por fuente con criterio de acción | `weekly/wr/src/data.py`, `features.py`, sección nueva en el Datasheet + notebook de verificación | ✅ Cerrada 2026-09-29 |
 | 3. EDA de WR | Explicar cada target con ejemplo real; distribución de los 3 targets; EDA general, por equipo, de un jugador destacado, multivariable sistemático, y perfil de forma de cada variable | 6 notebooks de EDA | ✅ Cerrada 2026-09-30 |
 | 4. Feature engineering informado | Construir variables nuevas, evaluarlas todas (viejas y nuevas) en conjunto contra un modelo, seleccionar con evidencia | Lista de features con su justificación, en `features.py` | ✅ Cerrada 2026-09-30 |
-| 5. Modelado comparado | Patrón de `03_modelo_predictivo` (Baseline/Ridge/RandomForest/XGBoost, split temporal) + cuantiles | `modeling.py` parametrizado por `target` + Model Card por target | Pendiente |
+| 5. Modelado comparado | Patrón de `03_modelo_predictivo` (Baseline/Ridge/RandomForest/XGBoost/HistGradientBoosting, split temporal), técnicas de conteo para touchdowns, estabilidad, SHAP, benchmark contra el legado, validación con 2026 | `modeling.py` + 8 notebooks (`12`-`19`) | ✅ Cerrada 2026-09-30 |
 | 6. Estabilidad / ciclo de vida | `tracking.csv` por corrida; chequeo recurrente de las 6 dimensiones de calidad | Historial de métricas, visible si el modelo se degrada | Pendiente |
 | 7. Documentar el patrón | Forma del pipeline en términos genéricos, para cuando llegue el notebook de Ricky | Guía corta de replicación en `weekly/README.md` | Pendiente |
 | **Entregable final** | — | Predicción semanal real: punto + piso/techo, modelo ganador, frescura de datos | — |
@@ -148,3 +148,81 @@ train 2016-2023/val 2024-2025).
 - **Pospuesto a Fase 5, a propósito**: si entrenar con todas las semanas o solo con las activas
   (`targets > 0`) es una decisión de función de pérdida (Poisson/Tweedie), no de qué columnas
   usar — no se resuelve aquí.
+
+### Fase 5 — Modelado comparado (cerrada 2026-09-30)
+
+8 notebooks nuevos (`12` a `19`) y un módulo nuevo `weekly/wr/src/modeling.py` (split temporal,
+bake-off de modelos, walk-forward, modelo de 2 etapas para conteos). `features.py` gana
+`construir_tabla_modelado()` (une todo el bloque de Fase 4 en una función reusable, con soporte
+para filas "placeholder" de una semana futura) y `columnas_por_modelo()` ahora regresa el feature
+set completo (34 columnas árbol / 30 Ridge), no solo el subconjunto de colinealidad.
+
+- **Split de 3 particiones, distinto al de Fase 4 y por qué**: train 2016-2021 / val 2022-2023
+  (elige modelo) / test 2024-2025 (se mira una sola vez) — Fase 4 usaba 2 particiones porque solo
+  hacía *screening* de features con un modelo fijo; aquí se elige entre familias de modelo e
+  hiperparámetros, y reusar el mismo val para ambas decisiones sería fuga de decisión.
+- **XGBoost gana en los 3 targets** (`13_comparacion_modelos.ipynb`, `14_receiving_tds_modelos_de_conteo.ipynb`):
+  MAE test 1.372 (recepciones), 20.647 (yardas), 0.2466 con objetivo `reg:tweedie` (touchdowns,
+  probado contra Poisson/Tweedie/HGB-Poisson/hurdle — ganó con ventaja clara, aunque con R² más
+  negativo que el resto, documentado sin ocultar).
+- **Decisión de Fase 4 resuelta con evidencia**: entrenar con todas las semanas gana sobre filtrar
+  activas, en los 3 targets y los 5 modelos (comparación con el mismo conjunto de prueba activo en
+  ambos casos, para que sea justa).
+- **Estabilidad confirmada 2 veces**: walk-forward 2021-2025, coeficiente de variación 4.5%-4.7%
+  en los 3 targets; validación adicional contra 2026 (dato que no existía en ningún momento
+  anterior del proyecto) en el mismo rango de MAE, sin degradarse.
+- **Benchmark real contra el legado** (`16_benchmark_vs_legado.ipynb`): mejora de MAE de 4.5%
+  (recepciones), 7.2% (yardas) y 17.2% (touchdowns) sobre las mismas 929 predicciones reales que
+  el legado ya guardó para las semanas 7-18 de 2025, comparadas contra el resultado real de esas
+  semanas — no una simulación aparte.
+- **Bug real encontrado y corregido en el camino**: los CSVs de `weekly/wr/outputs/2025/`
+  (`*_pred_week_N.csv`) tienen filas duplicadas por jugador-semana con predicciones distintas
+  entre sí (hasta 7.6x en `wrs_complete_week18.csv`) — auditado y documentado en `HALLAZGOS.md`,
+  resuelto con una regla explícita de promediar antes de calcular el benchmark.
+- **Explicabilidad** (`17_explicabilidad_shap.ipynb`): SHAP coincide con permutación (Fase 4) e
+  importancia nativa de árbol en las variables más influyentes. Hallazgo honesto y repetido 3
+  veces de forma independiente (cuartil de uso, caso real de Ja'Marr Chase, los 5 peores errores):
+  **el modelo subestima sistemáticamente las semanas boom** — mismo patrón que ya documentó Daniel
+  en `preeliminar/03_modelo_predictivo`.
+- **Predicción real generada** (`18_validacion_temporada_actual.ipynb`): usando el estado real de
+  hoy (`cargar_depth_charts_actual`) se predijo la semana 4 de 2026, todavía sin jugarse — ranking
+  encabezado por WR1 reconocibles, con su frescura de datos documentada.
+- **Los 3 modelos ganadores quedan guardados** en `weekly/wr/models/` (`{target}_xgboost.json` +
+  `{target}_metadata.json` con features, hiperparámetros, métricas y limitaciones conocidas) —
+  entrenados con toda la historia 2016-2025, verificados con una recarga desde disco que reproduce
+  predicciones idénticas.
+- **Pospuesto a propósito, no en silencio**: Model Cards formales, `tracking.csv` y regresión de
+  cuantiles quedan para Fase 6/7 — esta ronda fue "primeras pruebas", no la infraestructura
+  recurrente de producción.
+
+### Fase 5.1 — Mejoras de bajo costo post-cierre (cerrada 2026-09-30)
+
+3 notebooks nuevos (`21` a `23`), sin búsqueda de hiperparámetros ni entrenamientos pesados a
+propósito — igual de rigurosos, pero deliberadamente baratos de correr.
+
+- **`21_unificacion_depth_chart.ipynb`**: resuelve la limitación de `depth_team` 100% nulo en
+  2025+ (ver `HALLAZGOS.md`, cerrado). `data.cargar_depth_charts_unificado()` mapea cada scrape
+  del esquema nuevo a su próximo partido real (`pd.merge_asof`, verificado con Marvin Harrison
+  Jr. y Ja'Marr Chase). Cobertura 0% → ~97% en 2025. Impacto real, medido con los mismos
+  hiperparámetros ya elegidos (sin buscar nada nuevo): mejora modesta pero consistente de R² en
+  los 3 targets; MAE mejora en recepciones, neutro en yardas, ligeramente peor en touchdowns
+  (mismo patrón MAE-vs-R² ya conocido de ese target). Los 3 modelos base se reentrenaron con el
+  dato corregido y quedan guardados como la nueva referencia.
+- **`22_regresion_cuantiles.ipynb`**: agrega P10/P50/P90 a los 3 targets
+  (`HistGradientBoostingRegressor(loss="quantile")`, preferido sobre el objetivo nativo de
+  cuantiles de XGBoost con evidencia real — mejor pinball loss, 0% de cuantiles cruzados vs ~4%,
+  mejor cobertura empírica). `receptions`/`receiving_yards` logran cobertura ~80-82% como se
+  espera; en `receiving_tds` (82% de semanas en cero) P10/P50 salen en 0 siempre — el rango solo
+  aporta señal en P90 para ese target. Hallazgo adicional: el cuantil 0.5 (que optimiza MAE
+  directo) le gana en MAE a los 3 modelos guardados pero empeora R² en los 3 — confirma que la
+  tensión MAE-vs-R² no es exclusiva de touchdowns.
+- **`23_ensamble_simple.ipynb`**: promediar los 3 modelos de árbol (XGBoost/RandomForest/
+  HistGradientBoosting) no ayuda — están demasiado correlacionados entre sí (0.97-0.99) para que
+  un ensamble reduzca error. Agregar Ridge (el único realmente diverso, ~0.93-0.95 de
+  correlación) sí mejora MAE (~0.8-1.5%) y R² en recepciones/yardas. Para touchdowns, mezclar el
+  XGBoost Tweedie con el modelo hurdle (correlación 0.62, mucho más diversos) sí tiene sentido:
+  da un trade-off MAE-vs-R² ajustable con un solo parámetro, en vez de 2 extremos fijos — una
+  opción concreta, nueva, para la decisión pendiente sobre ese target.
+- **Todos los artefactos nuevos** (modelos de cuantil, componentes del ensamble) quedan en
+  `weekly/wr/models/` junto a los 3 modelos base — ninguno fue reemplazado, son una capa
+  adicional.

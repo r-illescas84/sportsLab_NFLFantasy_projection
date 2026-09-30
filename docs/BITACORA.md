@@ -164,3 +164,51 @@ Feature engineering informado por Fase 3: 2 notebooks nuevos (`10_ingenieria_fea
 **Pendiente:** Fase 5 — modelado comparado (Baseline/Ridge/RandomForest/XGBoost, split temporal,
 Model Card por target), incluyendo decidir ahí si entrenar con todas las semanas o solo las
 activas (función de pérdida, no de features).
+
+## 2026-09-30 — Fase 5 completa
+
+Modelado comparado, con 8 preguntas explícitas cubiertas (detalle completo en `docs/PLAN.md`): 8
+notebooks nuevos (`12` a `19`) y `weekly/wr/src/modeling.py` nuevo.
+
+- XGBoost gana en los 3 targets (con objetivo `reg:tweedie` en `receiving_tds`, probado contra
+  Poisson/Tweedie/HGB-Poisson/hurdle — sí se ejecutaron, no solo se mencionaron).
+- Resuelto con evidencia: entrenar con todas las semanas gana sobre filtrar activas, en los 3
+  targets — cierra la decisión pospuesta de Fase 4.
+- Estabilidad confirmada 2 veces: walk-forward 2021-2025 (CV 4.5%-4.7%) y validación contra 2026
+  real, en el mismo rango, sin degradarse.
+- Benchmark real contra el legado: mejora de MAE 4.5%/7.2%/17.2% (recepciones/yardas/TDs) sobre
+  las mismas predicciones reales de 2025 que el legado ya guardó, comparadas contra el resultado
+  real de esas semanas.
+- Bug real encontrado en el camino: los CSVs de predicciones 2025 del legado tienen filas
+  duplicadas por jugador-semana (hasta 7.6x) — ver `HALLAZGOS.md`.
+- Predicción real generada para la semana 4 de 2026 (todavía sin jugarse), con ranking de WR1
+  reconocibles y frescura de datos documentada.
+- Hallazgo honesto repetido 3 veces: el modelo subestima sistemáticamente las semanas boom —
+  mismo patrón que ya documentó Daniel en `preeliminar/03_modelo_predictivo`.
+
+**Pendiente:** Fase 6 (estabilidad/ciclo de vida: `tracking.csv`, checklist de calidad recurrente)
+y Fase 7 (documentar el patrón para Ricky) — a definir cuándo arrancar.
+
+---
+
+## 2026-09-30 — Fase 5.1 completa (mejoras de bajo costo)
+
+3 notebooks nuevos (`21` a `23`), sin búsqueda de hiperparámetros ni entrenamientos pesados a
+propósito.
+
+- Unificado el esquema de depth chart 2024 vs. 2025+ (`data.cargar_depth_charts_unificado()`) —
+  cobertura de `depth_team` en 2025 sube de 0% a ~97%. Cierra el hallazgo correspondiente en
+  `HALLAZGOS.md`. Los 3 modelos base se reentrenaron con el dato corregido y quedan guardados
+  como la nueva referencia.
+- Agregada regresión de cuantiles (P10/P50/P90) a los 3 targets — cierra el punto que quedó
+  pospuesto al cierre de Fase 5.
+- Evaluado un ensamble simple: promediar solo los 3 modelos de árbol no ayuda (demasiado
+  correlacionados); agregar Ridge sí mejora MAE/R² en recepciones/yardas. Para touchdowns,
+  mezclar Tweedie con el modelo hurdle da un trade-off MAE-vs-R² ajustable — opción nueva para la
+  decisión pendiente sobre ese target.
+- Todos los artefactos nuevos quedan en `weekly/wr/models/` junto a los 3 modelos base, sin
+  reemplazar ninguno.
+
+**Pendiente:** decidir qué hacer con `receiving_tds` (R² sigue negativo en el modelo puntual;
+la mezcla con hurdle del notebook 23 es una opción, no una decisión tomada). Fase 6/7 sin
+arrancar.

@@ -5,12 +5,12 @@ Cada funcion consulta la fuente directamente -- no se guardan copias propias
 en CSV. El cache en disco de nflreadpy (NFLREADPY_CACHE_DIR, configurado en
 docker-compose.yml) es lo que evita volver a descargar lo mismo.
 
-depth_charts se maneja con 2 funciones separadas, no 1 unificada: nflreadpy
-regresa un esquema distinto para temporadas <=2024 que para 2025 en
-adelante, sin columna de temporada/semana compartida (ver docs/HALLAZGOS.md).
-Unificarlas de verdad requeriria mapear la fecha de cada snapshot (`dt`) a un
-numero de semana historico -- no se construye esa pieza hasta que la Fase 4
-decida, con evidencia, si depth chart es una feature que vale la pena.
+depth_charts: nflreadpy regresa un esquema distinto para temporadas <=2024
+que para 2025 en adelante, sin columna de temporada/semana compartida (ver
+docs/HALLAZGOS.md). cargar_depth_charts_historico()/cargar_depth_charts_actual()
+son las 2 piezas de bajo nivel, una por esquema; cargar_depth_charts_unificado()
+las combina en un solo DataFrame (season/week/team/player_id/depth_team) que
+cubre 2016 en adelante -- es la que usa features.construir_tabla_modelado().
 """
 import pandas as pd
 import nflreadpy as nfl
@@ -133,6 +133,92 @@ def cargar_depth_charts_actual(seasons, posicion="WR"):
     df = d.to_pandas()
     df["dt"] = pd.to_datetime(df["dt"])
     return df[["dt", "team", "gsis_id", "player_name", "pos_rank"]]
+
+
+def cargar_depth_charts_unificado(seasons, calendario=None, posicion="WR"):
+    """Une cargar_depth_charts_historico() (<=2024) y el esquema nuevo de
+    nflreadpy (2025 en adelante, incluida la temporada en curso) en un solo
+    DataFrame (season, week, team, player_id, depth_team) -- resuelve la
+    limitacion documentada desde Fase 2/4 (depth_team 100% nulo en 2025+,
+    ver HALLAZGOS.md).
+
+    El esquema nuevo no trae season/week, solo `dt` (fecha/hora del scrape).
+    Se infiere la semana con la misma logica real que usa un depth chart:
+    un scrape describe la alineacion que el equipo esta preparando para su
+    PROXIMO partido, no el que ya jugo -- se asigna cada `dt` al primer
+    partido de ese equipo en o despues de esa fecha (pd.merge_asof,
+    direction="forward", sobre el calendario real, que ya incluye partidos
+    programados aun no jugados -- por eso esto tambien sirve para la
+    alineacion "de hoy" al predecir la proxima semana no jugada, ver
+    notebooks/18_validacion_temporada_actual.ipynb). De todos los `dt` que
+    caen en la misma ventana (equipo-semana) se usa solo el mas reciente --
+    el mas cercano al partido es el mas confiable/final. `pos_rank` (2025+,
+    ranking limpio sin empates dentro del equipo, a diferencia de
+    depth_team en el esquema viejo) hace el mismo papel que `depth_team`.
+
+    Verificado con casos reales (notebooks/21_unificacion_depth_chart.ipynb):
+    Marvin Harrison Jr. (ARI) y Ja'Marr Chase (CIN) salen como WR1 la
+    inmensa mayoria de semanas de 2025, igual que se sabe que jugaron en la
+    realidad; cobertura sobre filas WR reales de 2025 sube de 0% a ~97%; sin
+    filas duplicadas jugador-equipo-semana.
+
+    `calendario`: se puede pasar ya cargado (cargar_calendario) para no
+    repetir la consulta si quien llama ya lo tiene -- se carga aqui solo si
+    hace falta."""
+    seasons = list(seasons)
+    viejas = [s for s in seasons if s <= 2024]
+    nuevas = [s for s in seasons if s >= 2025]
+    partes = []
+
+    if viejas:
+        hist = cargar_depth_charts_historico(viejas, posicion=posicion)
+        hist = hist.rename(columns={"club_code": "team", "gsis_id": "player_id"})
+        partes.append(hist[["season", "week", "team", "player_id", "depth_team"]])
+
+    if nuevas:
+        if calendario is None:
+            calendario = cargar_calendario(nuevas)
+        else:
+            calendario = calendario[calendario["season"].isin(nuevas)]
+        d = nfl.load_depth_charts(nuevas)
+        d = d.filter(d["pos_abb"] == posicion)
+        df = d.to_pandas()
+        df["dt"] = pd.to_datetime(df["dt"]).dt.tz_localize(None)
+
+        cal_home = calendario[["season", "week", "gameday", "home_team"]].rename(
+            columns={"home_team": "team"}
+        )
+        cal_away = calendario[["season", "week", "gameday", "away_team"]].rename(
+            columns={"away_team": "team"}
+        )
+        partidos = pd.concat([cal_home, cal_away], ignore_index=True)
+
+        asignado = []
+        for team, grupo in df.groupby("team"):
+            partidos_team = partidos[partidos["team"] == team].sort_values("gameday")
+            if partidos_team.empty:
+                continue
+            asignado.append(
+                pd.merge_asof(
+                    grupo.sort_values("dt"),
+                    partidos_team[["gameday", "season", "week"]],
+                    left_on="dt",
+                    right_on="gameday",
+                    direction="forward",
+                )
+            )
+        df = pd.concat(asignado, ignore_index=True)
+        # dt posteriores al ultimo partido de la temporada (post-temporada,
+        # offseason) no tienen un "proximo partido" -- se descartan, no
+        # corresponden a ninguna semana real.
+        df = df.dropna(subset=["season", "week"])
+
+        ultimo_dt = df.groupby(["season", "week", "team"])["dt"].transform("max")
+        df = df[df["dt"] == ultimo_dt]
+        df = df.rename(columns={"gsis_id": "player_id", "pos_rank": "depth_team"})
+        partes.append(df[["season", "week", "team", "player_id", "depth_team"]])
+
+    return pd.concat(partes, ignore_index=True)
 
 
 def identificar_qb_titular(stats, id_cols=("season", "week", "team")):
