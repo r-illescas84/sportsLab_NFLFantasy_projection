@@ -146,5 +146,21 @@ EDA de WR, 6 notebooks en `weekly/wr/notebooks/` (`04` a `09`). Detalle completo
 
 Todo el bloque se sube junto, mismo criterio que la Fase 2.
 
-**Pendiente:** Fase 4 — feature engineering informado (ventana `last3`/`last5` con evidencia de
-modelo, feature de ofensiva de equipo, qué hacer con `racr` y con las semanas sin target).
+## 2026-09-30 — Fase 4 completa
+
+Feature engineering informado por Fase 3: 2 notebooks nuevos (`10_ingenieria_features.ipynb`,
+`11_seleccion_features.ipynb`), 10 funciones nuevas en `features.py` + `identificar_qb_titular` en
+`data.py`. Detalle completo del registro en `docs/PLAN.md`.
+
+- Resuelto con evidencia de modelo (no solo correlación): `last5` gana en los 3 targets,
+  `season_avg` complementa, `career_avg` resulta redundante en conjunto pese a buena correlación
+  aislada en Fase 3.
+- `depth_team` (nunca antes evaluado) aporta señal fuerte — cierra ese hueco de Fase 3.
+- Volatilidad reciente y 3 interacciones propuestas, probadas de buena fe: sin evidencia de
+  aportar, no incluidas. `rest`/`div_game` y cambio de QB/equipo: mismo resultado.
+- Bug real encontrado y corregido: `cargar_depth_charts_historico()` podía duplicar filas
+  jugador-semana con `depth_team` distinto (357 de 27,928 casos) — ver `HALLAZGOS.md`.
+
+**Pendiente:** Fase 5 — modelado comparado (Baseline/Ridge/RandomForest/XGBoost, split temporal,
+Model Card por target), incluyendo decidir ahí si entrenar con todas las semanas o solo las
+activas (función de pérdida, no de features).

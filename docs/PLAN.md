@@ -22,7 +22,7 @@ sin depender de correr notebooks a mano uno por uno.
 | 1. Reorganización | Mover `annual/` (en pausa) y `weekly/wr/`; aislar el pipeline heredado como referencia congelada | Estructura de carpetas, 2 hallazgos de duplicidad cerrados | ✅ Cerrada 2026-09-28 |
 | 2. Construcción de datos | Migrar a `nflreadpy` (mapeo verificado, consulta directa, cache nativo de la librería); un módulo de datos + uno de features en `.py`, sin triplicar; auditoría de calidad por fuente con criterio de acción | `weekly/wr/src/data.py`, `features.py`, sección nueva en el Datasheet + notebook de verificación | ✅ Cerrada 2026-09-29 |
 | 3. EDA de WR | Explicar cada target con ejemplo real; distribución de los 3 targets; EDA general, por equipo, de un jugador destacado, multivariable sistemático, y perfil de forma de cada variable | 6 notebooks de EDA | ✅ Cerrada 2026-09-30 |
-| 4. Feature engineering informado | Auditar qué ya está disponible y sin usar (EPA, `air_yards`, `wopr`); no forzar Vegas/clima | Lista de features con su justificación, en `features.py` | Pendiente |
+| 4. Feature engineering informado | Construir variables nuevas, evaluarlas todas (viejas y nuevas) en conjunto contra un modelo, seleccionar con evidencia | Lista de features con su justificación, en `features.py` | ✅ Cerrada 2026-09-30 |
 | 5. Modelado comparado | Patrón de `03_modelo_predictivo` (Baseline/Ridge/RandomForest/XGBoost, split temporal) + cuantiles | `modeling.py` parametrizado por `target` + Model Card por target | Pendiente |
 | 6. Estabilidad / ciclo de vida | `tracking.csv` por corrida; chequeo recurrente de las 6 dimensiones de calidad | Historial de métricas, visible si el modelo se degrada | Pendiente |
 | 7. Documentar el patrón | Forma del pipeline en términos genéricos, para cuando llegue el notebook de Ricky | Guía corta de replicación en `weekly/README.md` | Pendiente |
@@ -112,7 +112,39 @@ multivariado → síntesis:
 - Todos los notebooks tienen referencias cruzadas "anterior/siguiente" consistentes con el orden
   final — no se dejaron hallazgos aislados sin reconciliar entre sí.
 
-**Pendiente:** Fase 4 — feature engineering informado por todo lo anterior: decidir `last3` vs
-`last5` con evidencia de modelo (no solo correlación individual), construir el feature de
-ofensiva de equipo (evidencia real de que aporta), y resolver qué hacer con `racr` (excluir o
-acotar) y con las filas sin ningún target (entrenar solo con semanas activas o con todas).
+### Fase 4 — Feature engineering informado (cerrada 2026-09-30)
+
+2 notebooks nuevos en `weekly/wr/notebooks/`: `10_ingenieria_features.ipynb` (construcción de
+variables nuevas + verificación fila por fila de que ninguna tiene fuga) y
+`11_seleccion_features.ipynb` (evaluación conjunta de todas las variables — viejas y nuevas —
+contra un modelo simple, no solo correlación aislada, sobre 2016-2025 con split temporal
+train 2016-2023/val 2024-2025).
+
+- **Variables nuevas construidas** en `weekly/wr/src/features.py` (10 funciones) y `data.py`
+  (`identificar_qb_titular`): ratios de eficiencia (`yards_per_target`, `catch_rate`,
+  `air_yards_per_target`), `racr` acotado (winsorizado), volatilidad reciente, edad/años de
+  experiencia con transformación no lineal, `draft_pick` (imputado para no drafteados), ofensiva
+  de equipo, cambio de QB titular/de equipo, e interacciones.
+- **`last3` vs. `last5` resuelto con evidencia de modelo, no solo correlación** (lo que
+  `08_eda_multivariable.ipynb` dejó abierto a propósito): `last5` gana con claridad en los 3
+  targets; `season_avg` es un complemento real; `career_avg` resulta el más débil una vez
+  evaluado en conjunto, pese a su buena correlación aislada en Fase 3 — la misma lección de la
+  edad en Fase 3, en dirección contraria.
+- **`depth_team` (nunca antes evaluado) cierra ese hueco**: señal fuerte en recepciones/yardas,
+  segundo lugar general en yardas — entra al feature set, con su límite de cobertura ya conocido
+  (0% en 2025+ hasta unificar esquemas de depth chart).
+- **Hallazgo honesto**: volatilidad reciente y las 3 interacciones propuestas (uso × ofensiva de
+  equipo, draft × experiencia, cambio de QB × uso) no mostraron evidencia de aportar — probadas
+  de buena fe, documentadas como intento sin confirmar, no incluidas.
+- **`rest`/`div_game`** (calculados en Fase 3 pero nunca interpretados) y **cambio de QB
+  titular/equipo** (aporte marginal casi nulo una vez presentes las features de uso reciente) no
+  entran al feature set principal — matiza, no invalida, el hallazgo bivariado de Fase 3 sobre
+  cambios de QB.
+- Bug real encontrado al construir el cruce de depth chart: `cargar_depth_charts_historico()`
+  podía regresar 2 filas para el mismo jugador-semana con `depth_team` distinto (357 de 27,928
+  casos) — corregido en `data.py`, documentado en `HALLAZGOS.md`.
+- Tabla completa `feature → decisión → evidencia` en el docstring de módulo de
+  `weekly/wr/src/features.py` (entregable de esta fase).
+- **Pospuesto a Fase 5, a propósito**: si entrenar con todas las semanas o solo con las activas
+  (`targets > 0`) es una decisión de función de pérdida (Poisson/Tweedie), no de qué columnas
+  usar — no se resuelve aquí.

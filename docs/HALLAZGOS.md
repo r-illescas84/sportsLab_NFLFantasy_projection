@@ -215,3 +215,14 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
 
   Las dos funciones ya corregidas: `cargar_depth_charts_historico()` y
   `cargar_depth_charts_actual()` en `weekly/wr/src/data.py`.
+
+- [ ] 🔴 **`cargar_depth_charts_historico()` podía regresar 2 filas para el mismo jugador en la
+  misma semana, con `depth_team` distinto.** Confirmado en 357 de 27,928 combinaciones
+  jugador-equipo-semana (1.3%) sobre 2016-2024 — ejemplo real: Braxton Miller, HOU, 2016 semana 1,
+  aparece con `depth_team=2` y `depth_team=3` a la vez. El filtro ya existente
+  (`formation=="Offense"` + `depth_position==<posición>` + `game_type=="REG"` + `week<=18`) no
+  garantiza una sola fila por jugador-semana — el jugador queda listado más de una vez dentro de
+  la misma formación/posición. Se descubrió al usar la función como insumo de un modelo en Fase 4:
+  cualquier cruce por `(season, week, team, gsis_id)` duplicaba esas filas en silencio. Fix:
+  `cargar_depth_charts_historico()` ahora se queda con el mejor rango (`depth_team` mínimo) por
+  jugador-semana antes de regresar el resultado.

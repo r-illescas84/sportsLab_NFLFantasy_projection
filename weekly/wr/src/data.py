@@ -89,7 +89,16 @@ def cargar_depth_charts_historico(seasons, posicion="WR"):
     etiquetada como REG incluso en equipos que no llegaron a playoffs (ej.
     Atlanta 2024, que termino 8-9), que no puede ser un partido real. Parece
     un snapshot extra de fin de temporada mal etiquetado. Se acota explicito
-    a semana <= 18 (el maximo real de temporada regular desde 2021)."""
+    a semana <= 18 (el maximo real de temporada regular desde 2021).
+
+    Un jugador puede quedar listado 2 veces en la misma semana dentro de la
+    MISMA formacion/posicion, con depth_team distinto (confirmado: 357 de
+    27,928 combinaciones jugador-equipo-semana en 2016-2024, ej. Braxton
+    Miller, HOU, 2016 semana 1, depth_team=2 y 3 a la vez -- ver
+    docs/HALLAZGOS.md). Se resuelve quedandose con el mejor rango
+    (depth_team minimo) por jugador-semana antes de regresar el resultado,
+    para que cualquier merge por (season, week, team, gsis_id) no duplique
+    filas en silencio."""
     d = nfl.load_depth_charts(seasons)
     d = d.filter(
         (d["formation"] == "Offense")
@@ -100,6 +109,9 @@ def cargar_depth_charts_historico(seasons, posicion="WR"):
     df = d.to_pandas()
     df["week"] = df["week"].astype(int)
     df["depth_team"] = df["depth_team"].astype(int)
+    df = df.sort_values("depth_team").drop_duplicates(
+        subset=["season", "week", "club_code", "gsis_id"], keep="first"
+    )
     return df[["season", "week", "club_code", "gsis_id", "full_name", "depth_team"]]
 
 
@@ -121,3 +133,32 @@ def cargar_depth_charts_actual(seasons, posicion="WR"):
     df = d.to_pandas()
     df["dt"] = pd.to_datetime(df["dt"])
     return df[["dt", "team", "gsis_id", "player_name", "pos_rank"]]
+
+
+def identificar_qb_titular(stats, id_cols=("season", "week", "team")):
+    """QB titular de un equipo en una semana: el pasador con mas intentos de pase
+    esa semana, sobre cargar_stats_semanales() -- no hace falta cargar_jugadas(),
+    attempts/passing_epa ya vienen en el resumen semanal.
+
+    Empate de attempts: verificado sobre 2016-2025, ocurre en 7 de 5269
+    equipo-semana (0.13%) -- raro pero real, se desempata por passing_epa (mejor
+    desempeño esa semana), no por orden arbitrario de fila.
+
+    Limite conocido: funciona sobre partidos ya jugados (attempts real). Para la
+    semana en curso, sin jugarse, no hay attempts todavia -- se necesitaria el
+    titular esperado (depth chart/reporte de lesiones), mismo caso que ya separa
+    cargar_depth_charts_historico de cargar_depth_charts_actual."""
+    cols = list(id_cols)
+    qb = stats[(stats["position"] == "QB") & (stats["attempts"] > 0)][
+        cols + ["player_id", "player_display_name", "attempts", "passing_epa"]
+    ].copy()
+    qb = qb.sort_values(["attempts", "passing_epa"], ascending=False)
+    titular = qb.drop_duplicates(subset=cols)
+    titular = titular.rename(
+        columns={
+            "player_id": "qb_id",
+            "player_display_name": "qb_nombre",
+            "passing_epa": "qb_passing_epa",
+        }
+    )
+    return titular[cols + ["qb_id", "qb_nombre", "qb_passing_epa"]]
