@@ -251,3 +251,42 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   resolvió ahí con una regla explícita (promediar los duplicados por jugador-semana antes de
   calcular cualquier métrica), pero el defecto de origen sigue sin corregirse en el pipeline
   heredado — queda fuera de alcance de este proyecto, documentado aquí para quien lo retome.
+
+- [x] 🔴 **`XGBRegressor().load_model()` falla al recargar un modelo guardado, con las versiones
+  fijadas del proyecto** — `AttributeError: 'super' object has no attribute '__sklearn_tags__'`
+  (xgboost 2.1.3 con scikit-learn 1.6.1), encontrado al verificar la recarga de los modelos
+  guardados en `18_validacion_temporada_actual.ipynb`. Guardar con `save_model()` funciona; lo que
+  falla es recargar con el wrapper de sklearn. **Resuelto:** se recarga con `xgboost.Booster()` y
+  `DMatrix`, que es el camino que usa `modeling.cargar_modelos()`.
+
+- [x] 🔴 **`idata.to_netcdf()` de `arviz` guarda sin error pero falla al recargar** —
+  incompatibilidad real entre las versiones instaladas de `h5netcdf`/`xarray`
+  (`AttributeError: 'Variable' object has no attribute 'filters'`, confirmado en
+  `24_modelo_jerarquico_binomial_negativa.ipynb`). Mismo tipo de problema que el bug de
+  `XGBRegressor().load_model()` con el wrapper de sklearn ya documentado arriba — una
+  incompatibilidad entre librerías de terceros en versiones recientes, no un error del código del
+  proyecto. **Resuelto:** se usa `joblib` para guardar/recargar el objeto `idata` completo (mismo
+  criterio ya usado para los modelos de cuantil/ensamble) — verificado con una recarga real que
+  reproduce las mismas métricas de test.
+
+- [x] **`receiving_yards` tiene valores negativos reales — rompe una transformación `log1p`
+  directa.** 67 filas en el set de entrenamiento 2016-2021 (confirmado en
+  `26_jerarquico_receptions_yardas.ipynb`), ej. Eddie Royal, 2016 semana 12, 1 recepción con -6
+  yardas netas. No es un error de datos: son jugadas reales donde el receptor fue tackleado
+  detrás de la línea de golpeo (ej. un *screen pass* o motion en jet sweep que termina en
+  pérdida) — un jugador puede terminar el partido con yardas de recepción netas negativas.
+  `np.log1p()` no está definido para valores menores a -1 (varias de estas filas llegan hasta
+  -9), así que una transformación logarítmica directa sobre `receiving_yards` falla o produce
+  `NaN`/`-inf` en silencio si no se revisa antes. **Resuelto:** se usa una transformación
+  logarítmica con signo (`sign(x) * log1p(|x|)`), que maneja negativos correctamente y mapea
+  0 → 0 exacto.
+
+- [x] **`cargar_depth_charts_unificado()` asigna el scrape de la mañana de un partido al partido
+  siguiente — correr el flujo antes de que cierre la semana anterior da una alineación parcial.**
+  Un `dt` se asigna al primer partido con `gameday >= dt`, y `gameday` es medianoche: un scrape de
+  las 07:15 UTC del día del partido queda después y cae en el siguiente. Confirmado el 2026-10-01
+  (jueves de la semana 4): la semana 5 tenía alineación de solo 2 de 30 equipos (CLE y PIT, que
+  juegan ese jueves), y el flujo devolvía 12 WR sin avisar. Para la semana que sí está completa no
+  afecta: usa el último scrape anterior al partido. **Resuelto:** `pipeline.ejecutar_semana` compara
+  los equipos con alineación contra los del calendario y falla con un mensaje que dice cuáles
+  faltan.

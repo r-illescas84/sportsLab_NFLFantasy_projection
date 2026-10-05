@@ -212,3 +212,85 @@ propósito.
 **Pendiente:** decidir qué hacer con `receiving_tds` (R² sigue negativo en el modelo puntual;
 la mezcla con hurdle del notebook 23 es una opción, no una decisión tomada). Fase 6/7 sin
 arrancar.
+
+---
+
+## 2026-09-30 (continuación) — Exploración de modelos más explicativos
+
+Daniel pidió explorar alternativas "más explicativas, sin modelos de caja negra, que se ajusten
+mejor a los datos" — ninguno de los modelos probados hasta ahora explota que son los mismos
+jugadores repetidos temporada tras temporada (dato de panel). Empezamos con un modelo jerárquico
+(efectos mixtos) + Binomial Negativa para `receiving_tds`.
+
+- Nueva herramienta en el proyecto: `pymc`/`bambi`/`arviz`/`h5netcdf` (Python, Bayesiano) —
+  agregados a `docker/requirements.txt`, imagen reconstruida. Primera vez que `weekly/` usa algo
+  más allá de `pandas`/`scikit-learn`/`xgboost`.
+- `24_modelo_jerarquico_binomial_negativa.ipynb`: efecto aleatorio por jugador + Binomial
+  Negativa da el **mejor R² de todos los intentos** para `receiving_tds` (+0.073, supera al
+  hurdle) con MAE razonable. Totalmente interpretable sin SHAP (coeficientes con intervalos de
+  credibilidad, efecto individual legible por jugador — ej. Ja'Marr Chase ~+30% sobre un jugador
+  promedio con sus mismas features).
+- Bug real encontrado y corregido: un `dropna()` ingenuo hubiera perdido 20.8% de las filas de
+  entrenamiento (justo las primeras apariciones de temporada/carrera de cada jugador) — se
+  imputa en vez de descartar. Otro bug real: `idata.to_netcdf()` falla al recargar
+  (incompatibilidad `h5netcdf`/`xarray`) — resuelto con `joblib`, ver `HALLAZGOS.md`.
+- Hallazgo honesto, contrario a la hipótesis inicial: el shrinkage no ayuda más a jugadores ya
+  vistos en entrenamiento que a jugadores nuevos — de hecho los nuevos salen con mejor MAE.
+- Daniel también señaló que la ventana de evaluación (2016-2025 completo) puede ser demasiado
+  larga — jugadores/equipos cambian de forma de juego año con año. Anotado para retomar, no
+  resuelto todavía.
+
+**Pendiente (al momento de escribir esto):** extender el mismo enfoque jerárquico a
+`receptions`/`receiving_yards`; revisar la ventana de entrenamiento/evaluación con el criterio de
+Daniel — ver cierre abajo, ambos puntos ya resueltos con evidencia (aunque negativa en los 2
+casos).
+
+---
+
+## 2026-09-30 (cierre) — Ventana de evaluación revisada, jerárquico extendido a los 3 targets
+
+`25_revision_ventana_evaluacion.ipynb` y `26_jerarquico_receptions_yardas.ipynb` cierran los 2
+pendientes de la entrada anterior — ambos con resultado negativo, documentado tal cual, no
+forzado.
+
+- **Ventana de evaluación**: se confirma con evidencia real que el nivel de un jugador decae
+  gradualmente con los años (correlación de `target_share` cae de 0.80 a 1 año a 0.58 a 5 años;
+  `receiving_yards`/`receptions` de ~0.72 a ~0.50). Pero ninguna de las 2 correcciones probadas
+  mejora el modelo: una pendiente temporal por jugador empeora MAE y R² (y la convergencia);
+  acortar la ventana de entrenamiento (2019-2021 vs. 2016-2021) da MAE igual pero peor R². Lectura
+  más probable: las 30 variables rezagadas que ya alimentan al modelo absorben la mayor parte de
+  "qué tan vigente está" un jugador — el diseño actual se mantiene sin cambios.
+- **Jerárquico en `receptions`/`receiving_yards`**: en ambos, el modelo jerárquico queda **por
+  debajo** del XGBoost ya guardado (recepciones: MAE 1.48 vs. 1.35, R² 0.36 vs. 0.45; yardas: MAE
+  21.3 vs. 20.4, R² 0.14 vs. 0.37). La mejora en `receiving_tds` no era "jerárquico es mejor en
+  general" — era corregir una discrepancia real de distribución (Tweedie mal especificado para un
+  conteo con 82% de ceros). Donde XGBoost ya se ajustaba bien, la estructura más rígida de un
+  modelo lineal pierde contra un árbol.
+- Bug real encontrado en el camino: 67 filas de `receiving_yards` son negativas (jugadas
+  tackleadas detrás de la línea) — rompe un `log1p` directo. Se usa una transformación
+  logarítmica con signo en su lugar.
+
+**Recomendación con evidencia**: adoptar el jerárquico solo para `receiving_tds`; mantener
+XGBoost sin cambios para los otros 2 targets. Sigue pendiente decidir si el jerárquico reemplaza
+o complementa al Tweedie/hurdle para `receiving_tds` — no se tomó esa decisión todavía.
+
+---
+
+## 2026-10-01 — Fase 5.3 completa (arquitectura semanal)
+
+Daniel corrigió el diseño de `modeling.py`: debía ser el paso del flujo semanal que aplica los
+modelos ya evaluados y trae métricas, no la caja de herramientas de comparación.
+
+- Reestructura de `weekly/wr/src/`: lo que corre cada semana (`data`, `features`, `modeling`,
+  `pipeline`) separado de lo exploratorio (`experimentos`, `features_exploratorio`). Detalle y
+  verificación en `docs/PLAN.md` (Fase 5.3).
+- `pipeline.py` corrido sobre datos reales: semana 3 de 2026 (jugada, fuera de muestra) con
+  métricas por debajo de las de referencia en recepciones y yardas, y semana 4 (pendiente) con 198
+  WR predichos.
+- Decidido por Daniel: los modelos de cuantil y el jerárquico quedan fuera del flujo semanal.
+- Corregida una referencia colgada en `HALLAZGOS.md` (el bug de recarga de XGBoost no estaba
+  documentado). Hallazgo nuevo: el scrape de la mañana del partido se asigna a la semana siguiente
+  y el flujo ahora lo detecta.
+
+**Pendiente:** republicar la página de arquitectura; Fase 6 (`tracking.csv`) y Fase 7 sin arrancar;
+sigue abierta la decisión de touchdowns (Tweedie vs. jerárquico).

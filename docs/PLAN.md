@@ -24,9 +24,12 @@ sin depender de correr notebooks a mano uno por uno.
 | 3. EDA de WR | Explicar cada target con ejemplo real; distribución de los 3 targets; EDA general, por equipo, de un jugador destacado, multivariable sistemático, y perfil de forma de cada variable | 6 notebooks de EDA | ✅ Cerrada 2026-09-30 |
 | 4. Feature engineering informado | Construir variables nuevas, evaluarlas todas (viejas y nuevas) en conjunto contra un modelo, seleccionar con evidencia | Lista de features con su justificación, en `features.py` | ✅ Cerrada 2026-09-30 |
 | 5. Modelado comparado | Patrón de `03_modelo_predictivo` (Baseline/Ridge/RandomForest/XGBoost/HistGradientBoosting, split temporal), técnicas de conteo para touchdowns, estabilidad, SHAP, benchmark contra el legado, validación con 2026 | `modeling.py` + 8 notebooks (`12`-`19`) | ✅ Cerrada 2026-09-30 |
+| 5.1 Mejoras de bajo costo | Unificar esquema de depth chart 2024/2025+, regresión de cuantiles P10/P50/P90, ensamble simple — sin búsqueda de hiperparámetros a propósito | 3 notebooks (`21`-`23`) | ✅ Cerrada 2026-09-30 |
+| 5.2 Modelos más explicativos | Modelo jerárquico (efectos mixtos) + Binomial Negativa en los 3 targets; revisión de la ventana de entrenamiento/evaluación | `pymc`/`bambi` nuevo en el proyecto + 3 notebooks (`24`-`26`) | ✅ Cerrada 2026-09-30 |
+| 5.3 Arquitectura semanal | Separar lo que corre cada semana (`data`, `features`, `modeling`, `pipeline`) de lo exploratorio (`experimentos`, `features_exploratorio`, notebooks); un orquestador que aplica los modelos ya guardados y trae métricas | `pipeline.py`, `modeling.py` reescrito, `experimentos.py`, `features_exploratorio.py` | ✅ Cerrada 2026-10-01 |
 | 6. Estabilidad / ciclo de vida | `tracking.csv` por corrida; chequeo recurrente de las 6 dimensiones de calidad | Historial de métricas, visible si el modelo se degrada | Pendiente |
 | 7. Documentar el patrón | Forma del pipeline en términos genéricos, para cuando llegue el notebook de Ricky | Guía corta de replicación en `weekly/README.md` | Pendiente |
-| **Entregable final** | — | Predicción semanal real: punto + piso/techo, modelo ganador, frescura de datos | — |
+| **Entregable final** | — | Predicción semanal real por WR (recepciones, yardas, touchdowns), con las métricas de la semana cuando ya se jugó. El rango P10/P50/P90 se exploró (nb 22) y queda fuera del flujo semanal | — |
 
 ---
 
@@ -226,3 +229,80 @@ propósito — igual de rigurosos, pero deliberadamente baratos de correr.
 - **Todos los artefactos nuevos** (modelos de cuantil, componentes del ensamble) quedan en
   `weekly/wr/models/` junto a los 3 modelos base — ninguno fue reemplazado, son una capa
   adicional.
+
+### Fase 5.2 — Modelos más explicativos: jerárquico + Binomial Negativa (cerrada 2026-09-30)
+
+Pedido explícito de Daniel: "algo más explicativo sin modelos [de caja negra], que se ajuste
+mejor a los datos" -- ninguno de los modelos de Fase 5/5.1 explota que son los mismos jugadores
+repetidos temporada tras temporada (dato de panel). 3 notebooks nuevos (`24`-`26`). Primera
+herramienta Bayesiana del proyecto: `pymc`/`bambi`/`arviz`/`h5netcdf`, agregados a
+`docker/requirements.txt`.
+
+- **`24_modelo_jerarquico_binomial_negativa.ipynb`**: efecto aleatorio por jugador (`1|player_id`)
+  + verosimilitud Binomial Negativa (mejor especificada que `reg:tweedie` para un conteo de 82%
+  ceros) para `receiving_tds` -- **mejor R² de todos los intentos de este proyecto para ese
+  target** (+0.073, supera al hurdle de Fase 5.1; MAE=0.300, peor que Tweedie puro pero mejor que
+  hurdle puro). Totalmente interpretable sin SHAP: coeficientes con intervalos de credibilidad
+  (`depth_team` significativo, `wopr_last3_avg` no) y efecto individual legible por jugador
+  (Ja'Marr Chase: ~+30% sobre un jugador promedio con sus mismas features). Bug real corregido:
+  un `dropna()` ingenuo hubiera perdido 20.8% de filas de entrenamiento (las primeras apariciones
+  de temporada/carrera de cada jugador) -- se imputa en vez de descartar. Otro bug real: el
+  formato nativo de `arviz` (netCDF) falla al recargar -- resuelto con `joblib` (ver
+  `HALLAZGOS.md`). Convergencia verificada sobre los 540 parámetros del modelo, no solo los
+  efectos fijos.
+- **`25_revision_ventana_evaluacion.ipynb`**: responde la preocupación de Daniel sobre si la
+  ventana 2016-2025 es demasiado larga. Confirmado con evidencia real: la correlación del nivel
+  de un jugador consigo mismo decae gradualmente con los años (0.80 a 1 año → 0.58 a 5 años en
+  `target_share`). Pero ninguna corrección directa mejora el modelo: una pendiente temporal por
+  jugador empeora MAE y R² (y la convergencia); acortar la ventana (2019-2021 vs. 2016-2021) da
+  MAE igual pero peor R². El diseño actual (ventana 2016-2021, intercepto fijo) se mantiene --
+  las 30 variables rezagadas ya absorben la mayor parte de la vigencia de cada jugador.
+- **`26_jerarquico_receptions_yardas.ipynb`**: el mismo enfoque **no se repite** en los otros 2
+  targets -- Binomial Negativa para `receptions` (MAE 1.478 vs. 1.354 de XGBoost, R² 0.360 vs.
+  0.456 -- peor) y Gaussiana sobre yardas con transformación logarítmica con signo para
+  `receiving_yards` (MAE 21.34 vs. 20.65, R² 0.144 vs. 0.366 -- peor). La mejora en
+  `receiving_tds` no era "jerárquico es mejor en general" -- era corregir una discrepancia real
+  de distribución; donde XGBoost ya se ajustaba bien, pierde contra la flexibilidad de un árbol.
+  Bug real encontrado: 67 filas de `receiving_yards` son negativas (jugadas tackleadas detrás de
+  la línea de golpeo) -- rompía `log1p` directo, resuelto con `sign(x) * log1p(|x|)`.
+- **Recomendación con evidencia, decisión pendiente**: adoptar el jerárquico solo para
+  `receiving_tds`; mantener XGBoost sin cambios en `receptions`/`receiving_yards`. Falta decidir
+  si el jerárquico reemplaza o complementa al Tweedie/hurdle para touchdowns.
+
+### Fase 5.3 — Arquitectura semanal (cerrada 2026-10-01)
+
+Criterio de Daniel: los módulos de `weekly/wr/src/` son lo que se ejecuta cada semana y deben ser
+ligeros; el train/test, la validación y la comparación de modelos viven en los notebooks. El
+`modeling.py` de la Fase 5 no cumplía eso: era la caja de herramientas de comparación con nombre de
+paso del pipeline, sin forma de cargar y aplicar los modelos guardados.
+
+- **Flujo semanal** (`pipeline.py`, `python weekly/wr/src/pipeline.py --season 2026 --week 4`):
+  `data.py` carga las tablas, `features.py` arma las variables (y las filas de la semana si aún no
+  se juega), `modeling.py` carga los archivos de modelo de `weekly/wr/models/` y predice, y si la
+  semana ya se jugó compara contra lo real. Salida en `weekly/wr/outputs/{season}/`: predicciones
+  y, cuando hay resultados, métricas con el MAE de referencia del modelo al lado.
+- **`modeling.py`** (ligero): `cargar_modelos`, `predecir`, `metricas`, `evaluar_predicciones`. Carga
+  con `xgboost.Booster` porque el wrapper `XGBRegressor` falla al recargar (ver `HALLAZGOS.md`).
+- **Exploratorio, solo desde notebooks**: `experimentos.py` (split temporal, walk-forward,
+  comparación de modelos, búsqueda de hiperparámetros, modelo de 2 etapas y `guardar_modelo`, que
+  deja el archivo en el formato que lee `modeling.py`) y `features_exploratorio.py` (volatilidad,
+  interacciones, cambio de QB, ofensiva de equipo y topes: construidas en la Fase 4, no entraron al
+  modelo). 10 notebooks ajustados solo en imports y prefijos, sin re-ejecutarse.
+- **Fuera del flujo semanal, a propósito**: los modelos de cuantil (nb 22), el ensamble (nb 23) y el
+  jerárquico (nb 24, requeriría cargar `bambi`). Los archivos siguen en `weekly/wr/models/` como
+  resultado de la exploración.
+- **Verificado**: la tabla de variables delgada (220 columnas, antes 269) es idéntica a la anterior
+  en las 44 columnas que usan los modelos; el ciclo guardar → cargar da diferencia 0 con los dos
+  tipos de objetivo; todas las funciones movidas se ejercitaron y dan los mismos números de antes
+  (modelo de 2 etapas MAE 0.3074, baseline 1.4189); los notebooks 10, 12 y 13 ejecutan sin errores
+  sobre una copia.
+- **Corrida real**: semana 3 de 2026 (ya jugada, fuera de muestra porque los modelos llegan a 2025),
+  154 WR: MAE 1.30 recepciones, 19.28 yardas, 0.248 touchdowns contra 1.36, 20.65 y 0.249 de
+  referencia; R² 0.50, 0.41 y -0.09. Semana 4 (pendiente): 198 WR de 32 equipos. La semana 5 se
+  rechaza con un error claro: solo 2 de 30 equipos tienen alineación porque el scrape de la mañana
+  del partido del jueves cuenta como "el siguiente partido" (ver `HALLAZGOS.md`).
+- **Límites conocidos**: un WR sin ningún partido en las últimas 2 temporadas no se predice (ej. un
+  novato en su primera semana); el flujo no reentrena, aplica los modelos guardados; las métricas de
+  semanas de 2025 o anteriores son dentro de muestra (el flujo imprime con qué datos se entrenó).
+  Tres funciones de `data.py` no están en el camino semanal (`cargar_jugadas`,
+  `cargar_depth_charts_actual`, `identificar_qb_titular`) y siguen ahí porque notebooks las usan.

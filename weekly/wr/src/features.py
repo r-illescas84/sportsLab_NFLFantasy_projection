@@ -10,6 +10,11 @@ y limpios en cargar_stats_semanales() (0% nulo para WR, ver DATASHEET.md). El
 pipeline heredado los recalculaba a mano desde play-by-play dos veces por
 notebook; con nflreadpy eso ya no hace falta.
 
+Este modulo corre cada semana (pipeline.py) y solo contiene lo que alimenta a los modelos
+vigentes. Las variables de la Fase 4 que se probaron y no entraron (volatilidad, interacciones,
+cambio de QB, ofensiva de equipo, topes) viven en features_exploratorio.py y solo las usan
+los notebooks.
+
 Seleccion de features (Fase 4) -- que variable, que decision, con que evidencia.
 Construccion y verificacion de no-fuga en notebooks/10_ingenieria_features.ipynb;
 evaluacion conjunta contra un modelo (no solo correlacion aislada) en
@@ -33,6 +38,7 @@ notebooks/11_seleccion_features.ipynb:
 | rest / div_game                                         | No incluir                             | Sin evidencia de aportar (nb 11) |
 | Filas sin ningun target esa semana (targets == 0)       | Decision de modelado, no de features -- se deja para Fase 5 | Afecta la funcion de perdida (Poisson/Tweedie ya sugerido en nb 05), no que columnas usar |
 """
+import numpy as np
 import pandas as pd
 
 
@@ -110,33 +116,6 @@ def calcular_ratios_eficiencia(stats):
     return df
 
 
-def acotar_variable(stats, columna, limite=None, percentil=0.99):
-    """Topa una columna inestable sobre su valor semanal CRUDO, antes de
-    promediar -- evidencia: racr promediado empeora su curtosis (241 crudo -> 605
-    promediado, ver 05_eda_perfil_variables.ipynb), un solo valor disparado
-    arrastra el promedio de todo un jugador. limite=None calcula el percentil
-    real de la columna en vez de un numero inventado."""
-    df = stats.copy()
-    tope = df[columna].quantile(percentil) if limite is None else limite
-    df[f"{columna}_acotado"] = df[columna].clip(upper=tope)
-    return df
-
-
-def agregar_volatilidad_jugador(stats, columnas, ventana=5, id_col="player_id"):
-    """Desviacion estandar de las ultimas `ventana` apariciones del jugador --
-    mide consistencia/boom-bust, no solo nivel promedio (conectado con el
-    hallazgo de 09_eda_jugador_destacado.ipynb sobre semanas boom). shift(1)
-    antes de rolling().std(), mismo patron leak-safe que
-    agregar_promedios_jugador(). min_periods=2: un desvio con una sola
-    observacion no esta definido."""
-    df = stats.sort_values([id_col, "season", "week"]).copy()
-    for col in columnas:
-        df[f"{col}_volatilidad{ventana}"] = df.groupby(id_col)[col].transform(
-            lambda s: s.shift(1).rolling(ventana, min_periods=2).std()
-        )
-    return df
-
-
 def agregar_edad_experiencia(stats, jugadores, id_col="player_id"):
     """edad al 1 de septiembre de la temporada correspondiente, anios_experiencia
     = temporada - temporada de novato -- misma convencion ya usada en
@@ -188,85 +167,16 @@ def agregar_draft_pick(stats, jugadores, id_col="player_id"):
     return df.drop(columns=["gsis_id"])
 
 
-def agregar_ofensiva_equipo(stats, columnas=("receiving_yards",), ventanas=(3, 5), team_col="team"):
-    """Agregado de equipo-semana (suma de todos los WR de ese equipo esa semana),
-    rezagado reutilizando agregar_promedios_jugador() con id_col=team_col -- no
-    duplica la logica de shift/rolling ya verificada sin fuga.
-
-    OJO con la expectativa correcta: 0.40 de estabilidad (07_eda_equipos.ipynb)
-    es ANUAL, equipo-temporada. La version semana a semana ya se probo en
-    08_eda_multivariable.ipynb y da ~0.08 de correlacion individual (aclarado en
-    07, celda 11) -- se construye porque tiene una base real, no porque vaya a
-    repetir el 0.40."""
-    equipo_semana = stats.groupby(["season", team_col, "week"], as_index=False)[
-        list(columnas)
-    ].sum()
-    equipo_semana = agregar_promedios_jugador(
-        equipo_semana, columnas, ventanas=ventanas, id_col=team_col
-    )
-    columnas_nuevas = [
-        c
-        for c in equipo_semana.columns
-        if c not in ["season", team_col, "week"] + list(columnas)
-    ]
-    equipo_semana = equipo_semana.rename(
-        columns={c: f"equipo_{c}" for c in columnas_nuevas}
-    )
-    columnas_equipo = [f"equipo_{c}" for c in columnas_nuevas]
-    return stats.merge(
-        equipo_semana[["season", team_col, "week"] + columnas_equipo],
-        on=["season", team_col, "week"],
-        how="left",
-    )
-
-
-def agregar_cambio_qb_titular(stats, qb_titular, id_col="player_id", team_col="team"):
-    """Cruza data.identificar_qb_titular() y marca si el QB titular del equipo
-    del jugador cambio respecto a SU aparicion anterior (shift(1) agrupado por
-    id_col, leak-safe). Primera semana de carrera queda NaN, no False -- no hay
-    'anterior' con quien comparar; lo mismo si no se identifico titular en
-    alguna de las 2 semanas.
-
-    Un traspaso de equipo a media temporada (confirmado real: 105 filas de WR en
-    2016-2025) tambien queda marcado como cambio de QB titular -- es literalmente
-    cierto, un jugador que cambia de equipo casi siempre cambia de QB. Se agrega
-    ademas `cambio_equipo` por separado para que la fase de seleccion pueda
-    distinguir ambas senales en vez de mezclarlas sin querer."""
-    df = stats.merge(qb_titular, on=["season", "week", team_col], how="left")
-    df = df.sort_values([id_col, "season", "week"])
-    df["qb_anterior"] = df.groupby(id_col)["qb_id"].shift(1)
-    df["team_anterior"] = df.groupby(id_col)[team_col].shift(1)
-    hay_historia = df["qb_anterior"].notna() & df["qb_id"].notna()
-    df["cambio_qb_titular"] = ((df["qb_id"] != df["qb_anterior"]) & hay_historia).where(
-        hay_historia
-    )
-    df["cambio_equipo"] = (
-        (df[team_col] != df["team_anterior"]) & df["team_anterior"].notna()
-    ).where(df["team_anterior"].notna())
-    return df.drop(columns=["qb_anterior", "team_anterior"])
-
-
-def agregar_interaccion(stats, col_a, col_b, nombre=None):
-    """Feature de interaccion: producto de 2 columnas ya existentes (idealmente
-    ya rezagadas). Generico para las combinaciones con razon concreta probadas en
-    la Fase 4 (volumen x contexto de equipo, draft x experiencia, cambio de QB x
-    volumen) -- no se escribe una funcion distinta por cada par."""
-    df = stats.copy()
-    nombre = nombre or f"{col_a}_x_{col_b}"
-    df[nombre] = df[col_a] * df[col_b]
-    return df
-
-
 COLUMNAS_BASE_MODELADO = [
     "receptions", "targets", "receiving_yards", "receiving_air_yards",
-    "receiving_yards_after_catch", "receiving_first_downs", "receiving_tds",
-    "receiving_2pt_conversions", "receiving_10", "receiving_16", "receiving_20", "receiving_40",
+    "receiving_first_downs", "receiving_tds", "receiving_10", "receiving_16", "receiving_20",
     "target_share", "air_yards_share", "wopr", "receiving_epa", "fantasy_points_ppr",
-    "yards_per_target", "catch_rate", "air_yards_per_target", "racr_acotado",
+    "catch_rate",
 ]
-"""Columnas base a las que se les calculan los promedios rezagados
-(agregar_promedios_jugador) -- exactamente las mismas 20 evaluadas en
-notebooks/11_seleccion_features.ipynb."""
+"""Columnas a las que se les calculan los promedios rezagados
+(agregar_promedios_jugador): solo las 15 de las que salen las variables de
+FEATURES_SELECCIONADAS_ARBOL. catch_rate no viene de nflreadpy, la deriva
+calcular_ratios_eficiencia()."""
 
 FEATURES_SELECCIONADAS_ARBOL = sorted({
     # Union de las 15 variables mas importantes de cada uno de los 3 targets
@@ -318,25 +228,20 @@ def columnas_por_modelo(tipo="ridge"):
 
 
 def construir_tabla_modelado(seasons=range(2016, 2026), filas_extra=None):
-    """Arma la tabla WR completa lista para modelar -- todas las variables
-    construidas y seleccionadas en Fase 4 (ver tabla del docstring de modulo).
-    Encapsula el bloque que antes se repetia a mano en
-    notebooks/11_seleccion_features.ipynb (celdas 6-9), para que los
-    notebooks de Fase 5 no lo tripliquen -- mismo motivo que ya llevo a
-    agregar_promedios_jugador() en Fase 2.
+    """Arma la tabla WR por jugador-semana con las variables que usan los
+    modelos vigentes (columnas_por_modelo()). Es el unico punto de entrada de
+    features para pipeline.py y para los notebooks de modelado.
 
-    `filas_extra`: DataFrame opcional con filas "placeholder" (mismo esquema
-    que cargar_stats_semanales(), columnas de estadisticas en NaN) para una
-    semana que todavia no se juega -- se agregan a `stats` ANTES de calcular
-    cualquier promedio, para que agregar_promedios_jugador() (shift(1) antes
-    de promediar) les calcule sus features rezagadas usando solo la historia
-    real ya jugada, sin duplicar la logica de esta funcion en otro lugar (ver
-    notebooks/18_validacion_temporada_actual.ipynb). Se marcan con
-    `es_prediccion=True` para poder separarlas despues del resto de filas
-    reales (`es_prediccion=False`).
+    `filas_extra`: DataFrame opcional con filas "placeholder" (estadisticas en
+    NaN, ver filas_de_la_semana()) para una semana que todavia no se juega --
+    se agregan a `stats` ANTES de calcular cualquier promedio, para que
+    agregar_promedios_jugador() (shift(1) antes de promediar) les calcule sus
+    variables rezagadas usando solo la historia real ya jugada, sin duplicar la
+    logica en otro lugar. Se marcan con `es_prediccion=True` para separarlas del
+    resto de filas reales (`es_prediccion=False`).
 
-    Requiere `data.py` en el mismo path (mismo patron ya usado en todo el
-    proyecto: sys.path.insert(0, "../src"); import data, features)."""
+    Requiere `data.py` en el mismo path (sys.path.insert(0, "../src"); import
+    data, features)."""
     import data
 
     seasons = list(seasons)
@@ -344,7 +249,6 @@ def construir_tabla_modelado(seasons=range(2016, 2026), filas_extra=None):
     jugadores = data.cargar_jugadores()
     calendario = data.cargar_calendario(seasons)
     depth = data.cargar_depth_charts_unificado(seasons, calendario=calendario)
-    qb_titular = data.identificar_qb_titular(stats)
     wr = stats[stats["position"] == "WR"].copy()
     wr["es_prediccion"] = False
     if filas_extra is not None:
@@ -353,42 +257,44 @@ def construir_tabla_modelado(seasons=range(2016, 2026), filas_extra=None):
         wr = pd.concat([wr, filas_extra], ignore_index=True)
 
     wr = calcular_ratios_eficiencia(wr)
-    wr["racr"] = (wr["receiving_yards"] / wr["receiving_air_yards"]).where(
-        wr["receiving_air_yards"] > 0
-    )
-    wr = acotar_variable(wr, "racr", percentil=0.99)
     wr = agregar_promedios_jugador(wr, COLUMNAS_BASE_MODELADO, ventanas=(3, 5))
-    wr = agregar_volatilidad_jugador(wr, ["receiving_yards", "targets"], ventana=5)
     wr = agregar_edad_experiencia(wr, jugadores)
     wr = agregar_experiencia_no_lineal(wr)
     wr = agregar_draft_pick(wr, jugadores)
-
-    cal_home = calendario[
-        ["season", "week", "home_team", "home_rest", "div_game", "roof", "surface"]
-    ].rename(columns={"home_team": "team", "home_rest": "rest"})
-    cal_away = calendario[
-        ["season", "week", "away_team", "away_rest", "div_game", "roof", "surface"]
-    ].rename(columns={"away_team": "team", "away_rest": "rest"})
-    cal_long = pd.concat([cal_home, cal_away], ignore_index=True)
-    wr = wr.merge(cal_long, on=["season", "week", "team"], how="left")
-
     wr = wr.merge(
         depth[["season", "week", "team", "player_id", "depth_team"]],
         on=["season", "week", "team", "player_id"],
         how="left",
     )
-
-    wr = agregar_ofensiva_equipo(wr, columnas=("receiving_yards", "targets"), ventanas=(3, 5))
-    wr = agregar_cambio_qb_titular(wr, qb_titular)
-    wr["cambio_qb_titular_num"] = wr["cambio_qb_titular"].astype("float")
-    wr["cambio_equipo_num"] = wr["cambio_equipo"].astype("float")
-
-    wr = agregar_interaccion(
-        wr, "target_share_last5_avg", "equipo_receiving_yards_season_avg",
-        "target_share_x_ofensiva_equipo",
-    )
-    wr = agregar_interaccion(wr, "draft_pick", "anios_experiencia", "draft_pick_x_experiencia")
-    wr = agregar_interaccion(
-        wr, "cambio_qb_titular_num", "target_share_last5_avg", "cambio_qb_x_target_share"
-    )
     return wr
+
+
+def filas_de_la_semana(season, week):
+    """Filas "placeholder" de los WR a predecir en una semana que todavia no se
+    juega: los que estan en la alineacion de esa semana
+    (data.cargar_depth_charts_unificado) y ya jugaron al menos un partido en la
+    temporada actual o la anterior. Sin historia no hay variables rezagadas que
+    calcular, asi que un WR sin ningun partido previo (ej. un novato en su
+    primera semana) no se predice. Estadisticas en NaN, listas para pasar a
+    construir_tabla_modelado(filas_extra=...)."""
+    import data
+
+    stats = data.cargar_stats_semanales([season - 1, season])
+    con_historia = set(stats.loc[stats["position"] == "WR", "player_id"])
+
+    depth = data.cargar_depth_charts_unificado([season])
+    depth = depth[(depth["season"] == season) & (depth["week"] == week)]
+    depth = depth[depth["player_id"].isin(con_historia)]
+    depth = depth.sort_values("depth_team").drop_duplicates("player_id")
+
+    nombres = data.cargar_jugadores()[["gsis_id", "display_name"]].rename(
+        columns={"gsis_id": "player_id", "display_name": "player_display_name"}
+    )
+    filas = depth[["player_id", "team"]].merge(nombres, on="player_id", how="left")
+    filas["season"] = season
+    filas["week"] = week
+    filas["position"] = "WR"
+    for columna in COLUMNAS_BASE_MODELADO:
+        if columna != "catch_rate":
+            filas[columna] = np.nan
+    return filas.reset_index(drop=True)

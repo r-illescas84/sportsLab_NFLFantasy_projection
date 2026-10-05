@@ -1,0 +1,4 @@
+,n,mae,rmse,r2,mae_referencia
+receptions,154.0,1.2986,1.7796,0.5042,1.3647
+receiving_yards,154.0,19.2796,27.207,0.408,20.6502
+receiving_tds,154.0,0.2481,0.4362,-0.0949,0.2488
