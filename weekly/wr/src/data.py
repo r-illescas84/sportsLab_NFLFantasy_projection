@@ -15,6 +15,8 @@ cubre 2016 en adelante -- es la que usa features.construir_tabla_modelado().
 import pandas as pd
 import nflreadpy as nfl
 
+CODIGOS_EQUIPO_ACTUALES = {"OAK": "LV", "SD": "LAC"}
+
 
 def cargar_jugadores():
     """Identidad de jugador. Reemplaza al archivo de ADP para esto -- ahi se
@@ -85,11 +87,17 @@ def cargar_depth_charts_historico(seasons, posicion="WR"):
     `week` nulo (estructural: esa semana no tiene numero). Se filtra aqui a
     game_type=="REG", igual que en cargar_calendario/cargar_stats_semanales.
 
-    Ademas: game_type=="REG" por si solo no basta -- aparece una "semana 19"
-    etiquetada como REG incluso en equipos que no llegaron a playoffs (ej.
-    Atlanta 2024, que termino 8-9), que no puede ser un partido real. Parece
-    un snapshot extra de fin de temporada mal etiquetado. Se acota explicito
-    a semana <= 18 (el maximo real de temporada regular desde 2021).
+    Ademas: game_type=="REG" por si solo no basta -- aparece una semana de
+    mas etiquetada como REG incluso en equipos que no llegaron a playoffs (ej.
+    "semana 19" de Atlanta 2024, que termino 8-9; "semana 18" en 2016-2020,
+    temporadas de 17 semanas), que no puede ser un partido real. Parece un
+    snapshot extra de fin de temporada mal etiquetado. Se acota a la ultima
+    semana real de temporada regular: 17 hasta 2020 y 18 desde 2021.
+
+    club_code usa el codigo de la epoca (OAK hasta 2019, SD en 2016), mientras
+    que load_player_stats usa el de la franquicia actual (LV, LAC) en todas las
+    temporadas. Se traduce al actual para que el cruce por equipo no deje sin
+    alineacion a esos equipos (ver docs/HALLAZGOS.md).
 
     Un jugador puede quedar listado 2 veces en la misma semana dentro de la
     MISMA formacion/posicion, con depth_team distinto (confirmado: 357 de
@@ -104,9 +112,10 @@ def cargar_depth_charts_historico(seasons, posicion="WR"):
         (d["formation"] == "Offense")
         & (d["depth_position"] == posicion)
         & (d["game_type"] == "REG")
-        & (d["week"] <= 18)
+        & ((d["week"] <= 17) | ((d["season"] >= 2021) & (d["week"] == 18)))
     )
     df = d.to_pandas()
+    df["club_code"] = df["club_code"].replace(CODIGOS_EQUIPO_ACTUALES)
     df["week"] = df["week"].astype(int)
     df["depth_team"] = df["depth_team"].astype(int)
     df = df.sort_values("depth_team").drop_duplicates(
@@ -150,13 +159,13 @@ def cargar_depth_charts_unificado(seasons, calendario=None, posicion="WR"):
     direction="forward", sobre el calendario real, que ya incluye partidos
     programados aun no jugados -- por eso esto tambien sirve para la
     alineacion "de hoy" al predecir la proxima semana no jugada, ver
-    notebooks/18_validacion_temporada_actual.ipynb). De todos los `dt` que
+    notebooks/6.1_modelo_final_y_temporada_actual.ipynb). De todos los `dt` que
     caen en la misma ventana (equipo-semana) se usa solo el mas reciente --
     el mas cercano al partido es el mas confiable/final. `pos_rank` (2025+,
     ranking limpio sin empates dentro del equipo, a diferencia de
     depth_team en el esquema viejo) hace el mismo papel que `depth_team`.
 
-    Verificado con casos reales (notebooks/21_unificacion_depth_chart.ipynb):
+    Verificado con casos reales (notebooks/1.3_unificacion_alineaciones.ipynb):
     Marvin Harrison Jr. (ARI) y Ja'Marr Chase (CIN) salen como WR1 la
     inmensa mayoria de semanas de 2025, igual que se sabe que jugaron en la
     realidad; cobertura sobre filas WR reales de 2025 sube de 0% a ~97%; sin

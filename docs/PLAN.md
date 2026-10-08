@@ -27,9 +27,12 @@ sin depender de correr notebooks a mano uno por uno.
 | 5.1 Mejoras de bajo costo | Unificar esquema de depth chart 2024/2025+, regresión de cuantiles P10/P50/P90, ensamble simple — sin búsqueda de hiperparámetros a propósito | 3 notebooks (`21`-`23`) | ✅ Cerrada 2026-09-30 |
 | 5.2 Modelos más explicativos | Modelo jerárquico (efectos mixtos) + Binomial Negativa en los 3 targets; revisión de la ventana de entrenamiento/evaluación | `pymc`/`bambi` nuevo en el proyecto + 3 notebooks (`24`-`26`) | ✅ Cerrada 2026-09-30 |
 | 5.3 Arquitectura semanal | Separar lo que corre cada semana (`data`, `features`, `modeling`, `pipeline`) de lo exploratorio (`experimentos`, `features_exploratorio`, notebooks); un orquestador que aplica los modelos ya guardados y trae métricas | `pipeline.py`, `modeling.py` reescrito, `experimentos.py`, `features_exploratorio.py` | ✅ Cerrada 2026-10-01 |
+| 5.4 Métricas de selección y orden por etapa | Métricas de selección consistentes con lo que se predice, con base en la literatura; selección siempre en validación; notebooks reordenados por etapa (`etapa.paso`); modelo de touchdowns corregido | ADR 0004, política de métricas en `modeling.py`/`experimentos.py`, notebooks 4.1-6.2 re-ejecutados, modelos y salidas de 2026 regenerados | ✅ Cerrada 2026-10-07 |
 | 6. Estabilidad / ciclo de vida | `tracking.csv` por corrida; chequeo recurrente de las 6 dimensiones de calidad | Historial de métricas, visible si el modelo se degrada | Pendiente |
-| 7. Documentar el patrón | Forma del pipeline en términos genéricos, para cuando llegue el notebook de Ricky | Guía corta de replicación en `weekly/README.md` | Pendiente |
-| **Entregable final** | — | Predicción semanal real por WR (recepciones, yardas, touchdowns), con las métricas de la semana cuando ya se jugó. El rango P10/P50/P90 se exploró (nb 22) y queda fuera del flujo semanal | — |
+| 7. Documentar el patrón | Forma del pipeline en términos genéricos, para adaptarlo a las demás posiciones | Guía corta de replicación en `weekly/README.md` | Pendiente |
+| **Entregable final** | — | Predicción semanal real por WR (recepciones, yardas, touchdowns), con las métricas de la semana cuando ya se jugó. El rango P10/P50/P90 se exploró (nb 4.5) y queda fuera del flujo semanal | — |
+
+Las fases 2 a 5.3 se escribieron con la numeración anterior de notebooks (`01` a `26`); los nombres ya se actualizaron en el texto, y la equivalencia completa está en el registro de la Fase 5.4.
 
 ---
 
@@ -66,9 +69,9 @@ sin depender de correr notebooks a mano uno por uno.
   fila con datos reales de DeVonta Smith; `target_share` confirmado nativo, ya no se recalcula a
   mano desde PBP como en el pipeline heredado).
 - **2.6** 3 notebooks, cada uno respondiendo una pregunta propia, todos ejecutados de punta a
-  punta sin errores: `01_calidad_fuentes.ipynb` (¿se puede confiar en `nflreadpy`?),
-  `02_construccion_datos.ipynb` (`data.py` en acción, con las 3 trampas de `depth_charts`
-  explicadas sobre el dato real que las reveló), `03_features.ipynb` (prueba de que no hay fuga).
+  punta sin errores: `1.1_calidad_fuentes.ipynb` (¿se puede confiar en `nflreadpy`?),
+  `1.2_construccion_datos.ipynb` (`data.py` en acción, con las 3 trampas de `depth_charts`
+  explicadas sobre el dato real que las reveló), `1.4_promedios_sin_fuga.ipynb` (prueba de que no hay fuga).
 - **Pospuesto a Fase 4, a propósito, no olvidado**: agregados de equipo (ofensiva/defensiva) y
   unificar `cargar_depth_charts_historico`/`_actual` en una sola función — solo si la evidencia
   muestra que valen la pena. La ventana `last3` vs `last5` es decisión de la Fase 3.
@@ -84,31 +87,32 @@ notebook de "perfil de cada variable" quedó numerado *después* del de correlac
 ir antes). El orden final sigue la secuencia metodológica correcta — univariado → bivariado →
 multivariado → síntesis:
 
-- **`04_eda_targets.ipynb`** (univariado — los targets): touchdowns es fundamentalmente distinto
+- **`2.1_eda_targets.ipynb`** (univariado — los targets): touchdowns es fundamentalmente distinto
   a recepciones/yardas — 82% en cero incluso sobre receptores activos (con ≥1 target esa semana).
-- **`05_eda_perfil_variables.ipynb`** (univariado — todas las demás variables candidatas): con
+- **`2.2_eda_perfil_variables.ipynb`** (univariado — todas las demás variables candidatas): con
   asimetría/curtosis/regla IQR formales — `racr` es numéricamente inestable (curtosis 241 en
   crudo, 605 al promediar — promediar lo empeora, no lo arregla); `carries`/`rushing_yards` no
   mejoran de forma ni promediados; 2 falsos positivos metodológicos documentados (touchdowns y
   `rest` marcan muchos "outliers" por IQR que en realidad son la forma esperada de un conteo raro
   o de un calendario con bye weeks/partidos de jueves, no errores de datos).
-- **`06_eda_general.ipynb`** (bivariado — contexto vs. targets): la experiencia importa pero no
+- **`2.3_eda_general.ipynb`** (bivariado — contexto vs. targets): la experiencia importa pero no
   linealmente — recepciones, yardas *y* touchdowns suben hasta 3-5 años de experiencia y bajan
   después (verificado en los 3, no solo yardas). `air_yards_share`/`wopr` fuera de [0,1] es
-  aritmética real sobre un denominador pequeño, no error. Fuga verificada con evidencia (0.72
-  circular → 0.47 real). Vegas/clima confirmado sin efecto, con código propio en el repo.
-- **`07_eda_equipos.ipynb`** (bivariado — equipo vs. targets): ofensiva de equipo estable entre
+  aritmética real sobre un denominador pequeño, no error. Usar datos de la misma semana infla la correlación
+  (`target_share`: 0.72 en la semana contra 0.49 con semanas anteriores). Vegas/clima con relación pequeña con las yardas; el total implícito se
+  calculaba con la línea invertida y, corregido, correlaciona 0.088 (ver `HALLAZGOS.md`).
+- **`2.4_eda_equipos.ipynb`** (bivariado — equipo vs. targets): ofensiva de equipo estable entre
   temporadas (correlación 0.40 2024→2025); dureza defensiva contra WR casi aleatoria entre
   temporadas (0.02) — primera evidencia real para la decisión de agregados de equipo pospuesta en
   Fase 2.
-- **`08_eda_multivariable.ipynb`** (multivariado — todas las variables entre sí y contra los
+- **`2.5_eda_multivariable.ipynb`** (multivariado — todas las variables entre sí y contra los
   targets, sistemático): `draft_pick` correlaciona más que edad/experiencia (nunca antes
   considerado); un cambio de QB titular golpea la producción (~16% menos yardas, 594 casos) pero
   la calidad continua del QB casi no importa; `target_share`/`air_yards_share`/`wopr`
   correlacionadas 0.82-0.97 entre sí (redundantes para Ridge); acarreos de WR (jet sweeps) no
   predicen nada de su rendimiento como receptor; dureza defensiva confirmada sin efecto también
   dentro de la misma temporada y contra targets, no solo yardas entre temporadas.
-- **`09_eda_jugador_destacado.ipynb`** (síntesis narrativa, cierre de la fase): Ja'Marr Chase,
+- **`2.6_eda_jugador_destacado.ipynb`** (síntesis narrativa, cierre de la fase): Ja'Marr Chase,
   elegido por datos (mayor rango real entre receptores de volumen alto), con visualización de
   campo (`sportypy`) mostrando que su semana boom fue volumen+profundidad+acierto juntos, no una
   sola jugada de suerte.
@@ -117,9 +121,9 @@ multivariado → síntesis:
 
 ### Fase 4 — Feature engineering informado (cerrada 2026-09-30)
 
-2 notebooks nuevos en `weekly/wr/notebooks/`: `10_ingenieria_features.ipynb` (construcción de
+2 notebooks nuevos en `weekly/wr/notebooks/`: `3.1_ingenieria_features.ipynb` (construcción de
 variables nuevas + verificación fila por fila de que ninguna tiene fuga) y
-`11_seleccion_features.ipynb` (evaluación conjunta de todas las variables — viejas y nuevas —
+`3.2_seleccion_features.ipynb` (evaluación conjunta de todas las variables — viejas y nuevas —
 contra un modelo simple, no solo correlación aislada, sobre 2016-2025 con split temporal
 train 2016-2023/val 2024-2025).
 
@@ -129,7 +133,7 @@ train 2016-2023/val 2024-2025).
   experiencia con transformación no lineal, `draft_pick` (imputado para no drafteados), ofensiva
   de equipo, cambio de QB titular/de equipo, e interacciones.
 - **`last3` vs. `last5` resuelto con evidencia de modelo, no solo correlación** (lo que
-  `08_eda_multivariable.ipynb` dejó abierto a propósito): `last5` gana con claridad en los 3
+  `2.5_eda_multivariable.ipynb` dejó abierto a propósito): `last5` gana con claridad en los 3
   targets; `season_avg` es un complemento real; `career_avg` resulta el más débil una vez
   evaluado en conjunto, pese a su buena correlación aislada en Fase 3 — la misma lección de la
   edad en Fase 3, en dirección contraria.
@@ -164,7 +168,7 @@ set completo (34 columnas árbol / 30 Ridge), no solo el subconjunto de colineal
   (elige modelo) / test 2024-2025 (se mira una sola vez) — Fase 4 usaba 2 particiones porque solo
   hacía *screening* de features con un modelo fijo; aquí se elige entre familias de modelo e
   hiperparámetros, y reusar el mismo val para ambas decisiones sería fuga de decisión.
-- **XGBoost gana en los 3 targets** (`13_comparacion_modelos.ipynb`, `14_receiving_tds_modelos_de_conteo.ipynb`):
+- **XGBoost gana en los 3 targets** (`4.2_modelos_recepciones_yardas.ipynb`, `4.3_modelos_touchdowns.ipynb`):
   MAE test 1.372 (recepciones), 20.647 (yardas), 0.2466 con objetivo `reg:tweedie` (touchdowns,
   probado contra Poisson/Tweedie/HGB-Poisson/hurdle — ganó con ventaja clara, aunque con R² más
   negativo que el resto, documentado sin ocultar).
@@ -174,7 +178,7 @@ set completo (34 columnas árbol / 30 Ridge), no solo el subconjunto de colineal
 - **Estabilidad confirmada 2 veces**: walk-forward 2021-2025, coeficiente de variación 4.5%-4.7%
   en los 3 targets; validación adicional contra 2026 (dato que no existía en ningún momento
   anterior del proyecto) en el mismo rango de MAE, sin degradarse.
-- **Benchmark real contra el legado** (`16_benchmark_vs_legado.ipynb`): mejora de MAE de 4.5%
+- **Benchmark real contra el legado** (`5.2_benchmark_vs_legado.ipynb`): mejora de MAE de 4.5%
   (recepciones), 7.2% (yardas) y 17.2% (touchdowns) sobre las mismas 929 predicciones reales que
   el legado ya guardó para las semanas 7-18 de 2025, comparadas contra el resultado real de esas
   semanas — no una simulación aparte.
@@ -182,12 +186,11 @@ set completo (34 columnas árbol / 30 Ridge), no solo el subconjunto de colineal
   (`*_pred_week_N.csv`) tienen filas duplicadas por jugador-semana con predicciones distintas
   entre sí (hasta 7.6x en `wrs_complete_week18.csv`) — auditado y documentado en `HALLAZGOS.md`,
   resuelto con una regla explícita de promediar antes de calcular el benchmark.
-- **Explicabilidad** (`17_explicabilidad_shap.ipynb`): SHAP coincide con permutación (Fase 4) e
+- **Explicabilidad** (`5.3_explicabilidad_y_casos.ipynb`): SHAP coincide con permutación (Fase 4) e
   importancia nativa de árbol en las variables más influyentes. Hallazgo honesto y repetido 3
   veces de forma independiente (cuartil de uso, caso real de Ja'Marr Chase, los 5 peores errores):
-  **el modelo subestima sistemáticamente las semanas boom** — mismo patrón que ya documentó Daniel
-  en `preeliminar/03_modelo_predictivo`.
-- **Predicción real generada** (`18_validacion_temporada_actual.ipynb`): usando el estado real de
+  **el modelo subestima sistemáticamente las semanas boom**.
+- **Predicción real generada** (`6.1_modelo_final_y_temporada_actual.ipynb`): usando el estado real de
   hoy (`cargar_depth_charts_actual`) se predijo la semana 4 de 2026, todavía sin jugarse — ranking
   encabezado por WR1 reconocibles, con su frescura de datos documentada.
 - **Los 3 modelos ganadores quedan guardados** en `weekly/wr/models/` (`{target}_xgboost.json` +
@@ -203,7 +206,7 @@ set completo (34 columnas árbol / 30 Ridge), no solo el subconjunto de colineal
 3 notebooks nuevos (`21` a `23`), sin búsqueda de hiperparámetros ni entrenamientos pesados a
 propósito — igual de rigurosos, pero deliberadamente baratos de correr.
 
-- **`21_unificacion_depth_chart.ipynb`**: resuelve la limitación de `depth_team` 100% nulo en
+- **`1.3_unificacion_alineaciones.ipynb`**: resuelve la limitación de `depth_team` 100% nulo en
   2025+ (ver `HALLAZGOS.md`, cerrado). `data.cargar_depth_charts_unificado()` mapea cada scrape
   del esquema nuevo a su próximo partido real (`pd.merge_asof`, verificado con Marvin Harrison
   Jr. y Ja'Marr Chase). Cobertura 0% → ~97% en 2025. Impacto real, medido con los mismos
@@ -211,7 +214,7 @@ propósito — igual de rigurosos, pero deliberadamente baratos de correr.
   los 3 targets; MAE mejora en recepciones, neutro en yardas, ligeramente peor en touchdowns
   (mismo patrón MAE-vs-R² ya conocido de ese target). Los 3 modelos base se reentrenaron con el
   dato corregido y quedan guardados como la nueva referencia.
-- **`22_regresion_cuantiles.ipynb`**: agrega P10/P50/P90 a los 3 targets
+- **`4.5_regresion_cuantiles.ipynb`**: agrega P10/P50/P90 a los 3 targets
   (`HistGradientBoostingRegressor(loss="quantile")`, preferido sobre el objetivo nativo de
   cuantiles de XGBoost con evidencia real — mejor pinball loss, 0% de cuantiles cruzados vs ~4%,
   mejor cobertura empírica). `receptions`/`receiving_yards` logran cobertura ~80-82% como se
@@ -219,7 +222,7 @@ propósito — igual de rigurosos, pero deliberadamente baratos de correr.
   aporta señal en P90 para ese target. Hallazgo adicional: el cuantil 0.5 (que optimiza MAE
   directo) le gana en MAE a los 3 modelos guardados pero empeora R² en los 3 — confirma que la
   tensión MAE-vs-R² no es exclusiva de touchdowns.
-- **`23_ensamble_simple.ipynb`**: promediar los 3 modelos de árbol (XGBoost/RandomForest/
+- **`4.6_ensamble_simple.ipynb`**: promediar los 3 modelos de árbol (XGBoost/RandomForest/
   HistGradientBoosting) no ayuda — están demasiado correlacionados entre sí (0.97-0.99) para que
   un ensamble reduzca error. Agregar Ridge (el único realmente diverso, ~0.93-0.95 de
   correlación) sí mejora MAE (~0.8-1.5%) y R² en recepciones/yardas. Para touchdowns, mezclar el
@@ -232,13 +235,13 @@ propósito — igual de rigurosos, pero deliberadamente baratos de correr.
 
 ### Fase 5.2 — Modelos más explicativos: jerárquico + Binomial Negativa (cerrada 2026-09-30)
 
-Pedido explícito de Daniel: "algo más explicativo sin modelos [de caja negra], que se ajuste
-mejor a los datos" -- ninguno de los modelos de Fase 5/5.1 explota que son los mismos jugadores
+Se buscó algo más explicativo, sin modelos de caja negra, que se ajuste mejor a los datos:
+ninguno de los modelos de Fase 5/5.1 explota que son los mismos jugadores
 repetidos temporada tras temporada (dato de panel). 3 notebooks nuevos (`24`-`26`). Primera
 herramienta Bayesiana del proyecto: `pymc`/`bambi`/`arviz`/`h5netcdf`, agregados a
 `docker/requirements.txt`.
 
-- **`24_modelo_jerarquico_binomial_negativa.ipynb`**: efecto aleatorio por jugador (`1|player_id`)
+- **`4.7_jerarquico_touchdowns.ipynb`**: efecto aleatorio por jugador (`1|player_id`)
   + verosimilitud Binomial Negativa (mejor especificada que `reg:tweedie` para un conteo de 82%
   ceros) para `receiving_tds` -- **mejor R² de todos los intentos de este proyecto para ese
   target** (+0.073, supera al hurdle de Fase 5.1; MAE=0.300, peor que Tweedie puro pero mejor que
@@ -250,14 +253,14 @@ herramienta Bayesiana del proyecto: `pymc`/`bambi`/`arviz`/`h5netcdf`, agregados
   formato nativo de `arviz` (netCDF) falla al recargar -- resuelto con `joblib` (ver
   `HALLAZGOS.md`). Convergencia verificada sobre los 540 parámetros del modelo, no solo los
   efectos fijos.
-- **`25_revision_ventana_evaluacion.ipynb`**: responde la preocupación de Daniel sobre si la
+- **`4.9_ventana_entrenamiento.ipynb`**: responde si la
   ventana 2016-2025 es demasiado larga. Confirmado con evidencia real: la correlación del nivel
   de un jugador consigo mismo decae gradualmente con los años (0.80 a 1 año → 0.58 a 5 años en
   `target_share`). Pero ninguna corrección directa mejora el modelo: una pendiente temporal por
   jugador empeora MAE y R² (y la convergencia); acortar la ventana (2019-2021 vs. 2016-2021) da
   MAE igual pero peor R². El diseño actual (ventana 2016-2021, intercepto fijo) se mantiene --
   las 30 variables rezagadas ya absorben la mayor parte de la vigencia de cada jugador.
-- **`26_jerarquico_receptions_yardas.ipynb`**: el mismo enfoque **no se repite** en los otros 2
+- **`4.8_jerarquico_recepciones_yardas.ipynb`**: el mismo enfoque **no se repite** en los otros 2
   targets -- Binomial Negativa para `receptions` (MAE 1.478 vs. 1.354 de XGBoost, R² 0.360 vs.
   0.456 -- peor) y Gaussiana sobre yardas con transformación logarítmica con signo para
   `receiving_yards` (MAE 21.34 vs. 20.65, R² 0.144 vs. 0.366 -- peor). La mejora en
@@ -271,7 +274,7 @@ herramienta Bayesiana del proyecto: `pymc`/`bambi`/`arviz`/`h5netcdf`, agregados
 
 ### Fase 5.3 — Arquitectura semanal (cerrada 2026-10-01)
 
-Criterio de Daniel: los módulos de `weekly/wr/src/` son lo que se ejecuta cada semana y deben ser
+Criterio: los módulos de `weekly/wr/src/` son lo que se ejecuta cada semana y deben ser
 ligeros; el train/test, la validación y la comparación de modelos viven en los notebooks. El
 `modeling.py` de la Fase 5 no cumplía eso: era la caja de herramientas de comparación con nombre de
 paso del pipeline, sin forma de cargar y aplicar los modelos guardados.
@@ -288,13 +291,13 @@ paso del pipeline, sin forma de cargar y aplicar los modelos guardados.
   deja el archivo en el formato que lee `modeling.py`) y `features_exploratorio.py` (volatilidad,
   interacciones, cambio de QB, ofensiva de equipo y topes: construidas en la Fase 4, no entraron al
   modelo). 10 notebooks ajustados solo en imports y prefijos, sin re-ejecutarse.
-- **Fuera del flujo semanal, a propósito**: los modelos de cuantil (nb 22), el ensamble (nb 23) y el
-  jerárquico (nb 24, requeriría cargar `bambi`). Los archivos siguen en `weekly/wr/models/` como
+- **Fuera del flujo semanal, a propósito**: los modelos de cuantil (nb 4.5), el ensamble (nb 4.6) y el
+  jerárquico (nb 4.7, requeriría cargar `bambi`). Los archivos siguen en `weekly/wr/models/` como
   resultado de la exploración.
 - **Verificado**: la tabla de variables delgada (220 columnas, antes 269) es idéntica a la anterior
   en las 44 columnas que usan los modelos; el ciclo guardar → cargar da diferencia 0 con los dos
   tipos de objetivo; todas las funciones movidas se ejercitaron y dan los mismos números de antes
-  (modelo de 2 etapas MAE 0.3074, baseline 1.4189); los notebooks 10, 12 y 13 ejecutan sin errores
+  (modelo de 2 etapas MAE 0.3074, baseline 1.4189); los notebooks 3.1, 4.1 y 4.2 ejecutan sin errores
   sobre una copia.
 - **Corrida real**: semana 3 de 2026 (ya jugada, fuera de muestra porque los modelos llegan a 2025),
   154 WR: MAE 1.30 recepciones, 19.28 yardas, 0.248 touchdowns contra 1.36, 20.65 y 0.249 de
@@ -306,3 +309,87 @@ paso del pipeline, sin forma de cargar y aplicar los modelos guardados.
   semanas de 2025 o anteriores son dentro de muestra (el flujo imprime con qué datos se entrenó).
   Tres funciones de `data.py` no están en el camino semanal (`cargar_jugadas`,
   `cargar_depth_charts_actual`, `identificar_qb_titular`) y siguen ahí porque notebooks las usan.
+
+### Fase 5.4 — Métricas de selección y orden por etapa (cerrada 2026-10-07)
+
+Al revisar por qué se elegía con MAE: los modelos predicen **valores esperados** (se suman para armar
+puntos de fantasy), y el MAE premia la **mediana** (Gneiting, 2011). En touchdowns, con 82% de
+partidos en cero, la mediana es 0: el modelo vigente se había elegido por MAE, con hiperparámetros
+por defecto, y quedó descalibrado (R² fuera de muestra negativo). Además, tres decisiones se habían
+tomado mirando la prueba. Decisión en `docs/decisions/0004-metricas-de-seleccion.md`.
+
+- **Política de métricas**: RMSE para recepciones y yardas, deviance de Poisson para touchdowns;
+  elección en validación (2022-2023) y la prueba (2024-2025) solo se reporta; R² y D² fuera de
+  muestra contra la media de entrenamiento; requisitos de calibración y de superar al promedio
+  histórico en cada año; empates por bootstrap de semanas completas, con el intervalo ajustado por
+  Bonferroni cuando se comparan varias alternativas. Implementada en `modeling.py`
+  (`POLITICA_METRICAS`, `metricas_target`, métricas semanales con referencia de validación y prueba)
+  y `experimentos.py` (`diferencia_bootstrap`, `cumple_requisitos`, búsqueda compacta con early
+  stopping en la métrica correcta, `guardar_modelo` con media de entrenamiento y referencias).
+- **Modelos elegidos**: XGBoost con error cuadrático para recepciones y yardas (profundidad 3, 200
+  árboles, tasa 0.03) y XGBoost con objetivo Poisson para touchdowns (profundidad 3, 200 árboles,
+  tasa 0.08). Validación: RMSE 1.929 y 29.57, deviance 0.617; prueba: 1.826, 27.91 y 0.625; R² fuera
+  de muestra de 0.44, 0.36 y 0.08 en validación. Los tres cumplen los requisitos en validación y en
+  cada año de 2021 a 2025.
+- **Alternativas que no se adoptan**: búsqueda compacta de hiperparámetros y variables propias por
+  resultado (4.4), ensambles y mezcla con el modelo de dos etapas (4.6), jerárquicos con Binomial
+  Negativa (4.7, 4.8; en touchdowns, también mezclado con el XGBoost: el mejor peso, 90/10, empata) y
+  ventanas o ponderación por antigüedad (4.9). Empates o peores en validación, ya con el intervalo de
+  95%. La regla de comparaciones múltiples del ADR 0004 se agregó por un caso de 4.9 que, con el dato
+  de alineaciones corregido, ya empata sin ajuste.
+- **Evaluación**: mejor que el flujo heredado sobre las mismas semanas de 2025 en yardas y touchdowns,
+  con diferencias que no incluyen cero aun ajustando por las tres comparaciones; en recepciones mejor
+  en la estimación puntual, pero empate con el intervalo ajustado (5.2). En las semanas 1-4 de 2026
+  los tres quedan al nivel de validación en R² fuera de muestra (en la métrica principal, yardas y
+  touchdowns un poco por encima de validación y prueba), con una subestimación a vigilar (−3.1
+  yardas por receptor).
+- **Corrección de datos**: las alineaciones históricas usaban otros códigos de equipo que las
+  estadísticas (`OAK`/`SD` contra `LV`/`LAC`) y traían una semana de más en 2016-2020 (ver
+  `HALLAZGOS.md`). Con el dato corregido se re-ejecutaron 1.3 y de 4.1 a 6.2; la única decisión que
+  cambió fue la configuración de touchdowns dentro de la grilla de 4.3 (de 400 árboles con tasa 0.03
+  a 200 con tasa 0.08, una diferencia de 0.0008 en deviance de validación).
+- **Reorganización**: 26 notebooks renombrados con `git mv` a `etapa.paso` (CRISP-DM), índice en
+  `weekly/wr/notebooks/README.md`; modelos exploratorios en `weekly/wr/models/exploratorio/` (de 4.6,
+  donde no se adopta ninguna alternativa, solo queda la metadata, sin los modelos);
+  `6.1_modelo_final_y_temporada_actual.ipynb` es el único que guarda los modelos del flujo semanal.
+- **Salidas de 2026 regeneradas**: semanas 1-4 con las métricas nuevas y semana 5 (pendiente) con 186
+  WR de los 30 equipos que juegan.
+- **Fuera de alcance**: la selección de variables (3.2) sigue usando MAE y la prueba como validación,
+  y con el dato corregido su regla daría 31 variables en lugar de las 34 vigentes (ver `HALLAZGOS.md`);
+  se mantienen las 34 hasta rehacerla con un método estable.
+- **Limpieza de texto de los notebooks (1.1 a 6.2)**: cada cifra citada se verificó contra las
+  salidas ejecutadas. Corrigió, entre otros, la fórmula del total implícito de las líneas de apuestas
+  (2.3), la comparación de SHAP contra el orden de permutación de la corrida anterior de 3.2 (5.3) y la
+  lectura de 2026 frente a las referencias (6.1). Los notebooks 4.6 y 4.7 dejan de guardar (o de
+  versionar) los modelos de alternativas que no se adoptan.
+
+Equivalencia de nombres:
+
+| Antes | Ahora |
+|---|---|
+| `01_calidad_fuentes` | `1.1_calidad_fuentes` |
+| `02_construccion_datos` | `1.2_construccion_datos` |
+| `21_unificacion_depth_chart` | `1.3_unificacion_alineaciones` |
+| `03_features` | `1.4_promedios_sin_fuga` |
+| `04_eda_targets` | `2.1_eda_targets` |
+| `05_eda_perfil_variables` | `2.2_eda_perfil_variables` |
+| `06_eda_general` | `2.3_eda_general` |
+| `07_eda_equipos` | `2.4_eda_equipos` |
+| `08_eda_multivariable` | `2.5_eda_multivariable` |
+| `09_eda_jugador_destacado` | `2.6_eda_jugador_destacado` |
+| `10_ingenieria_features` | `3.1_ingenieria_features` |
+| `11_seleccion_features` | `3.2_seleccion_features` |
+| `12_preparacion_modelado` | `4.1_preparacion_y_metricas` |
+| `13_comparacion_modelos` | `4.2_modelos_recepciones_yardas` |
+| `14_receiving_tds_modelos_de_conteo` | `4.3_modelos_touchdowns` |
+| `20_mejora_del_modelo` | `4.4_ajuste_hiperparametros` |
+| `22_regresion_cuantiles` | `4.5_regresion_cuantiles` |
+| `23_ensamble_simple` | `4.6_ensamble_simple` |
+| `24_modelo_jerarquico_binomial_negativa` | `4.7_jerarquico_touchdowns` |
+| `26_jerarquico_receptions_yardas` | `4.8_jerarquico_recepciones_yardas` |
+| `25_revision_ventana_evaluacion` | `4.9_ventana_entrenamiento` |
+| `15_estabilidad_temporal` | `5.1_estabilidad_temporal` |
+| `16_benchmark_vs_legado` | `5.2_benchmark_vs_legado` |
+| `17_explicabilidad_shap` | `5.3_explicabilidad_y_casos` |
+| `18_validacion_temporada_actual` | `6.1_modelo_final_y_temporada_actual` |
+| `19_cierre_fase5` | `6.2_cierre` |

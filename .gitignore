@@ -7,3 +7,6 @@ _fase1_replica/
 catboost_info/
 .DS_Store
 __pycache__/
+
+# Modelos bayesianos exploratorios: pesan varios MB y se regeneran corriendo su notebook
+weekly/wr/models/exploratorio/*_jerarquico.joblib

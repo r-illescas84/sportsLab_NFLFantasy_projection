@@ -1,0 +1,86 @@
+{
+  "target": "receiving_tds",
+  "mezcla": "w * XGBoost elegido + (1 - w) * hurdle",
+  "metrica": "deviance_poisson",
+  "barrido": {
+    "w = 1.0": {
+      "val_deviance": 0.6167,
+      "val_d2_oos": 0.1223,
+      "val_r2_oos": 0.0826,
+      "val_pendiente": 0.9604,
+      "test_deviance": 0.6252,
+      "test_d2_oos": 0.1355
+    },
+    "w = 0.7": {
+      "val_deviance": 0.6165,
+      "val_d2_oos": 0.1225,
+      "val_r2_oos": 0.0832,
+      "val_pendiente": 0.9686,
+      "test_deviance": 0.6265,
+      "test_d2_oos": 0.1338
+    },
+    "w = 0.5": {
+      "val_deviance": 0.6174,
+      "val_d2_oos": 0.1213,
+      "val_r2_oos": 0.0822,
+      "val_pendiente": 0.9588,
+      "test_deviance": 0.6283,
+      "test_d2_oos": 0.1314
+    },
+    "w = 0.3": {
+      "val_deviance": 0.619,
+      "val_d2_oos": 0.119,
+      "val_r2_oos": 0.08,
+      "val_pendiente": 0.9375,
+      "test_deviance": 0.6307,
+      "test_d2_oos": 0.128
+    },
+    "w = 0.0": {
+      "val_deviance": 0.6228,
+      "val_d2_oos": 0.1135,
+      "val_r2_oos": 0.0745,
+      "val_pendiente": 0.8873,
+      "test_deviance": 0.6356,
+      "test_d2_oos": 0.1212
+    }
+  },
+  "mejor_w_validacion": 0.7,
+  "se_adopta": false,
+  "fecha_de_guardado": "2026-10-07T23:40:21.246266+00:00",
+  "features_arbol_en_orden": [
+    "air_yards_share_career_avg",
+    "air_yards_share_last3_avg",
+    "air_yards_share_season_avg",
+    "anios_experiencia",
+    "catch_rate_career_avg",
+    "depth_team",
+    "draft_pick",
+    "edad",
+    "fantasy_points_ppr_last3_avg",
+    "fantasy_points_ppr_last5_avg",
+    "fantasy_points_ppr_season_avg",
+    "receiving_10_last3_avg",
+    "receiving_16_last5_avg",
+    "receiving_20_last3_avg",
+    "receiving_air_yards_season_avg",
+    "receiving_epa_last3_avg",
+    "receiving_first_downs_career_avg",
+    "receiving_first_downs_last5_avg",
+    "receiving_tds_season_avg",
+    "receiving_yards_career_avg",
+    "receiving_yards_last3_avg",
+    "receiving_yards_season_avg",
+    "receptions_career_avg",
+    "receptions_last3_avg",
+    "receptions_last5_avg",
+    "receptions_season_avg",
+    "target_share_career_avg",
+    "target_share_last3_avg",
+    "target_share_last5_avg",
+    "targets_last3_avg",
+    "targets_last5_avg",
+    "targets_season_avg",
+    "wopr_last3_avg",
+    "wopr_last5_avg"
+  ]
+}

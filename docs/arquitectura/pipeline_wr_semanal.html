@@ -1,0 +1,253 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pipeline WR semanal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* layout: orquestador arriba, pila vertical de capas semanales (una por modulo .py) con recibe / contiene / entrega, y la zona exploratoria aparte con borde punteado */
+:root{
+  --bg:#f5f4ef; --surface:#ffffff; --border:#ddd9cd;
+  --text-primary:#211f1a; --text-secondary:#68645a; --text-muted:#8f8a7d;
+  --font-sans:'IBM Plex Sans',-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --source-bg:#eceef0; --source-border:#97a1ac; --source-text:#333d47; --source-text2:#5b6570;
+  --feature-bg:#e2f2ec; --feature-border:#4a9f85; --feature-text:#1d5944; --feature-text2:#36735c;
+  --model-bg:#ece6f7; --model-border:#8975bf; --model-text:#473a72; --model-text2:#625195;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#18181a; --surface:#222124; --border:#39373a;
+    --text-primary:#eeede9; --text-secondary:#a9a59c; --text-muted:#85817a;
+    --source-bg:#282c31; --source-border:#6d7986; --source-text:#cdd4da; --source-text2:#a2abb4;
+    --feature-bg:#16302a; --feature-border:#3f8d75; --feature-text:#9bd6c1; --feature-text2:#6fb49d;
+    --model-bg:#28223b; --model-border:#7c68ac; --model-text:#cabdef; --model-text2:#a593d6;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#18181a; --surface:#222124; --border:#39373a;
+  --text-primary:#eeede9; --text-secondary:#a9a59c; --text-muted:#85817a;
+  --source-bg:#282c31; --source-border:#6d7986; --source-text:#cdd4da; --source-text2:#a2abb4;
+  --feature-bg:#16302a; --feature-border:#3f8d75; --feature-text:#9bd6c1; --feature-text2:#6fb49d;
+  --model-bg:#28223b; --model-border:#7c68ac; --model-text:#cabdef; --model-text2:#a593d6;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text-primary);font-family:var(--font-sans);margin:0;padding-block:2.5rem}
+.page{max-width:860px;margin:0 auto;padding-inline:1rem;display:flex;flex-direction:column;gap:.35rem}
+header{margin-bottom:1rem}
+header h1{font-family:var(--font-mono);font-weight:500;font-size:1.5rem;margin:0 0 .4rem;letter-spacing:.01em}
+header p{margin:0;color:var(--text-secondary);font-size:.95rem;line-height:1.55;max-width:62ch}
+.status{display:inline-flex;align-items:center;gap:.45rem;margin-top:.8rem;font-size:.8rem;color:var(--text-muted);font-family:var(--font-mono)}
+.status .dot{width:6px;height:6px;border-radius:50%;background:var(--feature-border)}
+
+.layer{--l-bg:var(--source-bg);--l-border:var(--source-border);--l-text:var(--source-text);--l-text2:var(--source-text2);
+  background:var(--surface);border:1px solid var(--l-border);border-radius:10px;overflow:hidden}
+.layer.feat{--l-bg:var(--feature-bg);--l-border:var(--feature-border);--l-text:var(--feature-text);--l-text2:var(--feature-text2)}
+.layer.mdl{--l-bg:var(--model-bg);--l-border:var(--model-border);--l-text:var(--model-text);--l-text2:var(--model-text2)}
+.layer.explo{border-style:dashed}
+.layer-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem 1rem;padding:.7rem 1rem;background:var(--l-bg);border-bottom:1px solid var(--l-border)}
+.layer-head code{font-family:var(--font-mono);font-weight:500;font-size:1.02rem;color:var(--l-text)}
+.layer-head span{font-size:.85rem;color:var(--l-text2)}
+.body{display:grid;grid-template-columns:1fr 1.9fr 1.15fr;gap:1rem 1.4rem;padding:1rem}
+.body>div{min-width:0}
+h3{font-size:.7rem;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin:0 0 .5rem}
+.body p,.pad p{margin:0 0 .45rem;font-size:.85rem;line-height:1.5;color:var(--text-secondary)}
+.pad{padding:1rem}
+code.i{font-family:var(--font-mono);font-size:.78rem}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem}
+.chip{font-family:var(--font-mono);font-size:.74rem;padding:.16rem .45rem;border-radius:4px;background:var(--l-bg);border:1px solid var(--l-border);color:var(--l-text);overflow-wrap:anywhere}
+.chip.set{font-weight:500;padding:.3rem .55rem}
+.group{margin-bottom:.7rem}
+.group:last-child{margin-bottom:0}
+.group small{display:block;font-size:.74rem;color:var(--text-muted);margin-bottom:.3rem}
+
+.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem 1.2rem;padding:1rem}
+.item code{display:block;font-family:var(--font-mono);font-size:.8rem;color:var(--l-text);margin-bottom:.1rem;overflow-wrap:anywhere}
+.item span{font-size:.82rem;color:var(--text-secondary);line-height:1.45}
+
+.run{padding:0 1rem 1rem}
+.run h3{margin-top:.2rem}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.82rem;font-variant-numeric:tabular-nums}
+th{font-weight:500;text-align:right;color:var(--text-muted);font-size:.74rem;padding:.3rem .6rem;border-bottom:1px solid var(--l-border)}
+td{text-align:right;padding:.35rem .6rem;color:var(--text-primary);border-bottom:1px solid var(--border)}
+th:first-child,td:first-child{text-align:left;font-family:var(--font-mono);font-size:.78rem;color:var(--l-text)}
+tr:last-child td{border-bottom:0}
+.cap{margin:.5rem 0 0;font-size:.78rem;color:var(--text-muted);line-height:1.5}
+
+.link{display:flex;align-items:center;justify-content:center;gap:.6rem;color:var(--text-muted);font-size:.8rem;padding:.2rem 1rem;text-align:center}
+.link svg{flex:none}
+.zone{margin:1.4rem 0 .5rem;font-size:.7rem;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:.8rem}
+.zone::after{content:"";flex:1;border-top:1px solid var(--border)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.note{margin:.8rem 0 0;font-size:.82rem;color:var(--text-muted);line-height:1.6}
+.note i{display:inline-block;width:22px;border-top:1.5px dashed var(--text-muted);vertical-align:middle;margin-right:.4rem}
+footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px solid var(--border);padding-top:1rem;font-family:var(--font-mono)}
+
+@media (max-width:720px){
+  .body{grid-template-columns:1fr}
+  .two{grid-template-columns:1fr}
+  .link{flex-direction:column;gap:.2rem}
+}
+</style>
+
+<div class="page">
+
+<header>
+<h1>Pipeline WR semanal</h1>
+<p>Cómo se arma la predicción de recepciones, yardas y touchdowns cada semana: qué archivo hace cada paso, qué recibe, qué contiene y qué entrega.</p>
+<div class="status"><span class="dot"></span>Flujo verificado con las semanas 1 a 4 de 2026 · 3 modelos vigentes</div>
+</header>
+
+<div class="zone">Se ejecuta cada semana</div>
+
+<section class="layer">
+  <div class="layer-head"><code>pipeline.py</code><span>orquesta todo el flujo</span></div>
+  <div class="pad">
+    <p>Una llamada, <code class="i">ejecutar_semana(season, week)</code>, recorre las capas de abajo en orden y guarda la salida. Detecta sola si la semana ya se jugó. Si está en curso o la alineación está incompleta, se detiene con un mensaje claro en vez de dar una salida parcial.</p>
+  </div>
+</section>
+
+<div class="link"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0V26M2 21L7 27L12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>llama en orden</span></div>
+
+<section class="layer">
+  <div class="layer-head"><code>nflreadpy</code><span>fuente externa de datos</span></div>
+  <div class="items">
+    <div class="item"><code>load_player_stats</code><span>estadísticas reales por jugador y semana</span></div>
+    <div class="item"><code>load_players</code><span>identidad, fecha de nacimiento, draft</span></div>
+    <div class="item"><code>load_schedules</code><span>calendario real de partidos</span></div>
+    <div class="item"><code>load_depth_charts</code><span>alineación semanal, en 2 esquemas (hasta 2024 y desde 2025)</span></div>
+  </div>
+</section>
+
+<div class="link"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0V26M2 21L7 27L12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>las 4 tablas, filtradas a temporada regular</span></div>
+
+<section class="layer">
+  <div class="layer-head"><code>data.py</code><span>carga y limpia las bases</span></div>
+  <div class="body">
+    <div>
+      <h3>Recibe</h3>
+      <p>Las 4 tablas de <code class="i">nflreadpy</code>.</p>
+    </div>
+    <div>
+      <h3>Contiene</h3>
+      <div class="chips">
+        <span class="chip">cargar_stats_semanales</span>
+        <span class="chip">cargar_jugadores</span>
+        <span class="chip">cargar_calendario</span>
+        <span class="chip">cargar_depth_charts_unificado</span>
+      </div>
+    </div>
+    <div>
+      <h3>Entrega</h3>
+      <p>Tablas limpias por jugador-semana. El depth chart llega unificado: une los 2 esquemas usando el calendario real.</p>
+    </div>
+  </div>
+</section>
+
+<div class="link"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0V26M2 21L7 27L12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>tablas limpias, sin variables todavía</span></div>
+
+<section class="layer feat">
+  <div class="layer-head"><code>features.py</code><span>construye las variables</span></div>
+  <div class="body">
+    <div>
+      <h3>Recibe</h3>
+      <p>Las tablas de <code class="i">data.py</code>. Si la semana aún no se juega, agrega antes las filas de los WR a predecir.</p>
+      <p>Todo promedio usa solo semanas anteriores a la que se predice.</p>
+    </div>
+    <div>
+      <h3>Contiene</h3>
+      <div class="group"><small>Variables</small><div class="chips">
+        <span class="chip">agregar_promedios_jugador</span><span class="chip">calcular_ratios_eficiencia</span><span class="chip">agregar_edad_experiencia</span><span class="chip">agregar_experiencia_no_lineal</span><span class="chip">agregar_draft_pick</span></div></div>
+      <div class="group"><small>Orquesta y selecciona</small><div class="chips">
+        <span class="chip">construir_tabla_modelado</span><span class="chip">columnas_por_modelo</span><span class="chip">filas_de_la_semana</span></div></div>
+    </div>
+    <div>
+      <h3>Entrega</h3>
+      <p>Tabla de WR por jugador-semana con las variables que usan los modelos.</p>
+      <div class="chips"><span class="chip set">set árbol · 34 variables</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="link"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0V26M2 21L7 27L12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>tabla de variables de la semana</span></div>
+
+<section class="layer mdl">
+  <div class="layer-head"><code>modeling.py</code><span>aplica los modelos ya evaluados</span></div>
+  <div class="body">
+    <div>
+      <h3>Recibe</h3>
+      <p>La tabla de <code class="i">features.py</code> y los archivos de modelo ya evaluados de <code class="i">weekly/wr/models/</code>:</p>
+      <div class="chips">
+        <span class="chip">receptions_xgboost.json</span>
+        <span class="chip">receiving_yards_xgboost.json</span>
+        <span class="chip">receiving_tds_xgboost.json</span>
+      </div>
+    </div>
+    <div>
+      <h3>Contiene</h3>
+      <div class="chips">
+        <span class="chip">cargar_modelos</span><span class="chip">predecir</span><span class="chip">metricas</span><span class="chip">metricas_target</span><span class="chip">evaluar_predicciones</span>
+      </div>
+      <p style="margin-top:.7rem">No entrena ni divide nada. Cada modelo usa sus variables en el orden con el que se entrenó, que viene en su metadata.</p>
+    </div>
+    <div>
+      <h3>Entrega</h3>
+      <p>Una predicción por WR y target. Si la semana ya se jugó, las métricas contra lo real, con la métrica principal de cada modelo (RMSE en recepciones y yardas, deviance de Poisson en touchdowns) junto a su valor de referencia en validación y prueba.</p>
+    </div>
+  </div>
+</section>
+
+<div class="link"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0V26M2 21L7 27L12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>se guarda en weekly/wr/outputs/</span></div>
+
+<section class="layer">
+  <div class="layer-head"><code>salida</code><span>por semana</span></div>
+  <div class="items">
+    <div class="item"><code>predicciones_semana_N.csv</code><span>por cada WR activo: recepciones, yardas y touchdowns esperados de esa semana</span></div>
+    <div class="item"><code>metricas_semana_N.csv</code><span>solo si la semana ya se jugó: métrica principal y su referencia, R² fuera de muestra, sesgo y calibración contra lo real</span></div>
+  </div>
+  <div class="run">
+    <h3>Corridas de 2026 · métrica principal por semana</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>semana</th><th>receptions · RMSE</th><th>receiving_yards · RMSE</th><th>receiving_tds · deviance</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>1.80</td><td>28.63</td><td>0.597</td></tr>
+        <tr><td>2</td><td>1.86</td><td>30.66</td><td>0.666</td></tr>
+        <tr><td>3</td><td>1.78</td><td>27.26</td><td>0.606</td></tr>
+        <tr><td>4</td><td>2.00</td><td>31.90</td><td>0.651</td></tr>
+        <tr><td>referencia · validación 2022-2023</td><td>1.93</td><td>29.57</td><td>0.617</td></tr>
+        <tr><td>referencia · prueba 2024-2025</td><td>1.83</td><td>27.91</td><td>0.625</td></tr>
+      </tbody>
+    </table></div>
+    <p class="cap">151 a 154 WR por semana. Semanas fuera de muestra: los modelos se entrenaron con 2016-2025. Menor = mejor en las tres métricas. La semana 5, todavía sin jugarse, salió con 186 WR de los 30 equipos que juegan.</p>
+  </div>
+</section>
+
+<div class="zone">Exploratorio · solo desde los notebooks</div>
+
+<div class="two">
+  <section class="layer mdl explo">
+    <div class="layer-head"><code>experimentos.py</code><span>decide qué modelo usar</span></div>
+    <div class="pad">
+      <div class="chips">
+        <span class="chip">dividir_temporal</span><span class="chip">folds_walk_forward</span><span class="chip">entrenar_y_evaluar</span><span class="chip">buscar_hiperparametros</span><span class="chip">entrenar_hurdle</span><span class="chip">evaluar_modelo</span><span class="chip">BaselinePromedioJugador</span><span class="chip">resumen_resultados</span><span class="chip">diferencia_bootstrap</span><span class="chip">cumple_requisitos</span><span class="chip">spearman_semanal</span><span class="chip">guardar_modelo</span>
+      </div>
+    </div>
+  </section>
+  <section class="layer feat explo">
+    <div class="layer-head"><code>features_exploratorio.py</code><span>variables que no entraron</span></div>
+    <div class="pad">
+      <div class="chips">
+        <span class="chip">agregar_volatilidad_jugador</span><span class="chip">agregar_interaccion</span><span class="chip">agregar_cambio_qb_titular</span><span class="chip">agregar_ofensiva_equipo</span><span class="chip">acotar_variable</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<p class="note"><i></i>Borde punteado: no corre en el flujo semanal. Los notebooks usan estos módulos para decidir qué modelo y qué variables; <b style="font-weight:500;color:var(--text-primary)">guardar_modelo</b> deja el archivo ya evaluado en <code class="i">weekly/wr/models/</code>, que es lo que <code class="i">modeling.py</code> aplica cada semana. El flujo no reentrena: reentrenar se decide en los notebooks. Cada modelo se elige con la métrica principal en validación y debe cumplir requisitos de calibración (<code class="i">docs/decisions/0004-metricas-de-seleccion.md</code>). Los modelos de cuantil, los ensambles, el de dos etapas y los jerárquicos se exploraron y quedan en <code class="i">weekly/wr/models/exploratorio/</code>, fuera del flujo semanal.</p>
+
+<footer>weekly/wr/src · pipeline.py → data.py → features.py → modeling.py · modelos en weekly/wr/models/</footer>
+
+</div>
+
+</body></html>

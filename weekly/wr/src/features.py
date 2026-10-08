@@ -16,27 +16,30 @@ cambio de QB, ofensiva de equipo, topes) viven en features_exploratorio.py y sol
 los notebooks.
 
 Seleccion de features (Fase 4) -- que variable, que decision, con que evidencia.
-Construccion y verificacion de no-fuga en notebooks/10_ingenieria_features.ipynb;
+Construccion y verificacion de no-fuga en notebooks/3.1_ingenieria_features.ipynb;
 evaluacion conjunta contra un modelo (no solo correlacion aislada) en
-notebooks/11_seleccion_features.ipynb:
+notebooks/3.2_seleccion_features.ipynb. La lista exacta de 34 variables (columnas_por_modelo) se
+fijo con la corrida de nb 3.2 anterior a la correccion de codigos de equipo de las alineaciones;
+con el dato corregido la misma regla daria 31 (nb 3.2, seccion 4.2; docs/HALLAZGOS.md).
 
 | Variable | Que es | Decision | Evidencia |
 |----------|--------|----------|-----------|
-| target_share/wopr/air_yards_share/receiving_epa/fantasy_points_ppr/receiving_first_downs (last5/season) | Que tanto del trabajo de pase del equipo recae en el jugador (participacion + eficiencia), resumido en sus ultimos 5 partidos o en lo que va de temporada | Incluir, prioritarias | Maxima importancia conjunta en los 3 targets (nb 11, secciones 4.2 y 5) |
-| Resto de columnas de uso/rendimiento (last5/season), incl. receiving_air_yards, receiving_10/16/20 | Volumen/produccion propia del jugador (recepciones, yardas, targets, etc.), mismo resumen por ventana | Incluir | Mismo patron, importancia real -- nombradas individualmente en nb 11 seccion 4.2 tras aparecer en el top 15 de al menos un target |
-| Ventana last3 | Promedio de sus ultimos 3 partidos | Incluir, secundaria | Aporta menos que last5/season en los 3 targets (nb 11) |
-| Ventana career | Promedio de toda su carrera hasta antes de esa semana | Conservar, no priorizar en modelado | Redundante frente a last5+season en conjunto, pese a buena correlacion aislada en Fase 3 (nb 11) |
-| target_share/air_yards_share/wopr juntas en Ridge | Las 3 miden participacion del jugador de formas distintas, muy correlacionadas entre si | Usar columnas_por_modelo("ridge") | Colinealidad 0.82-0.97 (nb 08, Fase 3) |
-| depth_team | Su lugar en la alineacion del equipo (1=titular/WR1, 2=WR2...) -- mas bajo es mejor | Incluir | Señal fuerte y nueva en recepciones/yardas (nb 11); cobertura en 2025+ resuelta via data.cargar_depth_charts_unificado (nb 21, ~97% de cobertura real, antes 0%) |
-| draft_pick | En que numero fue seleccionado en el draft (mas bajo = elegido antes); al no drafteado se le asigna peor que el ultimo pick real | Incluir (imputado: peor pick real + 1) | Confirmado con evidencia de modelo, no solo correlacion (nb 11) |
-| edad / anios_experiencia (+ _sq/_bucket para lineales) | Edad del jugador esa temporada / cuantas temporadas lleva en la NFL | Incluir | Confirmado con evidencia de modelo (nb 11); transformacion no lineal es especifica para Ridge |
-| racr_acotado | Eficiencia de conversion de yardas aereas (yardas recibidas / yardas de aire), con tope para evitar valores extremos | Se mantiene calculado, sin evidencia fuerte | No destaco en la evaluacion conjunta (nb 11) |
-| Volatilidad reciente (_volatilidad5) | Que tan parejo o irregular fue el jugador en sus ultimas 5 apariciones (alta = boom-bust, baja = consistente) | No incluir por ahora | Importancia nula/negativa en los 3 targets (nb 11) |
-| cambio_qb_titular / cambio_equipo | Si cambio el QB titular de su equipo, o si el jugador cambio de equipo, respecto a su aparicion anterior | No incluir en el feature set principal | Aporte marginal casi nulo una vez presentes las features de uso reciente (nb 11) -- matiza, no invalida, el hallazgo bivariado de Fase 3 (nb 08) |
-| Interacciones (target_share_x_ofensiva_equipo, draft_pick_x_experiencia, cambio_qb_x_target_share) | Combinan 2 variables ya existentes cada una (uso x ofensiva de equipo, draft x experiencia, cambio de QB x uso) | No incluir | Sin aporte claro, una incluso negativa (nb 11) |
-| Dureza defensiva del rival, Vegas/clima, acarreos de WR | Que tan dificil es el rival contra WR; puntos esperados por las casas de apuestas y clima; jugadas de carrera de un WR (jet sweeps) | No incluir | Confirmado sin efecto en Fase 3, no reevaluado sin razon nueva |
-| rest / div_game                                         | No incluir                             | Sin evidencia de aportar (nb 11) |
-| Filas sin ningun target esa semana (targets == 0)       | Decision de modelado, no de features -- se deja para Fase 5 | Afecta la funcion de perdida (Poisson/Tweedie ya sugerido en nb 05), no que columnas usar |
+| target_share/wopr/air_yards_share/receiving_epa/fantasy_points_ppr/receiving_first_downs (last5/season) | Que tanto del trabajo de pase del equipo recae en el jugador (participacion + eficiencia), resumido en sus ultimos 5 partidos o en lo que va de temporada | Incluir, prioritarias | Maxima importancia conjunta en los 3 targets (nb 3.2, secciones 4.2 y 5) |
+| Resto de columnas de uso/rendimiento (last5/season), incl. receiving_air_yards, receiving_10/16/20 | Volumen/produccion propia del jugador (recepciones, yardas, targets, etc.), mismo resumen por ventana | Incluir | Mismo patron, importancia real -- nombradas individualmente en nb 3.2 seccion 4.2 tras aparecer en el top 15 de al menos un target |
+| Ventana last3 | Promedio de sus ultimos 3 partidos | Incluir las que estan entre las 15 mas importantes de algun target | Aporta menos que last5/season en recepciones y yardas; la menor en touchdowns (nb 3.2) |
+| Ventana career | Promedio de toda su carrera hasta antes de esa semana | Incluir las que estan entre las 15 mas importantes de algun target | La mas debil en recepciones y yardas, la mas fuerte en touchdowns (nb 3.2) |
+| target_share/air_yards_share/wopr juntas en Ridge | Las 3 miden participacion del jugador de formas distintas, muy correlacionadas entre si | Usar columnas_por_modelo("ridge") | Colinealidad 0.82-0.97 (nb 2.5, Fase 3) |
+| depth_team | Su lugar en la alineacion del equipo (1=titular/WR1, 2=WR2...) -- mas bajo es mejor | Incluir | Señal fuerte y nueva en recepciones/yardas (nb 3.2); cobertura en 2025+ resuelta via data.cargar_depth_charts_unificado (nb 1.3, ~97% de cobertura real, antes 0%) |
+| draft_pick | En que numero fue seleccionado en el draft (mas bajo = elegido antes); al no drafteado se le asigna peor que el ultimo pick real | Incluir (imputado: peor pick real + 1) | Confirmado con evidencia de modelo, no solo correlacion (nb 3.2) |
+| edad / anios_experiencia (+ _sq/_bucket para lineales) | Edad del jugador esa temporada / cuantas temporadas lleva en la NFL | Incluir | Confirmado con evidencia de modelo (nb 3.2); transformacion no lineal es especifica para Ridge |
+| racr_acotado | Eficiencia de conversion de yardas aereas (yardas recibidas / yardas de aire), con tope para evitar valores extremos | Se mantiene calculado, sin evidencia fuerte | No destaco en la evaluacion conjunta (nb 3.2) |
+| Volatilidad reciente (_volatilidad5) | Que tan parejo o irregular fue el jugador en sus ultimas 5 apariciones (alta = boom-bust, baja = consistente) | No incluir | Importancia nula o muy pequena en los 3 targets (nb 3.2) |
+| cambio_qb_titular / cambio_equipo | Si cambio el QB titular de su equipo, o si el jugador cambio de equipo, respecto a su aparicion anterior | No incluir en el feature set principal | Aporte marginal casi nulo una vez presentes las features de uso reciente (nb 3.2) -- matiza, no invalida, el hallazgo bivariado de Fase 3 (nb 2.5) |
+| Interacciones (target_share_x_ofensiva_equipo, draft_pick_x_experiencia, cambio_qb_x_target_share) | Combinan 2 variables ya existentes cada una (uso x ofensiva de equipo, draft x experiencia, cambio de QB x uso) | No incluir | Sin aporte claro, una incluso negativa (nb 3.2) |
+| Dureza defensiva del rival, clima, acarreos de WR | Que tan dificil es el rival contra WR; temperatura y viento; jugadas de carrera de un WR (jet sweeps) | No incluir | Sin efecto en el analisis exploratorio (nb 2.3 a 2.5) |
+| Total implicito de las lineas de apuestas | Puntos que las casas de apuestas esperan que anote el equipo | Pendiente | Correlacion de 0.088 con las yardas (nb 2.3, con la formula corregida); candidata para la seleccion de variables pendiente (docs/HALLAZGOS.md) |
+| rest / div_game | Dias de descanso / partido contra un rival de la misma division | No incluir | Aporte minimo (nb 3.2) |
+| Filas sin ningun target esa semana (targets == 0)       | Decision de modelado, no de features -- se deja para Fase 5 | Afecta la funcion de perdida (Poisson/Tweedie ya sugerido en nb 2.2), no que columnas usar |
 """
 import numpy as np
 import pandas as pd
@@ -70,8 +73,7 @@ def agregar_promedios_jugador(stats, columnas, ventanas=(3, 5), id_col="player_i
 
     No se decide aqui cual ventana (3, 5, u otra) es "la correcta" -- se
     calculan todas las que se pidan y se deja que el analisis/modelo de las
-    fases siguientes muestre con evidencia cual aporta, igual que ya se hizo
-    con Vegas/clima (se probaron, no se asumieron).
+    fases siguientes muestre con evidencia cual aporta.
 
     Se usa groupby(...).transform() -- no groupby().apply() con
     reset_index manual, que es exactamente el patron que causo el bug de
@@ -118,9 +120,7 @@ def calcular_ratios_eficiencia(stats):
 
 def agregar_edad_experiencia(stats, jugadores, id_col="player_id"):
     """edad al 1 de septiembre de la temporada correspondiente, anios_experiencia
-    = temporada - temporada de novato -- misma convencion ya usada en
-    preeliminar/03_modelo_predictivo y 06_eda_general.ipynb, para poder comparar
-    criterios entre ambos proyectos."""
+    = temporada - temporada de novato (misma convencion que 2.3_eda_general.ipynb)."""
     df = stats.merge(
         jugadores[["gsis_id", "birth_date", "rookie_season"]],
         left_on=id_col,
@@ -136,7 +136,7 @@ def agregar_edad_experiencia(stats, jugadores, id_col="player_id"):
 def agregar_experiencia_no_lineal(stats, col="anios_experiencia"):
     """Termino cuadratico + bucket de anios_experiencia -- la relacion real tiene
     pico en 3-5 anios y baja despues, confirmado en los 3 targets
-    (06_eda_general.ipynb); una correlacion lineal no lo detecta, un termino
+    (2.3_eda_general.ipynb); una correlacion lineal no lo detecta, un termino
     cuadratico o un bucket si pueden. Cortes identicos a los ya validados con
     datos reales en ese notebook -- no se inventan de nuevo."""
     df = stats.copy()
@@ -180,7 +180,9 @@ calcular_ratios_eficiencia()."""
 
 FEATURES_SELECCIONADAS_ARBOL = sorted({
     # Union de las 15 variables mas importantes de cada uno de los 3 targets
-    # (11_seleccion_features.ipynb, seccion 4.2 -- 32 variables, evidencia real).
+    # (3.2_seleccion_features.ipynb, seccion 4.2): 32 variables en la corrida anterior a
+    # la correccion de codigos de equipo de las alineaciones; con el dato corregido la
+    # regla daria otra lista (docs/HALLAZGOS.md).
     "depth_team", "draft_pick", "target_share_last5_avg", "wopr_last5_avg",
     "fantasy_points_ppr_last5_avg", "targets_season_avg", "receptions_season_avg",
     "receiving_yards_season_avg", "receiving_first_downs_last5_avg", "wopr_last3_avg",
@@ -192,16 +194,15 @@ FEATURES_SELECCIONADAS_ARBOL = sorted({
     "receiving_20_last3_avg", "receiving_first_downs_career_avg", "target_share_last3_avg",
     "receptions_last5_avg", "target_share_career_avg", "air_yards_share_career_avg",
     "air_yards_share_last3_avg",
-    # Confirmadas con evidencia de modelo individual aunque quedaron justo fuera
-    # del top 15 (11_seleccion_features.ipynb, seccion 6): edad 0.067/0.003/0.001,
-    # anios_experiencia 0.017/0.000/0.000 en yardas/recepciones/TDs.
+    # Se agregan por regla: relacion no lineal con los resultados (2.3_eda_general.ipynb).
     "edad", "anios_experiencia",
 })
-"""Feature set de arbol (RF/XGBoost/HistGradientBoosting) para Fase 5 -- 34
-columnas. No incluye `career_avg` (redundante frente a last5+season en
-conjunto, ver seccion 5 de 11_seleccion_features.ipynb) ni las variables
-descartadas (volatilidad, cambio de QB/equipo, interacciones, rest/div_game,
-dureza defensiva, Vegas/clima)."""
+"""Feature set de arbol (RF/XGBoost/HistGradientBoosting) -- 34 columnas. Incluye los
+promedios de carrera que quedaron entre las mas importantes. No incluye las variables
+descartadas en 3.2_seleccion_features.ipynb (volatilidad, cambio de QB/equipo,
+interacciones, rest/div_game) ni las que el analisis exploratorio no paso a la evaluacion
+(dureza defensiva, clima); el total implicito de las lineas de apuestas queda como
+candidata para la seleccion pendiente (docs/HALLAZGOS.md)."""
 
 _COLINEALES_PARTICIPACION = {
     "target_share_last5_avg", "target_share_last3_avg", "target_share_career_avg",
@@ -212,7 +213,7 @@ _COLINEALES_PARTICIPACION = {
 def columnas_por_modelo(tipo="ridge"):
     """Feature set completo de Fase 5 por familia de modelo. 'arbol': las 34
     de FEATURES_SELECCIONADAS_ARBOL -- la colinealidad de target_share/
-    air_yards_share/wopr (0.82-0.97, 08_eda_multivariable.ipynb) no perjudica
+    air_yards_share/wopr (0.82-0.97, 2.5_eda_multivariable.ipynb) no perjudica
     a RandomForest/XGBoost/HistGradientBoosting. 'ridge': se quitan las
     versiones de target_share/air_yards_share (se conserva wopr, que ya las
     combina, mas receiving_epa -- la mas independiente del grupo) y se agrega

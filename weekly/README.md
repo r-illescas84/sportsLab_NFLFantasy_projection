@@ -10,22 +10,22 @@ Cada posición vive en su propia subcarpeta, con la misma forma general:
 
 ```
 <posicion>/
-  notebooks/
-    _reference/  # punto de partida heredado, congelado — no se edita, solo se consulta
-    ...          # los notebooks activos del pipeline (features, modelado, ensamblado semanal)
-  outputs/     # predicciones ya generadas, por año y semana
-  data/        # snapshots propios de los datos descargados (no el dato "en vivo" sin guardar)
-  models/      # modelos entrenados + una Model Card por target
-  docs/
-    tracking.csv   # una fila por corrida: fecha, modelo, target, métricas, ventana de datos
+  src/           # lo que corre cada semana: data.py -> features.py -> modeling.py -> pipeline.py;
+                 # experimentos.py y features_exploratorio.py solo los usan los notebooks
+  notebooks/     # análisis por etapa, numerados etapa.paso (ver notebooks/README.md)
+    _reference/  # notebooks originales, congelados: no se editan, solo se consultan
+  models/        # los modelos que aplica el pipeline, con su metadata
+    exploratorio/  # modelos probados que no entraron al flujo semanal
+  outputs/       # predicciones y métricas generadas, por temporada y semana
 ```
 
 ## Posiciones
 
-- **`wr/`** — la primera y, por ahora, la única completa de principio a fin (datos → EDA →
-  features → modelo comparado → tracking). Es la referencia para adaptar el trabajo de las
-  demás posiciones cuando llegue.
+- **`wr/`** — la primera y, por ahora, la única completa de principio a fin (datos → análisis
+  exploratorio → variables → modelado → evaluación → modelo final y flujo semanal). Es la
+  referencia para adaptar el trabajo de las demás posiciones.
 
-Al agregar una posición nueva, seguir la misma forma de carpetas y el mismo patrón de pipeline
-que `wr/` — no es necesario copiar su código línea por línea, sí su estructura y sus decisiones
-(split temporal, comparación de modelos con baseline, tracking de métricas por corrida).
+Al agregar una posición nueva, seguir la misma forma de carpetas, las mismas etapas de notebooks y
+las mismas decisiones: split temporal, comparación de modelos contra un baseline, y métricas de
+selección consistentes con lo que se predice
+([`docs/decisions/0004-metricas-de-seleccion.md`](../docs/decisions/0004-metricas-de-seleccion.md)).

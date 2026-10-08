@@ -11,7 +11,7 @@ import features
 def acotar_variable(stats, columna, limite=None, percentil=0.99):
     """Topa una columna inestable sobre su valor semanal CRUDO, antes de
     promediar -- evidencia: racr promediado empeora su curtosis (241 crudo -> 605
-    promediado, ver 05_eda_perfil_variables.ipynb), un solo valor disparado
+    promediado, ver 2.2_eda_perfil_variables.ipynb), un solo valor disparado
     arrastra el promedio de todo un jugador. limite=None calcula el percentil
     real de la columna en vez de un numero inventado."""
     df = stats.copy()
@@ -23,7 +23,7 @@ def acotar_variable(stats, columna, limite=None, percentil=0.99):
 def agregar_volatilidad_jugador(stats, columnas, ventana=5, id_col="player_id"):
     """Desviacion estandar de las ultimas `ventana` apariciones del jugador --
     mide consistencia/boom-bust, no solo nivel promedio (conectado con el
-    hallazgo de 09_eda_jugador_destacado.ipynb sobre semanas boom). shift(1)
+    hallazgo de 2.6_eda_jugador_destacado.ipynb sobre semanas boom). shift(1)
     antes de rolling().std(), mismo patron leak-safe que
     agregar_promedios_jugador(). min_periods=2: un desvio con una sola
     observacion no esta definido."""
@@ -40,9 +40,9 @@ def agregar_ofensiva_equipo(stats, columnas=("receiving_yards",), ventanas=(3, 5
     rezagado reutilizando agregar_promedios_jugador() con id_col=team_col -- no
     duplica la logica de shift/rolling ya verificada sin fuga.
 
-    OJO con la expectativa correcta: 0.40 de estabilidad (07_eda_equipos.ipynb)
+    OJO con la expectativa correcta: 0.40 de estabilidad (2.4_eda_equipos.ipynb)
     es ANUAL, equipo-temporada. La version semana a semana ya se probo en
-    08_eda_multivariable.ipynb y da ~0.08 de correlacion individual (aclarado en
+    2.5_eda_multivariable.ipynb y da ~0.08 de correlacion individual (aclarado en
     07, celda 11) -- se construye porque tiene una base real, no porque vaya a
     repetir el 0.40."""
     equipo_semana = stats.groupby(["season", team_col, "week"], as_index=False)[

@@ -195,7 +195,7 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   si se apunta directo a la temporada en curso sin un adaptador. Acción: el pipeline nuevo
   necesita una función que detecte el esquema por temporada (`season <= 2024` vs. `>= 2025`) y
   normalice ambos a las mismas columnas antes de usarlos juntos.
-  **Resuelto (2026-09-30, `21_unificacion_depth_chart.ipynb`):** `data.cargar_depth_charts_unificado()`
+  **Resuelto (2026-09-30, `1.3_unificacion_alineaciones.ipynb`):** `data.cargar_depth_charts_unificado()`
   mapea cada `dt` (esquema 2025+) al próximo partido real de ese equipo (`pd.merge_asof`,
   `direction="forward"`, contra el calendario) y se queda con el snapshot más cercano al partido
   por equipo-semana. Verificado con 2 casos reales (Marvin Harrison Jr., Ja'Marr Chase, ambos WR1
@@ -218,7 +218,8 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
      equipos que no llegaron a playoffs (confirmado con Atlanta 2024, que terminó 8-9 y no jugó
      postemporada). Parece un snapshot extra de fin de temporada mal etiquetado, no un partido
      real. Filtrar por `game_type=="REG"` no es suficiente por sí solo — hace falta acotar
-     también `week <= 18`.
+     también la semana a la última real de temporada regular (17 hasta 2020, 18 desde 2021; ver
+     el hallazgo de códigos de equipo, más abajo).
 
   Las dos funciones ya corregidas: `cargar_depth_charts_historico()` y
   `cargar_depth_charts_actual()` en `weekly/wr/src/data.py`.
@@ -246,7 +247,7 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   ~27% de diferencia relativa entre las filas duplicadas, hasta 2-3 veces esa magnitud en casos
   extremos (ejemplo real: Adonai Mitchell, semana 18, `predicted_receiving_tds` = 0.345 / 0.250 /
   0.149 en sus 3 filas). Se descubrió al construir el benchmark de Fase 5
-  (`weekly/wr/notebooks/16_benchmark_vs_legado.ipynb`) contra las predicciones reales ya guardadas
+  (`weekly/wr/notebooks/5.2_benchmark_vs_legado.ipynb`) contra las predicciones reales ya guardadas
   — tomar "la primera fila" a ciegas habría introducido un error arbitrario en la comparación. Se
   resolvió ahí con una regla explícita (promediar los duplicados por jugador-semana antes de
   calcular cualquier métrica), pero el defecto de origen sigue sin corregirse en el pipeline
@@ -255,14 +256,14 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
 - [x] 🔴 **`XGBRegressor().load_model()` falla al recargar un modelo guardado, con las versiones
   fijadas del proyecto** — `AttributeError: 'super' object has no attribute '__sklearn_tags__'`
   (xgboost 2.1.3 con scikit-learn 1.6.1), encontrado al verificar la recarga de los modelos
-  guardados en `18_validacion_temporada_actual.ipynb`. Guardar con `save_model()` funciona; lo que
+  guardados en `6.1_modelo_final_y_temporada_actual.ipynb`. Guardar con `save_model()` funciona; lo que
   falla es recargar con el wrapper de sklearn. **Resuelto:** se recarga con `xgboost.Booster()` y
   `DMatrix`, que es el camino que usa `modeling.cargar_modelos()`.
 
 - [x] 🔴 **`idata.to_netcdf()` de `arviz` guarda sin error pero falla al recargar** —
   incompatibilidad real entre las versiones instaladas de `h5netcdf`/`xarray`
   (`AttributeError: 'Variable' object has no attribute 'filters'`, confirmado en
-  `24_modelo_jerarquico_binomial_negativa.ipynb`). Mismo tipo de problema que el bug de
+  `4.7_jerarquico_touchdowns.ipynb`). Mismo tipo de problema que el bug de
   `XGBRegressor().load_model()` con el wrapper de sklearn ya documentado arriba — una
   incompatibilidad entre librerías de terceros en versiones recientes, no un error del código del
   proyecto. **Resuelto:** se usa `joblib` para guardar/recargar el objeto `idata` completo (mismo
@@ -271,7 +272,7 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
 
 - [x] **`receiving_yards` tiene valores negativos reales — rompe una transformación `log1p`
   directa.** 67 filas en el set de entrenamiento 2016-2021 (confirmado en
-  `26_jerarquico_receptions_yardas.ipynb`), ej. Eddie Royal, 2016 semana 12, 1 recepción con -6
+  `4.8_jerarquico_recepciones_yardas.ipynb`), ej. Eddie Royal, 2016 semana 12, 1 recepción con -6
   yardas netas. No es un error de datos: son jugadas reales donde el receptor fue tackleado
   detrás de la línea de golpeo (ej. un *screen pass* o motion en jet sweep que termina en
   pérdida) — un jugador puede terminar el partido con yardas de recepción netas negativas.
@@ -290,3 +291,95 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   afecta: usa el último scrape anterior al partido. **Resuelto:** `pipeline.ejecutar_semana` compara
   los equipos con alineación contra los del calendario y falla con un mensaje que dice cuáles
   faltan.
+
+- [x] 🔴 **La selección de modelos usaba MAE, que premia la mediana, cuando los modelos predicen
+  valores esperados.** En touchdowns (82% de ceros) la mediana es 0: en validación 2022-2023,
+  predecir 0 para todos tiene MAE de 0.193 contra 0.336 de predecir la media de entrenamiento, pero
+  su D² es −6.13 (`4.1_preparacion_y_metricas.ipynb`). Elegir por MAE favorece modelos que predicen
+  casi cero. **Resuelto:** política de métricas por resultado (RMSE en recepciones y yardas, deviance
+  de Poisson en touchdowns) con requisitos de calibración —
+  [`decisions/0004-metricas-de-seleccion.md`](decisions/0004-metricas-de-seleccion.md).
+
+- [x] 🔴 **Varias decisiones de modelado se tomaron mirando el conjunto de prueba.** El ganador de
+  touchdowns se eligió por MAE de prueba (`tabla_final.sort_values("test_mae")`); la adopción de
+  hiperparámetros se decidió con un umbral de mejora en MAE de prueba; y la comparación «entrenar con
+  todas las semanas o solo con las activas» se evaluó en prueba. La prueba solo debe reportarse una
+  vez. **Resuelto:** las tres decisiones se toman en validación (`4.2`, `4.3` y `4.4`).
+
+- [x] 🔴 **El modelo de touchdowns usaba los hiperparámetros por defecto de XGBoost (tasa 0.3,
+  profundidad 6, 100 árboles) y quedó descalibrado.** En validación: pendiente de calibración 0.57
+  (predicciones demasiado extremas), sesgo −0.075 y D² −0.206; en prueba, R² −0.040. La
+  descomposición de Gneiting y Resin (2023) muestra que su descalibración (0.0134) es mayor que su
+  discriminación (0.0112), y de ahí la R² negativa (`4.3_modelos_touchdowns.ipynb`).
+  **Resuelto:** sus hiperparámetros se eligen ahora con la grilla de la familia y deviance de Poisson
+  en validación.
+
+- [x] **Dos fugas pequeñas en `experimentos.entrenar_y_evaluar`.** El respaldo del baseline (la
+  media cuando el jugador no tiene promedios) se calculaba con todas las temporadas, prueba incluida,
+  y el imputador de RandomForest se ajustaba sobre todas las filas. **Resuelto:** ambos se ajustan
+  solo con entrenamiento.
+
+- [x] **El primer requisito de sesgo («sesgo total de a lo más 5% de la media») estaba mal
+  planteado.** La tasa de touchdowns por receptor bajó de 0.216 (2016-2021) a 0.193 (2022-2023): hasta
+  predecir la media de entrenamiento tiene 12% de sesgo en validación, así que ningún modelo
+  entrenado con años anteriores podía cumplirlo. **Resuelto:** el requisito mide el sesgo que el
+  modelo agrega por encima del de la media de entrenamiento (`experimentos.REQUISITOS`).
+
+- [x] **Enlaces relativos rotos a `docs/` en `1.1_calidad_fuentes.ipynb`.** Usaban `../../docs/`
+  cuando desde `weekly/wr/notebooks/` la ruta correcta es `../../../docs/`. **Resuelto.**
+
+- [ ] **La selección de variables usó como validación los mismos años que después son prueba del
+  modelado.** `3.2_seleccion_features.ipynb` eligió variables con validación 2024-2025, que en la
+  etapa 4 es el conjunto de prueba: el resultado de prueba puede ser algo optimista. Además, su
+  importancia por permutación se midió con MAE, que en touchdowns deja casi todas las importancias en
+  cero. Además, el corte por «las 15 más importantes de cada resultado» es inestable: con el dato de
+  alineaciones corregido, la misma regla daría 31 variables en lugar de las 34 que usan los modelos
+  (entrarían 6 y saldrían 9). Se mantienen las 34. `5.3_explicabilidad_y_casos.ipynb` comparaba
+  SHAP contra el orden de la corrida anterior; ya cita la actual, en la que ninguna variable de
+  carrera queda entre las 15 primeras de yardas. No se corrige en esta fase (el cambio de métricas
+  empieza después de la selección de variables); la verificación sin ningún uso previo es la temporada 2026
+  (`6.1_modelo_final_y_temporada_actual.ipynb`).
+
+- [x] **El modelo jerárquico de yardas se comparaba sin corregir la retransformación.** Se ajusta en
+  escala logarítmica, y deshacer el logaritmo del promedio da algo cercano a la mediana, no al valor
+  esperado: en validación subestima 10.8 yardas por receptor, y aun así tiene el MAE más bajo de su
+  tabla. La corrección estándar de Duan (1983) se va al extremo contrario (+12.5 yardas, pendiente
+  0.44). **Resuelto en la comparación:** `4.8_jerarquico_recepciones_yardas.ipynb` reporta las dos
+  versiones; ninguna se adopta.
+
+- [x] **El «techo» de R² de touchdowns de `4.1_preparacion_y_metricas.ipynb` suponía Poisson.** El
+  cálculo (varianza − media) / varianza da 0.06–0.07, pero el modelo elegido llega a 0.08–0.09
+  fuera de muestra: casi nunca hay más de un touchdown por partido, así que el azar real es menor que
+  el de una Poisson. **Resuelto:** 4.1 lo presenta como referencia bajo ese supuesto, no como tope.
+
+- [x] **La regla de empates no controlaba comparaciones múltiples.** Un intervalo de 95% por
+  comparación deja que, entre muchas alternativas, alguna parezca mejor por azar. En
+  `4.9_ventana_entrenamiento.ipynb`, 1 de 15 alternativas (ponderación por antigüedad en recepciones)
+  excluía el cero con 95% y no con el intervalo ajustado (con el dato de alineaciones anterior a su
+  corrección; con el corregido ya empata con 95%). Con el dato corregido, el caso que el ajuste sí
+  cambia es la mejora en recepciones contra el flujo heredado en `5.2_benchmark_vs_legado.ipynb`.
+  **Resuelto:** el ADR 0004 y `4.1_preparacion_y_metricas.ipynb` piden ajustar por Bonferroni cuando se
+  comparan varias alternativas; `experimentos.diferencia_bootstrap` acepta `nivel`.
+
+- [x] **Las alineaciones históricas usaban otros códigos de equipo que las estadísticas.**
+  `load_depth_charts` usa el código de la época (`OAK` hasta 2019, `SD` en 2016) y
+  `load_player_stats` el de la franquicia actual (`LV`, `LAC`) en todas las temporadas. El cruce por
+  equipo dejaba sin `depth_team` a todos los receptores de los Raiders 2016-2019 y de los Chargers
+  2016: 315 filas de WR que sí tenían alineación. Además, las temporadas 2016-2020 (17 semanas)
+  traían una «semana 18» de temporada regular, el mismo error de etiqueta que la «semana 19» de años
+  recientes. **Resuelto** en `data.cargar_depth_charts_historico`: los códigos se traducen al actual
+  y la semana se acota a 17 hasta 2020 y a 18 desde 2021. La cobertura de `depth_team` de 2016-2019
+  sube de 90.5-92.2% a 93.4-96.3%. Con los modelos elegidos, la métrica principal de validación
+  cambia a lo más 0.11% (yardas 29.538 → 29.572; recepciones y touchdowns, empate) y todos siguen
+  cumpliendo los requisitos.
+
+- [x] **El total implícito de las líneas de apuestas se calculaba con la línea invertida.** En
+  `nflreadpy`, `spread_line` positivo significa que el local es favorito (correlaciona +0.50 con el
+  margen real del local en 2024-2025), pero `2.3_eda_general.ipynb` calculaba el total del local como
+  `(total − spread)/2`. Con esa fórmula el total implícito correlacionaba −0.19 con los puntos reales
+  del local; corregido, +0.43. Su correlación con las yardas de un WR pasa de 0.0018 a 0.088.
+  **Resuelto** en 2.3. De ese resultado salía la conclusión «Vegas/clima sin efecto», por la que el
+  total implícito nunca entró a la evaluación de `3.2_seleccion_features.ipynb`.
+
+- [ ] **Evaluar el total implícito como variable.** Queda como candidata para la selección de
+  variables que se rehará (ver la entrada de `3.2_seleccion_features.ipynb` arriba).

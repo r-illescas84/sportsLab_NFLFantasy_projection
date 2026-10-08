@@ -2,12 +2,14 @@
   "target": "receiving_tds",
   "modelo": "XGBRegressor",
   "hiperparametros": {
-    "objective": "reg:tweedie",
+    "objective": "count:poisson",
     "enable_categorical": false,
+    "learning_rate": 0.08,
+    "max_depth": 3,
     "missing": NaN,
+    "n_estimators": 200,
     "n_jobs": -1,
-    "random_state": 0,
-    "tweedie_variance_power": 1.5
+    "random_state": 0
   },
   "features_arbol_en_orden": [
     "air_yards_share_career_avg",
@@ -45,16 +47,107 @@
     "wopr_last3_avg",
     "wopr_last5_avg"
   ],
-  "entrenado_con": "2016-2025 (toda la historia disponible al momento del guardado)",
-  "fecha_de_guardado": "2026-09-30T14:48:13.819687+00:00",
+  "media_entrenamiento": 0.20876747141041932,
+  "metrica_principal": "deviance_poisson",
+  "entrenado_con": "2016-2025 (temporadas completas); configuracion elegida en 4.4_ajuste_hiperparametros.ipynb",
+  "fecha_de_guardado": "2026-10-07T19:20:08.446156+00:00",
   "metricas_referencia": {
-    "mae_test_2024_2025": 0.2488,
-    "r2_test_2024_2025": -0.041,
-    "mae_legado_2025_real": 0.412,
-    "mae_nuevo_2025_real": 0.341
+    "validacion": {
+      "rmse": 0.4347,
+      "mae": 0.3081,
+      "r2": 0.0802,
+      "r2_oos": 0.0826,
+      "sesgo": 0.0261,
+      "sesgo_media_entrenamiento": 0.0234,
+      "media_real": 0.1929,
+      "pendiente_calibracion": 0.9604,
+      "deviance_poisson": 0.6167,
+      "d2_oos": 0.1223,
+      "brier_anota": 0.1302,
+      "auc_anota": 0.7129
+    },
+    "prueba": {
+      "rmse": 0.4463,
+      "mae": 0.3045,
+      "r2": 0.087,
+      "r2_oos": 0.0877,
+      "sesgo": 0.0001,
+      "sesgo_media_entrenamiento": 0.013,
+      "media_real": 0.2034,
+      "pendiente_calibracion": 1.0104,
+      "deviance_poisson": 0.6252,
+      "d2_oos": 0.1355,
+      "brier_anota": 0.1333,
+      "auc_anota": 0.7201
+    },
+    "walk_forward": {
+      "2021": {
+        "deviance_poisson": 0.6463,
+        "r2_oos": 0.084,
+        "d2_oos": 0.1229,
+        "pendiente_calibracion": 0.9994
+      },
+      "2022": {
+        "deviance_poisson": 0.6195,
+        "r2_oos": 0.0792,
+        "d2_oos": 0.1174,
+        "pendiente_calibracion": 0.9508
+      },
+      "2023": {
+        "deviance_poisson": 0.6154,
+        "r2_oos": 0.0815,
+        "d2_oos": 0.1241,
+        "pendiente_calibracion": 0.9474
+      },
+      "2024": {
+        "deviance_poisson": 0.6496,
+        "r2_oos": 0.0894,
+        "d2_oos": 0.1366,
+        "pendiente_calibracion": 1.0953
+      },
+      "2025": {
+        "deviance_poisson": 0.599,
+        "r2_oos": 0.0874,
+        "d2_oos": 0.137,
+        "pendiente_calibracion": 0.9665
+      }
+    },
+    "cumple_requisitos": true,
+    "temporada_2026": {
+      "semanas": "1-4",
+      "rmse": 0.4474,
+      "mae": 0.2874,
+      "r2": 0.0813,
+      "r2_oos": 0.0825,
+      "sesgo": -0.0138,
+      "sesgo_media_entrenamiento": 0.0163,
+      "media_real": 0.1924,
+      "pendiente_calibracion": 0.9777,
+      "deviance_poisson": 0.6302,
+      "d2_oos": 0.124,
+      "brier_anota": 0.1276,
+      "auc_anota": 0.7032
+    }
   },
+  "requisitos": {
+    "sesgo_adicional_maximo": 0.05,
+    "pendiente_minima": 0.9,
+    "pendiente_maxima": 1.1
+  },
+  "referencias": [
+    "Gneiting, T. (2011). Making and evaluating point forecasts. Journal of the American Statistical Association, 106(494), 746-762.",
+    "Czado, C., Gneiting, T. y Held, L. (2009). Predictive model assessment for count data. Biometrics, 65(4), 1254-1261.",
+    "Gneiting, T. y Resin, J. (2023). Regression diagnostics meets forecast evaluation: conditional calibration, reliability diagrams, and coefficient of determination. Electronic Journal of Statistics, 17(2), 3226-3286.",
+    "Campbell, J. Y. y Thompson, S. B. (2008). Predicting excess stock returns out of sample: can anything beat the historical average? Review of Financial Studies, 21(4), 1509-1531.",
+    "Kolassa, S. (2016). Evaluating predictive count data distributions in retail sales forecasting. International Journal of Forecasting, 32(3), 788-803.",
+    "Walsh, C. y Joshi, A. (2024). Machine learning for sports betting: should model selection be based on accuracy or calibration? Machine Learning with Applications.",
+    "Diebold, F. X. y Mariano, R. S. (1995). Comparing predictive accuracy. Journal of Business & Economic Statistics, 13(3), 253-263.",
+    "White, H. (2000). A reality check for data snooping. Econometrica, 68(5), 1097-1126.",
+    "Hansen, P. R. (2005). A test for superior predictive ability. Journal of Business & Economic Statistics, 23(4), 365-380."
+  ],
   "limitaciones_conocidas": [
-    "depth_team cubre ~97% de las filas WR reales de 2025+ (antes 0%, ver 21_unificacion_depth_chart.ipynb); ~9% de nulos restantes en todo el historico son jugadores no listados esa semana en la formacion ofensiva, no un error de mapeo",
-    "el modelo subestima sistematicamente las semanas boom (ver 13_comparacion_modelos.ipynb y 17_explicabilidad_shap.ipynb)"
+    "predice valores esperados: queda por debajo en semanas de produccion extrema y por encima en semanas sin produccion; no anticipa semanas atipicas (ver 5.3_explicabilidad_y_casos.ipynb)",
+    "depth_team tiene dato en 95.4% de las filas de 2026 ya jugadas; los faltantes son receptores que no aparecen en la alineacion de esa semana (ver 1.3_unificacion_alineaciones.ipynb)",
+    "evento raro (mayoria de semanas en cero): el R2 alcanzable es bajo aun con un modelo calibrado (ver 4.1_preparacion_y_metricas.ipynb)"
   ]
 }
