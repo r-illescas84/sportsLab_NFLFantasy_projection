@@ -1,11 +1,19 @@
-# Hallazgos — pendientes para la fase de gobernanza
+# Hallazgos
 
-Cosas encontradas durante la Fase 1 (réplica) que no se arreglan ahora — se corrigen después,
-en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
+Defectos encontrados en los datos y en el código, desde la réplica del flujo heredado (Fase 1)
+hasta el flujo semanal de WR. Cada entrada dice qué es, dónde está y por qué importa.
+
+- `[x]` cerrado: resuelto (la entrada dice dónde), o sin acción porque ese código ya no está en el
+  repositorio o quedó congelado como referencia en `weekly/wr/notebooks/_reference/` (la entrada dice
+  qué hace el flujo nuevo en su lugar).
+- `[ ]` abierto. Las 11 entradas abiertas son de la parte anual en R y de su archivo de ADP
+  (`annual/`, `data/adp_full_gsispos_*.csv`), en pausa por el
+  [ADR 0003](decisions/0003-alcance-wr-semanal.md). Ninguna afecta al flujo semanal de WR, que toma
+  la identidad de los jugadores de `load_players`, sin colisiones de `gsis_id` (DATASHEET).
 
 ---
 
-- [ ] 🔴 **`weekly_stats.ipynb` depende de un endpoint que se retrasa (`import_weekly_data()`),
+- [x] 🔴 **`weekly_stats.ipynb` depende de un endpoint que se retrasa (`import_weekly_data()`),
   cuando podría calcular lo mismo desde `import_pbp_data()` (siempre al día).** Verificado en
   vivo en semana 3 de la temporada 2026: `import_schedules()`, `import_pbp_data()` y
   `import_depth_charts()` ya estaban al día (el *depth chart* con datos de ese mismo día), pero
@@ -14,6 +22,8 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   cualquier semana mientras ese endpoint no se publique, aunque los datos crudos (PBP) para
   calcular las mismas stats ya existen. Gen1 (R) nunca tuvo este problema porque siempre agregó
   desde PBP directo, no desde un resumen. El pipeline nuevo en Python debe hacer lo mismo.
+  **Cerrado:** `weekly_stats.ipynb` se retiró en la Fase 1, y el flujo nuevo usa `load_player_stats`
+  de `nflreadpy`, que trae la temporada en curso al día (DATASHEET, vigencia).
 
 - [ ] 🔴 **Corrupción sistemática de códigos de equipo en el archivo de ADP de origen**, revisado
   en los 4 archivos finales (QB/RB/TE/WR, 278 jugadores): 7 casos reales de corrupción (2.5%),
@@ -44,7 +54,7 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   **Resuelto (2026-09-28):** mismo cambio que el hallazgo anterior — `Weekly projections/WR/outputs/2025/`
   ahora vive en `weekly/wr/outputs/2025/`; `data/weekly_data/weekly_predictions/` se retiró.
 
-- [ ] **`last5_avg.ipynb` truena en pandas 2.3.3 (celdas de equipo, no la de jugador)**: las celdas
+- [x] **`last5_avg.ipynb` truena en pandas 2.3.3 (celdas de equipo, no la de jugador)**: las celdas
   de `team_defense_last5_avg`/`team_offense_last5_avg` hacen
   `def_stats[[f"{c}_last5" for c in cols]] = def_stats.groupby(...).apply(...)` **sin**
   `.reset_index(drop=True)`. En el entorno original esto corrió bien (el CSV real existe), pero
@@ -57,27 +67,40 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   agregar `.droplevel(0)` después del `.apply(...)`. La causa: en pandas nuevo, ese `.apply()`
   devuelve un `MultiIndex` (equipo, índice original) en vez de solo el índice original; con
   `.droplevel(0)` se recupera el índice original y la asignación alinea correctamente.
+  **Cerrado:** `last5_avg.ipynb` se retiró en la Fase 1 por no tener consumidor. El flujo nuevo calcula
+  los promedios con `groupby().transform()` (`features.agregar_promedios_jugador`), que conserva el
+  índice.
 
-- [ ] **El mismo patrón "sin `reset_index`" (truena en pandas nuevo) se repite en `wrs_rec_yds.ipynb`,
+- [x] **El mismo patrón "sin `reset_index`" (truena en pandas nuevo) se repite en `wrs_rec_yds.ipynb`,
   `wrs_receptions.ipynb` y `wrs_rec_tds.ipynb`** (celdas 10, 11, 31, 32 — agregados de equipo
   ofensivo/defensivo, histórico y "temporada actual"). Mismo fix confirmado: `.droplevel(0)`.
+  **Cerrado sin corregir:** los notebooks heredados quedan congelados en
+  `weekly/wr/notebooks/_reference/` como referencia. El flujo nuevo no usa ese patrón
+  (`features.agregar_promedios_jugador`).
 
-- [ ] **El bug de fuga de `career_avg` está duplicado inline** dentro de `wrs_rec_yds.ipynb` /
+- [x] **El bug de fuga de `career_avg` está duplicado inline** dentro de `wrs_rec_yds.ipynb` /
   `wrs_receptions.ipynb` / `wrs_rec_tds.ipynb` (celdas 13 y 34) — no solo vive en
   `career_avg.ipynb`. Arreglar el archivo compartido no arregla estos 3 notebooks; cada uno
   recalcula su propia versión del promedio de carrera desde cero.
+  **Cerrado sin corregir:** notebooks congelados en `_reference/`. En el flujo nuevo cada promedio usa
+  solo partidos anteriores, verificado en `1.4_promedios_sin_fuga.ipynb`.
 
-- [ ] **Ruta de guardado con separador de Windows** en `wrs_rec_yds.ipynb` (y presumiblemente
+- [x] **Ruta de guardado con separador de Windows** en `wrs_rec_yds.ipynb` (y presumiblemente
   `wrs_receptions.ipynb`/`wrs_rec_tds.ipynb`): `f"weekly_predictions\{current_year}\..."` — solo
   funciona en Windows. En Linux/Mac no crea la carpeta esperada. Cambiar a `/`.
+  **Cerrado sin corregir:** notebooks congelados en `_reference/`. El flujo nuevo arma las rutas con
+  `pathlib` (`pipeline.py`).
 
-- [ ] **`wr_merge_stats.ipynb` tiene el mismo bug de ruta de Windows** en sus 2 celdas de
+- [x] **`wr_merge_stats.ipynb` tiene el mismo bug de ruta de Windows** en sus 2 celdas de
   lectura/escritura (`weekly_predictions\{current_year}\...`). Mismo fix: cambiar a `/`.
+  **Cerrado sin corregir:** mismo caso que el anterior.
 
-- [ ] **Desajuste doc/código en `wrs_rec_yds.ipynb`**: el markdown dice "WRs con al menos una
+- [x] **Desajuste doc/código en `wrs_rec_yds.ipynb`**: el markdown dice "WRs con al menos una
   temporada de 300+ yardas", el código usa `threshold = 400`.
+  **Cerrado sin corregir:** notebook congelado en `_reference/`. El flujo nuevo no filtra a los
+  receptores por yardas de temporada.
 
-- [ ] **La aplicación del modelo a la semana en curso depende de "hoy" (`datetime.today()`)** —
+- [x] **La aplicación del modelo a la semana en curso depende de "hoy" (`datetime.today()`)** —
   trae el *depth chart* del día en que se corre y *play-by-play* de la temporada actual.
   Confirmado con evidencia real: al re-correr `wrs_rec_yds.ipynb` en 2026 para una semana de
   2025, el *depth chart* de "hoy" no tiene datos de esa temporada y la lista de titulares sale
@@ -86,6 +109,10 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   original — pero la aplicación a una semana específica **no se puede reproducir después del
   hecho** sin guardar un snapshot histórico de esos datos "en vivo". Pendiente decidir si vale
   la pena empezar a guardar esos snapshots para que esto sea auditable a futuro.
+  **Resuelto** (Fase 6, `docs/decisions/0006-seguimiento-semanal.md`): el flujo recibe la temporada y
+  la semana, y guarda la tabla de variables con que se emitió cada predicción
+  (`variables_semana_N.csv`), con su huella en `tracking.csv`. Con ese archivo y el modelo guardado, la
+  predicción se reproduce exacta (`6.3_seguimiento_semanal.ipynb`).
 
 - [ ] 🔴 **No existe código que arme los archivos `*_zama.csv` finales de Gen1.** Los notebooks
   de agregación (`agg_ricky.ipynb`, `ricky_general_metrics.ipynb`) producen columnas de ADP/
@@ -141,18 +168,21 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   (y lo mismo para `Rush_Td.R`/`Rec_Td.R`). No corre en ninguna máquina que no sea esa —
   probablemente ni en la del propio autor si cambió de equipo. Fix: usar rutas relativas.
 
-- [ ] **`wrs_xgboost.ipynb` (prototipo viejo, no genera archivo)**: calcula un filtro `wrs`
+- [x] **`wrs_xgboost.ipynb` (prototipo viejo, no genera archivo)**: calcula un filtro `wrs`
   (solo WR con volumen mínimo) pero entrena con `data_f[features]` sin filtrar — el filtro se
   calcula y nunca se usa. No bloquea nada porque este notebook no alimenta el pipeline real,
   pero conviene decidir si se borra o se corrige.
+  **Cerrado:** `wrs_xgboost.ipynb` ya no está en el repositorio.
 
-- [ ] **Columnas duplicadas en `team_offense_season_avg_2014-24.csv`**: `completions_season_avg`,
+- [x] **Columnas duplicadas en `team_offense_season_avg_2014-24.csv`**: `completions_season_avg`,
   `attempts_season_avg`, `carries_season_avg` y `receptions_season_avg` aparecen 2 veces cada
   una en el encabezado (confirmado leyendo el CSV real). Causa: en `season_avg.ipynb`, la lista
   `cols` usada para el cálculo de equipo ofensivo repite esos 4 nombres por error de copiado.
   No corrompe los valores (ambas copias traen el mismo dato), pero rompe cualquier acceso por
   nombre de columna (`df['carries_season_avg']` devuelve 2 columnas, no 1). Acción sugerida:
   quitar los nombres repetidos de la lista `cols`.
+  **Cerrado:** ni el CSV ni `season_avg.ipynb` están ya en el repositorio (se retiraron en la Fase 1).
+  El flujo nuevo arma los agregados de equipo en `features.agregar_ofensiva_equipo`.
 
 - [ ] 🔴 **El marcador `"--"` de `gsis_id` (reservado para defensas de equipo) se filtra a
   jugadores reales sin cruce exitoso, en 4 de los 11 años del archivo de ADP.** En
@@ -203,7 +233,7 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   `depth_team` sobre filas WR reales de 2025 sube de 0% a ~97%. Integrada en
   `features.construir_tabla_modelado` — ya no es una limitación de los modelos guardados.
 
-- [ ] 🔴 **Al construir el adaptador del hallazgo anterior, aparecieron 3 trampas más — ninguna
+- [x] 🔴 **Al construir el adaptador del hallazgo anterior, aparecieron 3 trampas más — ninguna
   truena, las 3 producen un resultado silenciosamente incorrecto si no se conocen:**
   1. **Esquema viejo — `position` sola no identifica el rol de ataque.** Un jugador puede tener
      `position="WR"` en una fila con `formation="Special Teams"` (ej. como regresador de
@@ -221,21 +251,21 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
      también la semana a la última real de temporada regular (17 hasta 2020, 18 desde 2021; ver
      el hallazgo de códigos de equipo, más abajo).
 
-  Las dos funciones ya corregidas: `cargar_depth_charts_historico()` y
+  **Resuelto** en las dos funciones: `cargar_depth_charts_historico()` y
   `cargar_depth_charts_actual()` en `weekly/wr/src/data.py`.
 
-- [ ] 🔴 **`cargar_depth_charts_historico()` podía regresar 2 filas para el mismo jugador en la
+- [x] 🔴 **`cargar_depth_charts_historico()` podía regresar 2 filas para el mismo jugador en la
   misma semana, con `depth_team` distinto.** Confirmado en 357 de 27,928 combinaciones
   jugador-equipo-semana (1.3%) sobre 2016-2024 — ejemplo real: Braxton Miller, HOU, 2016 semana 1,
   aparece con `depth_team=2` y `depth_team=3` a la vez. El filtro ya existente
   (`formation=="Offense"` + `depth_position==<posición>` + `game_type=="REG"` + `week<=18`) no
   garantiza una sola fila por jugador-semana — el jugador queda listado más de una vez dentro de
   la misma formación/posición. Se descubrió al usar la función como insumo de un modelo en Fase 4:
-  cualquier cruce por `(season, week, team, gsis_id)` duplicaba esas filas en silencio. Fix:
+  cualquier cruce por `(season, week, team, gsis_id)` duplicaba esas filas en silencio. **Resuelto:**
   `cargar_depth_charts_historico()` ahora se queda con el mejor rango (`depth_team` mínimo) por
   jugador-semana antes de regresar el resultado.
 
-- [ ] 🔴 **Los CSVs de predicciones del pipeline heredado (`weekly/wr/outputs/2025/*_pred_week_N.csv`
+- [x] 🔴 **Los CSVs de predicciones del pipeline heredado (`weekly/wr/outputs/2025/*_pred_week_N.csv`
   y `wrs_complete_weekN.csv`) tienen filas duplicadas por jugador-semana, con predicciones
   distintas entre sí.** Confirmado semana por semana (7 a 18 de 2025): semanas 7, 8 y 10 sin
   duplicar; semana 9 duplica solo `receiving_tds` (1.89x); semana 11 y 13-17 duplican levemente
@@ -252,6 +282,8 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   resolvió ahí con una regla explícita (promediar los duplicados por jugador-semana antes de
   calcular cualquier métrica), pero el defecto de origen sigue sin corregirse en el pipeline
   heredado — queda fuera de alcance de este proyecto, documentado aquí para quien lo retome.
+  **Cerrado:** el flujo nuevo revisa en cada corrida que haya una sola fila por jugador, y si no, se
+  detiene (ADR 0006). Los CSVs heredados se quedan como están.
 
 - [x] 🔴 **`XGBRegressor().load_model()` falla al recargar un modelo guardado, con las versiones
   fijadas del proyecto** — `AttributeError: 'super' object has no attribute '__sklearn_tags__'`
