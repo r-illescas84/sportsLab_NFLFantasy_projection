@@ -2,35 +2,35 @@
   "target": "receiving_tds",
   "modelo": "bambi.Model, familia negativebinomial, efecto aleatorio (1|player_id)",
   "se_adopta": false,
-  "formula": "receiving_tds ~ anios_experiencia + catch_rate_career_avg + depth_team + draft_pick + edad + fantasy_points_ppr_last3_avg + fantasy_points_ppr_last5_avg + fantasy_points_ppr_season_avg + receiving_10_last3_avg + receiving_16_last5_avg + receiving_20_last3_avg + receiving_air_yards_season_avg + receiving_epa_last3_avg + receiving_first_downs_career_avg + receiving_first_downs_last5_avg + receiving_tds_season_avg + receiving_yards_career_avg + receiving_yards_last3_avg + receiving_yards_season_avg + receptions_career_avg + receptions_last3_avg + receptions_last5_avg + receptions_season_avg + targets_last3_avg + targets_last5_avg + targets_season_avg + wopr_last3_avg + wopr_last5_avg + anios_experiencia_sq + anios_experiencia_bucket + (1|player_id)",
+  "formula": "receiving_tds ~ receptions_career_avg + depth_team + receptions_season_avg + receptions_last3_avg + fantasy_points_ppr_last5_avg + total_implicito_equipo + receiving_yards_after_catch_career_avg + receiving_yards_career_avg + wopr_last3_avg + receiving_yards_last5_avg + fantasy_points_ppr_career_avg + receptions_last5_avg + fantasy_points_ppr_last3_avg + wopr_season_avg + target_share_x_ofensiva_equipo + targets_season_avg + draft_pick + receiving_first_downs_career_avg + receiving_yards_after_catch_season_avg + targets_last5_avg + edad + anios_experiencia + anios_experiencia_sq + anios_experiencia_bucket + (1|player_id)",
   "n_efectos_jugador": 505,
   "diagnostico_convergencia": {
-    "r_hat_max": 1.0147,
-    "parametros_r_hat_mayor_1_01": 16,
-    "parametros_totales": 540
+    "r_hat_max": 1.0109,
+    "parametros_r_hat_mayor_1_01": 1,
+    "parametros_totales": 534
   },
   "formato_guardado": "joblib (el netCDF de arviz falla al recargar con las versiones instaladas de h5netcdf/xarray)",
   "metricas_validacion_2022_2023": {
-    "deviance_poisson": 0.6296,
-    "d2_oos": 0.1039,
-    "r2_oos": 0.0675,
-    "sesgo": 0.0368,
-    "pendiente_calibracion": 0.8021,
-    "auc_anota": 0.704,
-    "mae": 0.3128
+    "deviance_poisson": 0.623,
+    "d2_oos": 0.1132,
+    "r2_oos": 0.0788,
+    "sesgo": 0.0267,
+    "pendiente_calibracion": 0.848,
+    "auc_anota": 0.7075,
+    "mae": 0.3052
   },
   "metricas_prueba_2024_2025": {
-    "deviance_poisson": 0.6389,
-    "d2_oos": 0.1166,
-    "r2_oos": 0.0745,
-    "sesgo": -0.0058,
-    "pendiente_calibracion": 0.8393,
-    "auc_anota": 0.7086,
-    "mae": 0.2993
+    "deviance_poisson": 0.6326,
+    "d2_oos": 0.1254,
+    "r2_oos": 0.0865,
+    "sesgo": -0.0096,
+    "pendiente_calibracion": 0.8753,
+    "auc_anota": 0.7135,
+    "mae": 0.2943
   },
-  "fecha_de_guardado": "2026-10-07T19:22:19.829335+00:00",
+  "fecha_de_guardado": "2026-10-08T01:31:40.940856+00:00",
   "limitaciones_conocidas": [
     "jugadores de prueba sin efecto propio (no estaban en entrenamiento): 2702 de 4952 filas; reciben el efecto de la poblacion",
-    "16 de 540 parametros con r_hat > 1.01 (16 son efectos individuales de jugador)"
+    "1 de 534 parametros con r_hat > 1.01 (1 son efectos individuales de jugador)"
   ]
 }

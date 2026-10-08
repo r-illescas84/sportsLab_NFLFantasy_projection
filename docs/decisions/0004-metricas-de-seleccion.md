@@ -65,7 +65,12 @@ Reglas:
   sigue empatando.
 - **Ajustes** (hiperparámetros, variables propias por resultado, ventanas de entrenamiento, mezclas)
   se adoptan solo si mejoran la métrica que decide en validación con una diferencia cuyo intervalo,
-  ajustado si se probaron varias alternativas, no incluye cero.
+  ajustado si se probaron varias alternativas, no incluye cero. Es condición necesaria, no
+  suficiente: una mejora real pero de milésimas que obliga a sumar modelos al flujo semanal puede no
+  adoptarse. Con las 25 variables del ADR 0005, el ensamble de cuatro modelos en recepciones de
+  `4.6_ensamble_simple.ipynb` mejora 0.26% del RMSE con el intervalo ajustado y no se adopta: queda
+  por debajo del margen de 1% que el ADR 0005 trata como despreciable y exigiría aplicar cuatro
+  modelos cada semana.
 
 La regla de comparaciones múltiples se agregó al revisar `4.9_ventana_entrenamiento.ipynb`: de 15
 alternativas, la ponderación por antigüedad en recepciones excluía el cero con el intervalo de 95% y

@@ -34,7 +34,8 @@ El planteamiento del problema y las decisiones de alcance están en
 | Notebook | Pregunta |
 |---|---|
 | [`3.1_ingenieria_features`](3.1_ingenieria_features.ipynb) | ¿Qué variables nuevas se construyen y cómo se verifica que no tienen fuga? |
-| [`3.2_seleccion_features`](3.2_seleccion_features.ipynb) | ¿Qué variables entran al modelo? |
+| [`3.2_seleccion_features`](3.2_seleccion_features.ipynb) | ¿Qué variables entran al modelo? (primera selección) |
+| [`3.3_seleccion_estable`](3.3_seleccion_estable.ipynb) | ¿Qué variables necesitan los modelos, con un orden estable y sin tocar la prueba? |
 
 ## 4. Modelado
 
@@ -43,7 +44,7 @@ El planteamiento del problema y las decisiones de alcance están en
 | [`4.1_preparacion_y_metricas`](4.1_preparacion_y_metricas.ipynb) | ¿Con qué tabla, particiones y métricas se comparan los modelos? |
 | [`4.2_modelos_recepciones_yardas`](4.2_modelos_recepciones_yardas.ipynb) | ¿Qué modelo predice mejor recepciones y yardas? |
 | [`4.3_modelos_touchdowns`](4.3_modelos_touchdowns.ipynb) | ¿Qué modelo predice mejor touchdowns, un conteo con mayoría de ceros? |
-| [`4.4_ajuste_hiperparametros`](4.4_ajuste_hiperparametros.ipynb) | ¿Cuánto mejora un ajuste de hiperparámetros o un conjunto de variables propio por resultado? |
+| [`4.4_ajuste_hiperparametros`](4.4_ajuste_hiperparametros.ipynb) | ¿Cuánto mejora un ajuste de hiperparámetros? |
 | [`4.5_regresion_cuantiles`](4.5_regresion_cuantiles.ipynb) | ¿Se puede dar un piso y un techo (P10/P90) además del valor esperado? |
 | [`4.6_ensamble_simple`](4.6_ensamble_simple.ipynb) | ¿Ayuda promediar varios modelos? |
 | [`4.7_jerarquico_touchdowns`](4.7_jerarquico_touchdowns.ipynb) | ¿Un modelo jerárquico con Binomial Negativa mejora touchdowns? |

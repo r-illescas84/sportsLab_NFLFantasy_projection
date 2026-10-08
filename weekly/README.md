@@ -26,6 +26,8 @@ Cada posición vive en su propia subcarpeta, con la misma forma general:
   referencia para adaptar el trabajo de las demás posiciones.
 
 Al agregar una posición nueva, seguir la misma forma de carpetas, las mismas etapas de notebooks y
-las mismas decisiones: split temporal, comparación de modelos contra un baseline, y métricas de
+las mismas decisiones: split temporal, comparación de modelos contra un baseline, métricas de
 selección consistentes con lo que se predice
-([`docs/decisions/0004-metricas-de-seleccion.md`](../docs/decisions/0004-metricas-de-seleccion.md)).
+([`docs/decisions/0004-metricas-de-seleccion.md`](../docs/decisions/0004-metricas-de-seleccion.md))
+y selección de variables con un orden estable y una regla de no inferioridad
+([`docs/decisions/0005-seleccion-de-variables.md`](../docs/decisions/0005-seleccion-de-variables.md)).

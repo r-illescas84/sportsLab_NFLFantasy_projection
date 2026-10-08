@@ -1,11 +1,16 @@
 """
-Variables de la Fase 4 que se construyeron y evaluaron pero NO entraron al modelo
-(tabla de decisiones en features.py; evidencia en notebooks/10 y 11).
+Variables candidatas que se construyeron y evaluaron pero NO entraron al modelo
+(tabla de decisiones en features.py; evidencia en 3.1_ingenieria_features.ipynb,
+3.2_seleccion_features.ipynb y 3.3_seleccion_estable.ipynb), y la tabla completa de
+candidatas de la seleccion de variables.
 
 Solo se usan desde los notebooks. El flujo semanal (pipeline.py) no las calcula: el
 modelo vigente solo usa las variables de features.FEATURES_SELECCIONADAS_ARBOL.
 """
+import pandas as pd
+
 import features
+from features import agregar_interaccion, agregar_ofensiva_equipo, agregar_total_implicito  # noqa: F401
 
 
 def acotar_variable(stats, columna, limite=None, percentil=0.99):
@@ -35,38 +40,6 @@ def agregar_volatilidad_jugador(stats, columnas, ventana=5, id_col="player_id"):
     return df
 
 
-def agregar_ofensiva_equipo(stats, columnas=("receiving_yards",), ventanas=(3, 5), team_col="team"):
-    """Agregado de equipo-semana (suma de todos los WR de ese equipo esa semana),
-    rezagado reutilizando agregar_promedios_jugador() con id_col=team_col -- no
-    duplica la logica de shift/rolling ya verificada sin fuga.
-
-    OJO con la expectativa correcta: 0.40 de estabilidad (2.4_eda_equipos.ipynb)
-    es ANUAL, equipo-temporada. La version semana a semana ya se probo en
-    2.5_eda_multivariable.ipynb y da ~0.08 de correlacion individual (aclarado en
-    07, celda 11) -- se construye porque tiene una base real, no porque vaya a
-    repetir el 0.40."""
-    equipo_semana = stats.groupby(["season", team_col, "week"], as_index=False)[
-        list(columnas)
-    ].sum()
-    equipo_semana = features.agregar_promedios_jugador(
-        equipo_semana, columnas, ventanas=ventanas, id_col=team_col
-    )
-    columnas_nuevas = [
-        c
-        for c in equipo_semana.columns
-        if c not in ["season", team_col, "week"] + list(columnas)
-    ]
-    equipo_semana = equipo_semana.rename(
-        columns={c: f"equipo_{c}" for c in columnas_nuevas}
-    )
-    columnas_equipo = [f"equipo_{c}" for c in columnas_nuevas]
-    return stats.merge(
-        equipo_semana[["season", team_col, "week"] + columnas_equipo],
-        on=["season", team_col, "week"],
-        how="left",
-    )
-
-
 def agregar_cambio_qb_titular(stats, qb_titular, id_col="player_id", team_col="team"):
     """Cruza data.identificar_qb_titular() y marca si el QB titular del equipo
     del jugador cambio respecto a SU aparicion anterior (shift(1) agrupado por
@@ -93,12 +66,124 @@ def agregar_cambio_qb_titular(stats, qb_titular, id_col="player_id", team_col="t
     return df.drop(columns=["qb_anterior", "team_anterior"])
 
 
-def agregar_interaccion(stats, col_a, col_b, nombre=None):
-    """Feature de interaccion: producto de 2 columnas ya existentes (idealmente
-    ya rezagadas). Generico para las combinaciones con razon concreta probadas en
-    la Fase 4 (volumen x contexto de equipo, draft x experiencia, cambio de QB x
-    volumen) -- no se escribe una funcion distinta por cada par."""
-    df = stats.copy()
-    nombre = nombre or f"{col_a}_x_{col_b}"
-    df[nombre] = df[col_a] * df[col_b]
-    return df
+COLUMNAS_BASE_CANDIDATAS = [
+    "receptions", "targets", "receiving_yards", "receiving_air_yards", "receiving_yards_after_catch",
+    "receiving_first_downs", "receiving_tds", "receiving_2pt_conversions", "receiving_10", "receiving_16",
+    "receiving_20", "receiving_40", "target_share", "air_yards_share", "wopr", "receiving_epa",
+    "fantasy_points_ppr", "yards_per_target", "catch_rate", "air_yards_per_target", "racr_acotado",
+]
+"""Las 21 estadisticas semanales que entran como candidatas en sus cuatro ventanas
+(VENTANAS_CANDIDATAS): las mismas de 3.2_seleccion_features.ipynb."""
+
+VENTANAS_CANDIDATAS = ("_season_avg", "_last3_avg", "_last5_avg", "_career_avg")
+
+CANDIDATAS_CONTEXTO = [
+    "receiving_yards_volatilidad5", "targets_volatilidad5",
+    "edad", "anios_experiencia", "anios_experiencia_sq", "draft_pick",
+    "rest", "div_game", "depth_team", "total_implicito_equipo",
+    "equipo_receiving_yards_season_avg", "equipo_receiving_yards_last3_avg",
+    "equipo_receiving_yards_last5_avg", "equipo_receiving_yards_career_avg",
+    "equipo_targets_season_avg", "equipo_targets_last3_avg",
+    "equipo_targets_last5_avg", "equipo_targets_career_avg",
+    "cambio_qb_titular_num", "cambio_equipo_num",
+    "target_share_x_ofensiva_equipo", "draft_pick_x_experiencia", "cambio_qb_x_target_share",
+]
+"""Candidatas numericas fuera de las ventanas: volatilidad, perfil del jugador, contexto de
+partido y de equipo, cambios de QB o de equipo, interacciones y el total implicito."""
+
+CANDIDATAS_CATEGORICAS = ["roof", "surface", "anios_experiencia_bucket"]
+
+VARIABLES_SELECCION_3_2 = [
+    "air_yards_share_career_avg",
+    "air_yards_share_last3_avg",
+    "air_yards_share_season_avg",
+    "anios_experiencia",
+    "catch_rate_career_avg",
+    "depth_team",
+    "draft_pick",
+    "edad",
+    "fantasy_points_ppr_last3_avg",
+    "fantasy_points_ppr_last5_avg",
+    "fantasy_points_ppr_season_avg",
+    "receiving_10_last3_avg",
+    "receiving_16_last5_avg",
+    "receiving_20_last3_avg",
+    "receiving_air_yards_season_avg",
+    "receiving_epa_last3_avg",
+    "receiving_first_downs_career_avg",
+    "receiving_first_downs_last5_avg",
+    "receiving_tds_season_avg",
+    "receiving_yards_career_avg",
+    "receiving_yards_last3_avg",
+    "receiving_yards_season_avg",
+    "receptions_career_avg",
+    "receptions_last3_avg",
+    "receptions_last5_avg",
+    "receptions_season_avg",
+    "target_share_career_avg",
+    "target_share_last3_avg",
+    "target_share_last5_avg",
+    "targets_last3_avg",
+    "targets_last5_avg",
+    "targets_season_avg",
+    "wopr_last3_avg",
+    "wopr_last5_avg",
+]
+"""Las 34 variables que eligio 3.2_seleccion_features.ipynb (union de las 15 mas importantes de
+cada target, mas edad y experiencia). Quedan como registro: 3.3_seleccion_estable.ipynb las usa de
+referencia al comparar conjuntos."""
+
+
+def columnas_candidatas():
+    """(numericas, categoricas) de la seleccion de variables: 84 en ventanas, 23 de contexto
+    y 3 categoricas -- las 109 de 3.2_seleccion_features.ipynb mas el total implicito."""
+    numericas = [f"{c}{v}" for c in COLUMNAS_BASE_CANDIDATAS for v in VENTANAS_CANDIDATAS]
+    return numericas + list(CANDIDATAS_CONTEXTO), list(CANDIDATAS_CATEGORICAS)
+
+
+def construir_tabla_candidatas(seasons=range(2016, 2026)):
+    """Tabla WR por jugador-semana con todas las candidatas (columnas_candidatas()). Misma
+    construccion que 3.2_seleccion_features.ipynb, con dos cambios: la alineacion es la
+    unificada (data.cargar_depth_charts_unificado, con dato desde 2025, la que usan los
+    modelos) y se agrega el total implicito. Todas se conocen antes del partido: las
+    estadisticas entran rezagadas y el contexto (linea, descanso, estadio) se publica antes.
+
+    Requiere `data.py` en el mismo path (sys.path.insert(0, "../src"))."""
+    import data
+
+    seasons = list(seasons)
+    stats = data.cargar_stats_semanales(seasons)
+    jugadores = data.cargar_jugadores()
+    calendario = data.cargar_calendario(seasons)
+    depth = data.cargar_depth_charts_unificado(seasons, calendario=calendario)
+    qb_titular = data.identificar_qb_titular(stats)
+
+    wr = stats[stats["position"] == "WR"].copy()
+    wr = features.calcular_ratios_eficiencia(wr)
+    wr["racr"] = (wr["receiving_yards"] / wr["receiving_air_yards"]).where(wr["receiving_air_yards"] > 0)
+    wr = acotar_variable(wr, "racr", percentil=0.99)
+    wr = features.agregar_promedios_jugador(wr, COLUMNAS_BASE_CANDIDATAS, ventanas=(3, 5))
+    wr = agregar_volatilidad_jugador(wr, ["receiving_yards", "targets"], ventana=5)
+    wr = features.agregar_edad_experiencia(wr, jugadores)
+    wr = features.agregar_experiencia_no_lineal(wr)
+    wr = features.agregar_draft_pick(wr, jugadores)
+    wr = agregar_ofensiva_equipo(wr, columnas=("receiving_yards", "targets"), ventanas=(3, 5))
+    wr = agregar_cambio_qb_titular(wr, qb_titular)
+    wr["cambio_qb_titular_num"] = wr["cambio_qb_titular"].astype(float)
+    wr["cambio_equipo_num"] = wr["cambio_equipo"].astype(float)
+    wr = agregar_total_implicito(wr, calendario)
+
+    partido = ["season", "week", "div_game", "roof", "surface"]
+    local = calendario[partido + ["home_team", "home_rest"]].rename(columns={"home_team": "team", "home_rest": "rest"})
+    visita = calendario[partido + ["away_team", "away_rest"]].rename(columns={"away_team": "team", "away_rest": "rest"})
+    filas = len(wr)
+    wr = wr.merge(pd.concat([local, visita], ignore_index=True), on=["season", "week", "team"], how="left")
+    wr = wr.merge(depth[["season", "week", "team", "player_id", "depth_team"]],
+                  on=["season", "week", "team", "player_id"], how="left")
+    assert len(wr) == filas, "los cruces con calendario y alineaciones no deben duplicar filas"
+
+    wr = agregar_interaccion(wr, "target_share_last5_avg", "equipo_receiving_yards_season_avg",
+                             "target_share_x_ofensiva_equipo")
+    wr = agregar_interaccion(wr, "draft_pick", "anios_experiencia", "draft_pick_x_experiencia")
+    wr = agregar_interaccion(wr, "cambio_qb_titular_num", "target_share_last5_avg", "cambio_qb_x_target_share")
+    return wr.reset_index(drop=True)

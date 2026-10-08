@@ -1,6 +1,6 @@
 # Glosario de variables — pipeline WR semanal
 
-Guía para entender cada variable del proyecto sin necesidad de conocer fútbol americano: qué mide, de qué fuente viene, cómo se calcula, un ejemplo real y si el modelo la usa. Cubre las cuatro tablas de datos (`nflreadpy`), las variables que construye `features.py`, las 34 que usan los modelos y las que se probaron y se descartaron.
+Guía para entender cada variable del proyecto sin necesidad de conocer fútbol americano: qué mide, de qué fuente viene, cómo se calcula, un ejemplo real y si el modelo la usa. Cubre las cuatro tablas de datos (`nflreadpy`), las variables que construye `features.py`, las 25 que usan los modelos y las que se probaron y se descartaron.
 
 Las definiciones de las columnas de las tablas de origen salen de los [diccionarios oficiales de `nflverse`](https://github.com/nflverse/nflreadr/tree/main/data-raw), traducidas. Donde la fuente no define una columna, se indica y se explica cómo se comprobó su significado.
 
@@ -25,8 +25,8 @@ Las definiciones de las columnas de las tablas de origen salen de los [diccionar
 |---|---|
 | **Resultado** | Es lo que los modelos predicen. |
 | **Insumo** | No entra tal cual al modelo; de ella se calculan variables que sí entran. |
-| **Modelo** | Una de las 34 variables que usan los 3 modelos vigentes. |
-| **Evaluada** | Se construyó y probó en los notebooks 3.1 y 3.2 y no entró al modelo. |
+| **Modelo** | Una de las 25 variables que usan los 3 modelos vigentes. |
+| **Evaluada** | Se construyó y probó en los notebooks 3.1 a 3.3 y no entró al modelo. |
 | **Fuente** | Viene en las tablas de `nflreadpy`; el pipeline semanal no la usa. |
 
 **Regla que explica casi todo el diseño:** los modelos nunca ven lo que pasó en el partido que predicen. Para predecir la semana 13 solo usan lo ocurrido en semanas anteriores (por eso las variables del modelo son promedios del pasado, ver sección 7). Si se colara un dato del propio partido, el modelo parecería muy bueno en pruebas y fallaría al predecir una semana que aún no se juega.
@@ -134,26 +134,26 @@ Valores de **un solo partido**. El modelo no los usa directamente: toma sus prom
 
 | Variable | Qué mide | Ejemplo (Ja'Marr Chase, s. 13) | Rango observado | Dónde se usa |
 |---|---|---|---|---|
-| `receptions` | Pases atrapados. | 7 | 0 · 2 · 18 | **Resultado.** Insumo: entra al modelo como `receptions_last3_avg`, `receptions_last5_avg`, `receptions_season_avg`, `receptions_career_avg` |
-| `targets` | Veces que le lanzaron el balón (objetivos). | 14 | 0 · 4 · 23 | Insumo: entra al modelo como `targets_last3_avg`, `targets_last5_avg`, `targets_season_avg` |
-| `receiving_yards` | Yardas ganadas en recepciones. | 110 | -13 · 23 · 300 | **Resultado.** Insumo: entra al modelo como `receiving_yards_last3_avg`, `receiving_yards_season_avg`, `receiving_yards_career_avg` |
-| `receiving_air_yards` | Yardas aéreas de todos sus objetivos, atrapados o no (sección 2). | 171 | -32 · 35 · 334 | Insumo: entra al modelo como `receiving_air_yards_season_avg` |
-| `receiving_first_downs` | Primeros downs ganados por recepción. | 5 | 0 · 1 · 14 | Insumo: entra al modelo como `receiving_first_downs_last5_avg`, `receiving_first_downs_career_avg` |
-| `receiving_tds` | Touchdowns tras recepción. | 0 | 0 · 0 · 4 | **Resultado.** Insumo: entra al modelo como `receiving_tds_season_avg` |
-| `receiving_10` | Recepciones que ganaron **10 o más yardas**. La fuente no la define; se verificó contra las jugadas de 2024: coincide con «recepciones de ≥10 yardas» en 99.67 % de los partidos de WR. | 5 | 0 · 1 · 10 | Insumo: entra al modelo como `receiving_10_last3_avg` |
-| `receiving_16` | Recepciones de **16 o más yardas** (misma verificación: 99.63 %). | 1 | 0 · 0 · 7 | Insumo: entra al modelo como `receiving_16_last5_avg` |
-| `receiving_20` | Recepciones de **20 o más yardas** (misma verificación: 99.75 %). | 1 | 0 · 0 · 7 | Insumo: entra al modelo como `receiving_20_last3_avg` |
-| `receiving_40` | Recepciones de **40 o más yardas** («jugada larga»; verificación 99.92 %). | 1 | 0 · 0 · 3 | Evaluada (notebook 3.2); no llegó al top de ningún resultado |
-| `target_share` | Participación: qué fracción de los objetivos de su equipo recibió él. Se reproduce exactamente como sus objetivos entre la suma de objetivos de todos los jugadores del equipo (coincide en 100.0 % de las filas WR). | 0.318 (14 de 44) | 0.000 · 0.114 · 0.667 | Insumo: entra al modelo como `target_share_last3_avg`, `target_share_last5_avg`, `target_share_career_avg` |
-| `air_yards_share` | Participación en yardas aéreas: qué fracción de las yardas aéreas de su equipo le tocaron. Se usa tal como la publica la fuente: al reconstruirla sumando las yardas aéreas de los jugadores de la tabla solo coincide en 52.53 % de las filas, así que el denominador de la fuente no es esa suma. Puede ser negativa cuando sus yardas aéreas del partido fueron negativas. | 0.450 (45 %) | -0.423 · 0.140 · 1.842 | Insumo: entra al modelo como `air_yards_share_last3_avg`, `air_yards_share_season_avg`, `air_yards_share_career_avg` |
-| `wopr` | *Weighted OPportunity Rating*: resume en un número cuánto lo usa el equipo, combinando objetivos y profundidad. Fórmula oficial: 1.5 × `target_share` + 0.7 × `air_yards_share`; se comprobó exacta en las 23,610 filas WR (diferencia máxima: 0). | 0.792 = 1.5 × 0.318 + 0.7 × 0.450 | -0.101 · 0.277 · 1.789 | Insumo: entra al modelo como `wopr_last3_avg`, `wopr_last5_avg` |
-| `receiving_epa` | Puntos esperados agregados sumados sobre las jugadas en que fue objetivo (sección 2). Vacío cuando no tuvo objetivos. | 7.26 | -23.14 · 0.73 · 24.68 | Insumo: entra al modelo como `receiving_epa_last3_avg` |
-| `fantasy_points_ppr` | Puntos de fantasy en formato PPR (1 punto por recepción). Se comprobó que equivalen a los puntos estándar más 1 por recepción en 100 % de las filas WR. | 18 | -3 · 5.2 · 57.9 | Insumo: entra al modelo como `fantasy_points_ppr_last3_avg`, `fantasy_points_ppr_last5_avg`, `fantasy_points_ppr_season_avg` |
+| `receptions` | Pases atrapados. | 7 | 0 · 2 · 18 | **Resultado.** Insumo: entra al modelo como `receptions_career_avg`, `receptions_season_avg`, `receptions_last3_avg`, `receptions_last5_avg` |
+| `targets` | Veces que le lanzaron el balón (objetivos). | 14 | 0 · 4 · 23 | Insumo: entra al modelo como `targets_season_avg`, `targets_last5_avg` |
+| `receiving_yards` | Yardas ganadas en recepciones. | 110 | -13 · 23 · 300 | **Resultado.** Insumo: entra al modelo como `receiving_yards_career_avg`, `receiving_yards_last5_avg` |
+| `receiving_air_yards` | Yardas aéreas de todos sus objetivos, atrapados o no (sección 2). | 171 | -32 · 35 · 334 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
+| `receiving_first_downs` | Primeros downs ganados por recepción. | 5 | 0 · 1 · 14 | Insumo: entra al modelo como `receiving_first_downs_career_avg` |
+| `receiving_tds` | Touchdowns tras recepción. | 0 | 0 · 0 · 4 | **Resultado.** Sus promedios solo los usa la referencia de los notebooks; no entra al modelo como variable |
+| `receiving_10` | Recepciones que ganaron **10 o más yardas**. La fuente no la define; se verificó contra las jugadas de 2024: coincide con «recepciones de ≥10 yardas» en 99.67 % de los partidos de WR. | 5 | 0 · 1 · 10 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
+| `receiving_16` | Recepciones de **16 o más yardas** (misma verificación: 99.63 %). | 1 | 0 · 0 · 7 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
+| `receiving_20` | Recepciones de **20 o más yardas** (misma verificación: 99.75 %). | 1 | 0 · 0 · 7 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
+| `receiving_40` | Recepciones de **40 o más yardas** («jugada larga»; verificación 99.92 %). | 1 | 0 · 0 · 3 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
+| `target_share` | Participación: qué fracción de los objetivos de su equipo recibió él. Se reproduce exactamente como sus objetivos entre la suma de objetivos de todos los jugadores del equipo (coincide en 100.0 % de las filas WR). | 0.318 (14 de 44) | 0.000 · 0.114 · 0.667 | Insumo: entra al modelo como `target_share_last5_avg`, `target_share_last3_avg`, `target_share_season_avg` y dentro de `target_share_x_ofensiva_equipo` |
+| `air_yards_share` | Participación en yardas aéreas: qué fracción de las yardas aéreas de su equipo le tocaron. Se usa tal como la publica la fuente: al reconstruirla sumando las yardas aéreas de los jugadores de la tabla solo coincide en 52.53 % de las filas, así que el denominador de la fuente no es esa suma. Puede ser negativa cuando sus yardas aéreas del partido fueron negativas. | 0.450 (45 %) | -0.423 · 0.140 · 1.842 | Insumo: entra al modelo como `air_yards_share_last3_avg` |
+| `wopr` | *Weighted OPportunity Rating*: resume en un número cuánto lo usa el equipo, combinando objetivos y profundidad. Fórmula oficial: 1.5 × `target_share` + 0.7 × `air_yards_share`; se comprobó exacta en las 23,610 filas WR (diferencia máxima: 0). | 0.792 = 1.5 × 0.318 + 0.7 × 0.450 | -0.101 · 0.277 · 1.789 | Insumo: entra al modelo como `wopr_last3_avg`, `wopr_season_avg` |
+| `receiving_epa` | Puntos esperados agregados sumados sobre las jugadas en que fue objetivo (sección 2). Vacío cuando no tuvo objetivos. | 7.26 | -23.14 · 0.73 · 24.68 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
+| `fantasy_points_ppr` | Puntos de fantasy en formato PPR (1 punto por recepción). Se comprobó que equivalen a los puntos estándar más 1 por recepción en 100 % de las filas WR. | 18 | -3 · 5.2 · 57.9 | Insumo: entra al modelo como `fantasy_points_ppr_last5_avg`, `fantasy_points_ppr_career_avg`, `fantasy_points_ppr_last3_avg` |
 | `fantasy_points` | Puntos de fantasy estándar, sumando recepción, acarreo y retornos: 0.1 por yarda, 6 por TD, −2 por fumble perdido, 2 por conversión de 2 puntos (esa regla reproduce el valor en 99.53 % de las filas WR; el resto no se investigó). | 11 | -3 · 2.7 · 44.9 | Fuente |
-| `receiving_yards_after_catch` | Yardas ganadas tras la recepción (YAC). La fuente avisa que es una estadística no oficial y puede variar levemente entre fuentes. | 9 | -23 · 6 · 153 | Evaluada (notebook 3.2); no llegó al top de ningún resultado |
+| `receiving_yards_after_catch` | Yardas ganadas tras la recepción (YAC). La fuente avisa que es una estadística no oficial y puede variar levemente entre fuentes. | 9 | -23 · 6 · 153 | Insumo: entra al modelo como `receiving_yards_after_catch_career_avg`, `receiving_yards_after_catch_season_avg` |
 | `receiving_fumbles` | Balones que soltó tras una recepción. | 0 | 0 · 0 · 2 | Fuente |
 | `receiving_fumbles_lost` | De esos, los que el rival recuperó. | 0 | 0 · 0 · 2 | Fuente |
-| `receiving_2pt_conversions` | Conversiones de 2 puntos por recepción. | 0 | 0 · 0 · 1 | Evaluada (notebook 3.2); no llegó al top de ningún resultado |
+| `receiving_2pt_conversions` | Conversiones de 2 puntos por recepción. | 0 | 0 · 0 · 1 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
 | `racr` | *Receiving Air Conversion Ratio*: yardas ganadas entre yardas aéreas. Mide cuánto convierte en yardas lo que le lanzan: >1 gana más de lo que viajó el balón (mucha YAC), <1 menos. Se comprobó como `receiving_yards` ÷ `receiving_air_yards` (coincide en 100 % de las filas con valor); queda vacío cuando no hay yardas aéreas que dividir (casi siempre, semanas sin objetivos). | 0.643 = 110 ÷ 171 | -2.00 · 0.74 · 116.00 | Evaluada (notebooks 3.1 y 3.2); ver `racr_acotado` en la sección 9 |
 | `special_teams_tds` | Touchdowns en retornos de patada o despeje. | 0 | 0 · 0 · 1 | Fuente |
 | `carries`, `rushing_yards` | Acarreos y yardas corriendo. Un receptor casi nunca corre con el balón (salvo jugadas de «barrida»). | 0 y 0 | 0 · 0 · 19 | Fuente (más columnas de acarreo en el Apéndice A.2) |
@@ -166,15 +166,15 @@ Dividen una estadística entre otra para medir **calidad** y no solo volumen. Un
 
 | Variable | Cómo se calcula | Ejemplo (Ja'Marr Chase, s. 13) | Dónde se usa |
 |---|---|---|---|
-| `catch_rate` | `receptions` ÷ `targets`: de los pases que le lanzan, qué fracción atrapa. | 7 ÷ 14 = 0.500 | Insumo: entra al modelo como `catch_rate_career_avg` |
-| `yards_per_target` | `receiving_yards` ÷ `targets`: yardas que genera por cada pase que recibe. | 110 ÷ 14 = 7.857 | Evaluada (notebook 3.2); no llegó al top |
-| `air_yards_per_target` | `receiving_air_yards` ÷ `targets`: profundidad promedio con la que lo buscan. | 171 ÷ 14 = 12.214 | Evaluada (notebook 3.2); no llegó al top |
+| `catch_rate` | `receptions` ÷ `targets`: de los pases que le lanzan, qué fracción atrapa. | 7 ÷ 14 = 0.500 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
+| `yards_per_target` | `receiving_yards` ÷ `targets`: yardas que genera por cada pase que recibe. | 110 ÷ 14 = 7.857 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
+| `air_yards_per_target` | `receiving_air_yards` ÷ `targets`: profundidad promedio con la que lo buscan. | 171 ÷ 14 = 12.214 | Evaluada (notebooks 3.2 y 3.3); no entró al modelo |
 
 Caso sin objetivos: DeAndre Carter (CLE, semana 1 de 2025) tuvo 0 objetivos, así que `catch_rate`, `yards_per_target` y `racr` quedan vacíos en esa fila.
 
 ### 7.2 Historial del jugador: cuatro ventanas
 
-Es la idea central del modelo: **describir al jugador con lo que hizo antes de ese partido**. Para cada una de las 15 estadísticas base (`COLUMNAS_BASE_MODELADO`) se calculan cuatro promedios, nombrados `{estadística}_{ventana}_avg`:
+Es la idea central del modelo: **describir al jugador con lo que hizo antes de ese partido**. Para cada una de las 10 estadísticas base (`COLUMNAS_BASE_MODELADO`: las 9 de las que salen las variables del modelo, más `receiving_tds`, cuyos promedios usa la referencia de los notebooks) se calculan cuatro promedios, nombrados `{estadística}_{ventana}_avg`:
 
 | Sufijo | Qué promedia | Pregunta que responde |
 |---|---|---|
@@ -212,7 +212,7 @@ Con eso, calculados a mano y comprobados contra la tabla (coinciden las 3 × 4 c
 | Variable | Qué es y cómo se calcula | Ejemplo (Ja'Marr Chase, s. 13) | Rango observado | Dónde se usa |
 |---|---|---|---|---|
 | `edad` | Años del jugador al 1 de septiembre de esa temporada: (1-sep-2025 − fecha de nacimiento) ÷ 365.25. Fecha de nacimiento: `birth_date` de `load_players()`. | nació el 2000-03-01 → 25.50 años | 20.8 · 25.5 · 38.0 | **Modelo** |
-| `anios_experiencia` | Temporada del partido menos temporada de novato (`rookie_season`). Un novato tiene 0. | 2025 − 2021 = 4 | 0 · 3 · 16 | **Modelo** |
+| `anios_experiencia` | Temporada del partido menos temporada de novato (`rookie_season`). Un novato tiene 0. | 2025 − 2021 = 4 | 0 · 3 · 16 | Solo en los modelos lineales de los notebooks, junto con sus versiones cuadrática y por tramos; no entra a los modelos de árboles |
 | `anios_experiencia_sq` | El cuadrado de la experiencia. La relación real tiene un pico entre los 3 y 5 años y luego baja; un modelo lineal solo la captura con un término cuadrático. | 4² = 16 | 0 · 9 · 256 | Solo para Ridge (modelo lineal); los modelos vigentes son de árboles y no la necesitan |
 | `anios_experiencia_bucket` | Experiencia en 4 grupos: Rookie (0), 1-2 años, 3-5 años, 6+ años. Mismo propósito que la anterior. | 3-5 años | 3-5 años: 7,494 · 1-2 años: 7,261 · 6+ años: 5,068 · Rookie: 3,787 | Solo para Ridge |
 | `draft_pick` | Número de selección en el draft de la NFL (1 = primer elegido). Más bajo = elegido antes. Los no drafteados reciben **el peor pick real + 1** (no la media), porque por definición son peores que el último elegido. | Ja'Marr Chase: pick 5 (ronda 1, CIN) | 3 · 117 · 473 | **Modelo** |
@@ -222,81 +222,71 @@ Ejemplo de `draft_pick` imputado: Kendrick Bourne (SF) no fue drafteado, así qu
 
 `years_of_experience` de `load_players()` no se usa: es un único valor por jugador (la tabla tiene una fila por jugador, no por temporada) y para Ja'Marr Chase marca 6, mientras que su experiencia en 2025 fue 4.
 
-## 8. Las 34 variables que usan los modelos
+## 8. Las 25 variables que usan los modelos
 
-Son las **mismas 34, en el mismo orden, para los tres modelos** (`receptions`, `receiving_yards` y `receiving_tds`, todos XGBoost; el de touchdowns usa objetivo Poisson). Salieron de la unión de las 15 variables más importantes de cada resultado en el notebook 3.2, más `edad` y `anios_experiencia`. Se guardan junto a cada modelo (`weekly/wr/models/*_metadata.json`), que es lo que `modeling.py` lee para ordenarlas igual que en el entrenamiento.
+Son las **mismas 25, en el mismo orden, para los tres modelos** (`receptions`, `receiving_yards` y `receiving_tds`, todos XGBoost; el de touchdowns usa objetivo Poisson). Salieron del notebook 3.3: un orden estable de las 110 candidatas por eliminación recursiva y el conjunto más chico que no es más de 1% peor que el mejor en validación ([ADR 0005](../decisions/0005-seleccion-de-variables.md)). Se guardan junto a cada modelo (`weekly/wr/models/*_metadata.json`), que es lo que `modeling.py` lee para ordenarlas igual que en el entrenamiento.
 
-**Peso**: parte de la mejora total del modelo que se atribuye a esa variable (importancia por ganancia de XGBoost; cada modelo suma 100 %, salvo redondeo). Sirve para ver qué usa cada modelo, no para afirmar causalidad. «—» = el modelo no la usa en ningún corte. Los tres modelos usan las 34 en al menos un corte, pero con pesos muy distintos entre variables.
+**Peso**: parte de la mejora total del modelo que se atribuye a esa variable (importancia por ganancia de XGBoost; cada modelo suma 100 %, salvo redondeo). Sirve para ver qué usa cada modelo, no para afirmar causalidad. «—» = el modelo no la usa en ningún corte. Los tres modelos usan las 25 en al menos un corte, pero con pesos muy distintos entre variables.
 
 | Variable | Qué es | Ejemplo (s. 13) | Rango (mín · mediana · máx) | Peso recepciones | Peso yardas | Peso TDs |
 |---|---|---|---|---|---|---|
-| `receptions_last3_avg` | Recepciones: promedio de sus últimas 3 apariciones | 7.00 | 0.00 · 2.33 · 12.67 | 5.5 % | 2.1 % | 1.7 % |
-| `receptions_last5_avg` | Recepciones: promedio de sus últimas 5 apariciones | 9.40 | 0.00 · 2.40 · 12.50 | 18.4 % | 0.5 % | 5.4 % |
-| `receptions_season_avg` | Recepciones: promedio de esta temporada hasta antes del partido | 7.90 | 0.00 · 2.44 · 16.00 | 3.0 % | 2.3 % | 1.2 % |
-| `receptions_career_avg` | Recepciones: promedio de toda su carrera hasta antes del partido | 6.58 | 0.00 · 2.47 · 12.50 | 4.7 % | 0.7 % | 0.8 % |
-| `targets_last3_avg` | Objetivos (pases dirigidos a él): promedio de sus últimas 3 apariciones | 12.33 | 0.00 · 4.00 · 18.00 | 0.4 % | 0.5 % | 0.6 % |
-| `targets_last5_avg` | Objetivos (pases dirigidos a él): promedio de sus últimas 5 apariciones | 14.40 | 0.00 · 4.00 · 17.50 | 21.6 % | 1.8 % | 3.0 % |
-| `targets_season_avg` | Objetivos (pases dirigidos a él): promedio de esta temporada hasta antes del partido | 11.70 | 0.00 · 4.00 · 21.00 | 1.4 % | 2.7 % | 2.8 % |
-| `receiving_yards_last3_avg` | Yardas recibidas: promedio de sus últimas 3 apariciones | 77.33 | -3.50 · 29.67 · 191.00 | 0.4 % | 0.9 % | 0.9 % |
-| `receiving_yards_season_avg` | Yardas recibidas: promedio de esta temporada hasta antes del partido | 86.10 | -3.50 · 30.88 · 215.00 | 0.1 % | 1.6 % | 0.8 % |
-| `receiving_yards_career_avg` | Yardas recibidas: promedio de toda su carrera hasta antes del partido | 87.31 | -3.50 · 32.50 · 180.00 | 0.7 % | 3.9 % | 7.8 % |
-| `receiving_air_yards_season_avg` | Yardas aéreas de sus objetivos: promedio de esta temporada hasta antes del partido | 100.50 | -14.00 · 41.77 · 282.00 | 0.2 % | 0.3 % | 1.2 % |
-| `receiving_first_downs_last5_avg` | Primeros downs por recepción: promedio de sus últimas 5 apariciones | 5.40 | 0.00 · 1.40 · 8.00 | 7.1 % | 5.3 % | 1.2 % |
-| `receiving_first_downs_career_avg` | Primeros downs por recepción: promedio de toda su carrera hasta antes del partido | 4.10 | 0.00 · 1.50 · 8.00 | 0.7 % | 0.5 % | 1.9 % |
-| `receiving_tds_season_avg` | Touchdowns recibidos: promedio de esta temporada hasta antes del partido | 0.50 | 0.00 · 0.12 · 3.00 | 0.1 % | 0.2 % | 1.2 % |
-| `receiving_10_last3_avg` | Recepciones de 10+ yardas: promedio de sus últimas 3 apariciones | 2.67 | 0.00 · 1.00 · 8.00 | 0.4 % | 1.5 % | 0.8 % |
-| `receiving_16_last5_avg` | Recepciones de 16+ yardas: promedio de sus últimas 5 apariciones | 2.00 | 0.00 · 0.60 · 5.00 | 0.1 % | 0.1 % | 2.7 % |
-| `receiving_20_last3_avg` | Recepciones de 20+ yardas: promedio de sus últimas 3 apariciones | 0.67 | 0.00 · 0.33 · 4.33 | 0.1 % | 0.2 % | 0.7 % |
-| `target_share_last3_avg` | Participación en los objetivos del equipo: promedio de sus últimas 3 apariciones | 0.337 | 0.00 · 0.12 · 0.48 | 1.9 % | 2.6 % | 2.2 % |
-| `target_share_last5_avg` | Participación en los objetivos del equipo: promedio de sus últimas 5 apariciones | 0.364 | 0.00 · 0.13 · 0.48 | 21.3 % | 27.3 % | 17.0 % |
-| `target_share_career_avg` | Participación en los objetivos del equipo: promedio de toda su carrera hasta antes del partido | 0.271 | 0.00 · 0.12 · 0.48 | 0.4 % | 0.4 % | 1.0 % |
-| `air_yards_share_last3_avg` | Participación en las yardas aéreas del equipo: promedio de sus últimas 3 apariciones | 0.351 | -0.08 · 0.16 · 0.97 | 0.1 % | 0.2 % | 1.4 % |
-| `air_yards_share_season_avg` | Participación en las yardas aéreas del equipo: promedio de esta temporada hasta antes del partido | 0.371 | -0.05 · 0.16 · 0.90 | 0.2 % | 0.5 % | 1.6 % |
-| `air_yards_share_career_avg` | Participación en las yardas aéreas del equipo: promedio de toda su carrera hasta antes del partido | 0.354 | -0.04 · 0.16 · 0.65 | 0.1 % | 0.3 % | 1.9 % |
-| `wopr_last3_avg` | Índice de oportunidad (wopr): promedio de sus últimas 3 apariciones | 0.751 | 0.00 · 0.30 · 1.24 | 0.2 % | 2.6 % | 6.9 % |
-| `wopr_last5_avg` | Índice de oportunidad (wopr): promedio de sus últimas 5 apariciones | 0.820 | 0.00 · 0.30 · 1.05 | 0.1 % | 20.0 % | 1.2 % |
-| `receiving_epa_last3_avg` | EPA en sus objetivos: promedio de sus últimas 3 apariciones | 1.173 | -10.59 · 0.82 · 15.37 | 0.2 % | 0.2 % | 1.0 % |
-| `fantasy_points_ppr_last3_avg` | Puntos de fantasy PPR: promedio de sus últimas 3 apariciones | 14.73 | -2.78 · 6.50 · 39.33 | 1.0 % | 2.7 % | 2.3 % |
-| `fantasy_points_ppr_last5_avg` | Puntos de fantasy PPR: promedio de sus últimas 5 apariciones | 21.48 | -2.78 · 6.66 · 36.00 | 6.4 % | 13.1 % | 21.0 % |
-| `fantasy_points_ppr_season_avg` | Puntos de fantasy PPR: promedio de esta temporada hasta antes del partido | 19.37 | -1.00 · 6.75 · 46.80 | 0.3 % | 1.3 % | 2.0 % |
-| `catch_rate_career_avg` | Porcentaje de pases atrapados: promedio de toda su carrera hasta antes del partido | 0.675 | 0.00 · 0.62 · 1.00 | 0.3 % | 0.3 % | 0.7 % |
-| `anios_experiencia` | Temporadas en la NFL (0 = novato) | 4 | 0.00 · 3.00 · 16.00 | 0.2 % | 0.3 % | 1.2 % |
-| `depth_team` | Lugar en la alineación de su equipo (1 = titular) | 1 | 1.00 · 2.00 · 8.00 | 1.8 % | 2.4 % | 2.0 % |
-| `draft_pick` | Número de selección en el draft (más bajo = elegido antes) | 5 | 3.00 · 117.00 · 473.00 | 0.2 % | 0.3 % | 1.5 % |
-| `edad` | Edad al 1 de septiembre de la temporada | 25.50 | 20.77 · 25.53 · 37.98 | 0.2 % | 0.4 % | 0.7 % |
+| `receptions_last3_avg` | Recepciones: promedio de sus últimas 3 apariciones | 7.00 | 0.00 · 2.33 · 12.67 | 5.2 % | 1.4 % | 0.9 % |
+| `receptions_last5_avg` | Recepciones: promedio de sus últimas 5 apariciones | 9.40 | 0.00 · 2.40 · 12.50 | 20.7 % | 0.2 % | 4.0 % |
+| `receptions_season_avg` | Recepciones: promedio de esta temporada hasta antes del partido | 7.90 | 0.00 · 2.44 · 16.00 | 4.2 % | 3.3 % | 0.9 % |
+| `receptions_career_avg` | Recepciones: promedio de toda su carrera hasta antes del partido | 6.58 | 0.00 · 2.47 · 12.50 | 4.2 % | 0.3 % | 0.4 % |
+| `targets_last5_avg` | Objetivos (pases dirigidos a él): promedio de sus últimas 5 apariciones | 14.40 | 0.00 · 4.00 · 17.50 | 20.7 % | 2.4 % | 2.5 % |
+| `targets_season_avg` | Objetivos (pases dirigidos a él): promedio de esta temporada hasta antes del partido | 11.70 | 0.00 · 4.00 · 21.00 | 1.4 % | 1.6 % | 1.6 % |
+| `receiving_yards_last5_avg` | Yardas recibidas: promedio de sus últimas 5 apariciones | 97.40 | -3.50 · 30.40 · 180.00 | 0.1 % | 4.9 % | 5.8 % |
+| `receiving_yards_career_avg` | Yardas recibidas: promedio de toda su carrera hasta antes del partido | 87.31 | -3.50 · 32.50 · 180.00 | 0.3 % | 4.9 % | 7.3 % |
+| `receiving_yards_after_catch_season_avg` | Yardas tras la recepción: promedio de esta temporada hasta antes del partido | 42.10 | -4.00 · 9.00 · 134.00 | 0.6 % | 0.4 % | 1.2 % |
+| `receiving_yards_after_catch_career_avg` | Yardas tras la recepción: promedio de toda su carrera hasta antes del partido | 39.18 | -3.00 · 10.29 · 92.00 | 1.0 % | 0.5 % | 0.9 % |
+| `receiving_first_downs_career_avg` | Primeros downs por recepción: promedio de toda su carrera hasta antes del partido | 4.10 | 0.00 · 1.50 · 8.00 | 0.8 % | 0.6 % | 4.5 % |
+| `target_share_last3_avg` | Participación en los objetivos del equipo: promedio de sus últimas 3 apariciones | 0.337 | 0.00 · 0.12 · 0.48 | 1.7 % | 2.3 % | 1.6 % |
+| `target_share_last5_avg` | Participación en los objetivos del equipo: promedio de sus últimas 5 apariciones | 0.364 | 0.00 · 0.13 · 0.48 | 26.7 % | 47.3 % | 13.0 % |
+| `target_share_season_avg` | Participación en los objetivos del equipo: promedio de esta temporada hasta antes del partido | 0.325 | 0.00 · 0.12 · 0.59 | 0.6 % | 0.9 % | 3.0 % |
+| `air_yards_share_last3_avg` | Participación en las yardas aéreas del equipo: promedio de sus últimas 3 apariciones | 0.351 | -0.08 · 0.16 · 0.97 | 0.2 % | 0.4 % | 2.4 % |
+| `wopr_last3_avg` | Índice de oportunidad (wopr): promedio de sus últimas 3 apariciones | 0.751 | 0.00 · 0.30 · 1.24 | 0.3 % | 2.9 % | 12.2 % |
+| `wopr_season_avg` | Índice de oportunidad (wopr): promedio de esta temporada hasta antes del partido | 0.748 | 0.00 · 0.30 · 1.52 | 0.4 % | 1.8 % | 2.0 % |
+| `fantasy_points_ppr_last3_avg` | Puntos de fantasy PPR: promedio de sus últimas 3 apariciones | 14.73 | -2.78 · 6.50 · 39.33 | 1.3 % | 2.1 % | 2.5 % |
+| `fantasy_points_ppr_last5_avg` | Puntos de fantasy PPR: promedio de sus últimas 5 apariciones | 21.48 | -2.78 · 6.66 · 36.00 | 5.8 % | 14.9 % | 25.0 % |
+| `fantasy_points_ppr_career_avg` | Puntos de fantasy PPR: promedio de toda su carrera hasta antes del partido | 19.53 | -2.78 · 7.08 · 36.00 | 1.1 % | 2.0 % | 1.5 % |
+| `target_share_x_ofensiva_equipo` | Participación reciente (`target_share_last5_avg`) por yardas de recepción de los WR de su equipo en la temporada (`equipo_receiving_yards_season_avg`) | 60.62 | 0.00 · 18.08 · 130.87 | 0.2 % | 1.3 % | 2.1 % |
+| `total_implicito_equipo` | Puntos que las líneas de apuestas esperan que anote su equipo: (total + línea) / 2 si es local, (total − línea) / 2 si es visitante | 22.75 | 9.75 · 22.50 · 36.25 | 0.3 % | 0.5 % | 1.3 % |
+| `depth_team` | Lugar en la alineación de su equipo (1 = titular) | 1 | 1.00 · 2.00 · 8.00; vacío en 7.5 % de las filas | 2.0 % | 2.4 % | 1.7 % |
+| `draft_pick` | Número de selección en el draft (más bajo = elegido antes) | 5 | 3.00 · 117.00 · 473.00 | 0.2 % | 0.3 % | 1.2 % |
+| `edad` | Edad al 1 de septiembre de la temporada | 25.50 | 20.77 · 25.53 · 37.98 | 0.2 % | 0.4 % | 0.5 % |
 
 **Las 5 variables con más peso en cada modelo:**
 
 | Puesto | `receptions` | `receiving_yards` | `receiving_tds` |
 |---|---|---|---|
-| 1 | `targets_last5_avg` (21.6 %) | `target_share_last5_avg` (27.3 %) | `fantasy_points_ppr_last5_avg` (21.0 %) |
-| 2 | `target_share_last5_avg` (21.3 %) | `wopr_last5_avg` (20.0 %) | `target_share_last5_avg` (17.0 %) |
-| 3 | `receptions_last5_avg` (18.4 %) | `fantasy_points_ppr_last5_avg` (13.1 %) | `receiving_yards_career_avg` (7.8 %) |
-| 4 | `receiving_first_downs_last5_avg` (7.1 %) | `receiving_first_downs_last5_avg` (5.3 %) | `wopr_last3_avg` (6.9 %) |
-| 5 | `fantasy_points_ppr_last5_avg` (6.4 %) | `receiving_yards_career_avg` (3.9 %) | `receptions_last5_avg` (5.4 %) |
+| 1 | `target_share_last5_avg` (26.7 %) | `target_share_last5_avg` (47.3 %) | `fantasy_points_ppr_last5_avg` (25.0 %) |
+| 2 | `receptions_last5_avg` (20.7 %) | `fantasy_points_ppr_last5_avg` (14.9 %) | `target_share_last5_avg` (13.0 %) |
+| 3 | `targets_last5_avg` (20.7 %) | `receiving_yards_career_avg` (4.9 %) | `wopr_last3_avg` (12.2 %) |
+| 4 | `fantasy_points_ppr_last5_avg` (5.8 %) | `receiving_yards_last5_avg` (4.9 %) | `receiving_yards_career_avg` (7.3 %) |
+| 5 | `receptions_last3_avg` (5.2 %) | `receptions_season_avg` (3.3 %) | `receiving_yards_last5_avg` (5.8 %) |
 
-En los tres modelos pesa sobre todo la participación reciente: `targets_last5_avg` y `target_share_last5_avg` encabezan recepciones (21.6 % y 21.3 %), `target_share_last5_avg` encabeza yardas (27.3 %) y `fantasy_points_ppr_last5_avg` encabeza touchdowns (21.0 %).
+En los tres modelos pesa sobre todo la participación reciente: `target_share_last5_avg` encabeza recepciones (26.7 %), `target_share_last5_avg` encabeza yardas (47.3 %) y `fantasy_points_ppr_last5_avg` encabeza touchdowns (25.0 %).
 
-Las 34 variables no son 34 ideas distintas: salen de 15 estadísticas base × 4 ventanas (algunas ventanas no entraron) más 4 de perfil. Varias miden lo mismo con ventanas distintas y están muy correlacionadas entre sí, lo que no perjudica a los modelos de árboles pero hace que sea poco confiable leer el peso de una sola variable.
+Las 25 variables no son 25 ideas distintas: 20 salen de 9 estadísticas base en distintas ventanas, y el resto son el perfil del jugador (`depth_team`, `draft_pick`, `edad`), el total implícito y una interacción. Varias miden lo mismo con ventanas distintas y están muy correlacionadas entre sí, lo que no perjudica a los modelos de árboles pero hace que sea poco confiable leer el peso de una sola variable.
 
 ## 9. Variables construidas y descartadas
 
-Se construyeron en la Fase 4, se evaluaron en los notebooks 3.1 y 3.2 y **no entran al modelo**. Viven en `features_exploratorio.py` y solo las usan los notebooks. La razón de cada descarte está en la tabla de decisiones del encabezado de `features.py`.
+Se construyeron en la Fase 4, se evaluaron en los notebooks 3.1 a 3.3 y **no entran al modelo**. Viven en `features_exploratorio.py` y solo las usan los notebooks. La razón de cada descarte está en la tabla de decisiones del encabezado de `features.py`.
 
 | Variable | Qué es | Ejemplo (Ja'Marr Chase, s. 13) | Decisión y evidencia |
 |---|---|---|---|
-| `racr_acotado` | `racr` topado en su percentil 99 (5.5), para que un valor disparado no arrastre el promedio. El máximo real de `racr` en la tabla es 116. | Khalil Shakir (semana 9): 43 yardas con 1 yarda aérea → `racr` 43.0, acotado a 5.5. Chase: 0.643 (sin cambio). | No destacó en la evaluación conjunta (notebook 3.2). |
-| `receiving_yards_volatilidad5`, `targets_volatilidad5` | Desviación estándar de las últimas 5 apariciones: qué tan parejo o irregular es el jugador (alta = «boom-bust»). | yardas: 47.0; objetivos: 6.3 | Importancia nula o negativa en los 3 resultados (notebook 3.2). |
-| `equipo_receiving_yards_season_avg`, `_last3_avg`, `_last5_avg`, `_career_avg` | Ofensiva de equipo: yardas por recepción sumadas de todos los WR del equipo cada partido, promediadas con las mismas ventanas y sin incluir el partido actual. | CIN: 166.5 (temporada), 186.3 (últimos 3), 200 (últimos 5) | No llegó al top 15 de ningún resultado (notebook 3.2). |
-| `cambio_qb_titular` | `True` si el QB titular del equipo (el pasador con más intentos ese partido) es distinto al de la aparición anterior del jugador. | Joe Burrow en la semana 13; en la 11 fue Joe Flacco → `True` | Aporte marginal casi nulo; en el análisis por separado sí mostraba una caída de yardas, pero se diluye al incluir el uso reciente. |
-| `cambio_equipo` | `True` si el jugador cambió de equipo respecto a su aparición anterior (un traspaso también cambia al QB). | `False` (CIN en ambas) | Se separó de `cambio_qb_titular` para distinguir ambas señales; no entra. |
-| `target_share_x_ofensiva_equipo` | Producto de `target_share_last5_avg` × `equipo_receiving_yards_season_avg`: ¿pesa más la misma participación en una ofensiva fuerte? | 0.364 × 166.5 = 60.62 | Sin aporte claro. |
-| `draft_pick_x_experiencia` | Producto de `draft_pick` × `anios_experiencia`. | 5 × 4 = 20 | Sin aporte claro. |
-| `cambio_qb_x_target_share` | Producto de `cambio_qb_titular` (1 o 0) × `target_share_last5_avg`. | 1 × 0.364 = 0.364 | Sin aporte claro; una de las tres incluso negativa. |
+| `racr_acotado` | `racr` topado en su percentil 99 (5.5), para que un valor disparado no arrastre el promedio. El máximo real de `racr` en la tabla es 116. | Khalil Shakir (semana 9): 43 yardas con 1 yarda aérea → `racr` 43.0, acotado a 5.5. Chase: 0.643 (sin cambio). | Fuera de las 25 primeras del orden estable (notebook 3.3). |
+| `receiving_yards_volatilidad5`, `targets_volatilidad5` | Desviación estándar de las últimas 5 apariciones: qué tan parejo o irregular es el jugador (alta = «boom-bust»). | yardas: 47.0; objetivos: 6.3 | Fuera de las 25 primeras del orden estable (notebook 3.3). |
+| `equipo_receiving_yards_season_avg`, `_last3_avg`, `_last5_avg`, `_career_avg` | Ofensiva de equipo: yardas por recepción sumadas de todos los WR del equipo cada partido, promediadas con las mismas ventanas y sin incluir el partido actual. | CIN: 166.5 (temporada), 186.3 (últimos 3), 200 (últimos 5) | No entran solas (fuera de las 25 del notebook 3.3); `equipo_receiving_yards_season_avg` es insumo de `target_share_x_ofensiva_equipo`, que sí entra (sección 8). |
+| `cambio_qb_titular` | `True` si el QB titular del equipo (el pasador con más intentos ese partido) es distinto al de la aparición anterior del jugador. | Joe Burrow en la semana 13; en la 11 fue Joe Flacco → `True` | Fuera de las 25 (lugar 109 de 110 en el orden estable del notebook 3.3). Además no se conoce antes del partido: el QB titular se identifica con los pases de esa misma semana. |
+| `cambio_equipo` | `True` si el jugador cambió de equipo respecto a su aparición anterior (un traspaso también cambia al QB). | `False` (CIN en ambas) | Fuera de las 25 primeras del orden estable (notebook 3.3). |
+| `draft_pick_x_experiencia` | Producto de `draft_pick` × `anios_experiencia`. | 5 × 4 = 20 | Fuera de las 25 primeras del orden estable (notebook 3.3). |
+| `cambio_qb_x_target_share` | Producto de `cambio_qb_titular` (1 o 0) × `target_share_last5_avg`. | 1 × 0.364 = 0.364 | Fuera de las 25 (lugar 92); depende del cambio de QB, que no se conoce antes del partido. |
 
 ### Contexto del partido (calendario)
 
-Columnas de `load_schedules()` que se probaron como contexto. Ninguna entra al modelo: *rest*, *div_game*, *roof* y *surface* se evaluaron en el notebook 3.2 y no entraron; el clima no mostró efecto en el análisis exploratorio, y el total implícito de las líneas de apuestas, con correlación de 0.088 con las yardas (`2.3_eda_general.ipynb`), queda como candidata para la selección de variables pendiente.
+Columnas de `load_schedules()` que se probaron como contexto. *rest*, *div_game*, *roof* y *surface* se evaluaron en los notebooks 3.2 y 3.3 y no entraron, y el clima no mostró efecto en el análisis exploratorio. Las líneas de apuestas sí entran, combinadas en el total implícito del equipo (sección 8).
 
 | Variable | Qué es | Ejemplo (este partido) |
 |---|---|---|
@@ -315,9 +305,9 @@ También se evaluaron en la Fase 3 y no tienen columna en el pipeline: la dureza
 
 | Columna | Qué es | Ejemplo (Chase, semana 3 de 2026) |
 |---|---|---|
-| `receptions_pred` | Recepciones esperadas. | 6.205 |
-| `receiving_yards_pred` | Yardas esperadas. | 75.397 |
-| `receiving_tds_pred` | Touchdowns esperados: un promedio, no un 0 o un 1. Un valor de 0.3 equivale a un TD cada tres partidos con este perfil. | 0.529 |
+| `receptions_pred` | Recepciones esperadas. | 6.236 |
+| `receiving_yards_pred` | Yardas esperadas. | 76.745 |
+| `receiving_tds_pred` | Touchdowns esperados: un promedio, no un 0 o un 1. Un valor de 0.3 equivale a un TD cada tres partidos con este perfil. | 0.485 |
 | `receptions_real`, `receiving_yards_real`, `receiving_tds_real` | Lo que de verdad pasó. Solo aparecen en semanas ya jugadas. | 9, 98, 1 |
 
 Archivo de métricas, una fila por resultado (semana 3 de 2026). «—» = la métrica no aplica a ese resultado:
@@ -326,20 +316,20 @@ Archivo de métricas, una fila por resultado (semana 3 de 2026). «—» = la m�
 |---|---|---|---|---|
 | `n` | Cuántos WR se evaluaron. | 154 | 154 | 154 |
 | `metrica_principal` | La métrica con la que se eligió el modelo: RMSE en recepciones y yardas, deviance de Poisson en touchdowns ([ADR 0004](../decisions/0004-metricas-de-seleccion.md)). | rmse | rmse | deviance_poisson |
-| `rmse` | Raíz del error cuadrático medio: en las unidades del resultado, castiga más los errores grandes. Menor = mejor. | 1.782 | 27.265 | 0.406 |
-| `mae` | Error absoluto medio: en promedio, cuántas unidades se equivoca la predicción. Se reporta, pero no decide: premia la mediana, no el valor esperado. | 1.306 | 19.275 | 0.284 |
-| `r2` | Parte de la variación explicada, contra el promedio de la propia semana. | 0.503 | 0.406 | 0.051 |
-| `r2_oos` | R² fuera de muestra: contra la media de entrenamiento guardada con el modelo. 0 = igual que predecir el promedio histórico; negativo = peor que eso. | 0.509 | 0.409 | 0.051 |
-| `sesgo` | Promedio predicho menos promedio real. Positivo = el modelo se pasó en promedio. | -0.177 | -3.000 | -0.025 |
+| `rmse` | Raíz del error cuadrático medio: en las unidades del resultado, castiga más los errores grandes. Menor = mejor. | 1.793 | 27.482 | 0.402 |
+| `mae` | Error absoluto medio: en promedio, cuántas unidades se equivoca la predicción. Se reporta, pero no decide: premia la mediana, no el valor esperado. | 1.308 | 19.334 | 0.280 |
+| `r2` | Parte de la variación explicada, contra el promedio de la propia semana. | 0.497 | 0.396 | 0.068 |
+| `r2_oos` | R² fuera de muestra: contra la media de entrenamiento guardada con el modelo. 0 = igual que predecir el promedio histórico; negativo = peor que eso. | 0.502 | 0.399 | 0.068 |
+| `sesgo` | Promedio predicho menos promedio real. Positivo = el modelo se pasó en promedio. | -0.175 | -2.815 | -0.028 |
 | `sesgo_media_entrenamiento` | El sesgo que tendría predecir la media de entrenamiento: refleja qué tanto cambió el nivel de esa semana respecto a la historia. | 0.270 | 2.635 | 0.007 |
 | `media_real` | Promedio real de la semana. | 2.429 | 31.643 | 0.201 |
-| `pendiente_calibracion` | Pendiente de lo real sobre lo predicho: 1 = predicciones en la escala correcta; menor a 1 = demasiado extremas; mayor a 1 = demasiado tímidas. | 1.150 | 1.106 | 0.750 |
-| `deviance_poisson` | Deviance de Poisson: el error propio de un conteo, la métrica principal de touchdowns. Menor = mejor. No aplica a yardas. | 1.331 | — | 0.606 |
-| `d2_oos` | Fracción de la deviance de Poisson explicada contra la media de entrenamiento (el equivalente de `r2_oos` para conteos). | 0.507 | — | 0.086 |
-| `referencia_validacion` | Valor de la métrica principal del modelo en validación (2022–2023), guardado con el modelo, para comparar contra la semana. | 1.929 | 29.572 | 0.617 |
-| `referencia_prueba` | Lo mismo en la prueba (2024–2025). | 1.826 | 27.914 | 0.625 |
-| `brier_anota` | Solo touchdowns: error cuadrático de la probabilidad de anotar al menos uno, calculada como 1 − e^(−predicción). Menor = mejor. | — | — | 0.150 |
-| `auc_anota` | Solo touchdowns: qué tan bien ordena el modelo a quienes anotan por encima de quienes no (0.5 = azar, 1 = perfecto). | — | — | 0.686 |
+| `pendiente_calibracion` | Pendiente de lo real sobre lo predicho: 1 = predicciones en la escala correcta; menor a 1 = demasiado extremas; mayor a 1 = demasiado tímidas. | 1.137 | 1.082 | 0.848 |
+| `deviance_poisson` | Deviance de Poisson: el error propio de un conteo, la métrica principal de touchdowns. Menor = mejor. No aplica a yardas. | 1.333 | — | 0.604 |
+| `d2_oos` | Fracción de la deviance de Poisson explicada contra la media de entrenamiento (el equivalente de `r2_oos` para conteos). | 0.506 | — | 0.089 |
+| `referencia_validacion` | Valor de la métrica principal del modelo en validación (2022–2023), guardado con el modelo, para comparar contra la semana. | 1.931 | 29.500 | 0.613 |
+| `referencia_prueba` | Lo mismo en la prueba (2024–2025). | 1.835 | 27.935 | 0.622 |
+| `brier_anota` | Solo touchdowns: error cuadrático de la probabilidad de anotar al menos uno, calculada como 1 − e^(−predicción). Menor = mejor. | — | — | 0.148 |
+| `auc_anota` | Solo touchdowns: qué tan bien ordena el modelo a quienes anotan por encima de quienes no (0.5 = azar, 1 = perfecto). | — | — | 0.693 |
 
 ## Apéndice A. Resto de columnas de la tabla de estadísticas
 
@@ -615,10 +605,8 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 |---|---|
 | `air_yards_per_target` | 7.1 |
 | `air_yards_share` | 6 |
-| `air_yards_share_career_avg` | 8 |
 | `air_yards_share_last3_avg` | 8 |
-| `air_yards_share_season_avg` | 8 |
-| `anios_experiencia` | 7.3, 8 |
+| `anios_experiencia` | 7.3 |
 | `anios_experiencia_bucket` | 7.3 |
 | `anios_experiencia_sq` | 7.3 |
 | `attempts` | A.1 |
@@ -638,7 +626,6 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `cambio_qb_x_target_share` | 9 |
 | `carries` | 6, A.2 |
 | `catch_rate` | 7.1 |
-| `catch_rate_career_avg` | 8 |
 | `college_conference` | B.1 |
 | `college_name` | B.1 |
 | `common_first_name` | B.1 |
@@ -681,9 +668,9 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `espn_id` | B.1 |
 | `fantasy_points` | 6 |
 | `fantasy_points_ppr` | 6 |
+| `fantasy_points_ppr_career_avg` | 8 |
 | `fantasy_points_ppr_last3_avg` | 8 |
 | `fantasy_points_ppr_last5_avg` | 8 |
-| `fantasy_points_ppr_season_avg` | 8 |
 | `fg_att` | A.6 |
 | `fg_blocked` | A.6 |
 | `fg_blocked_distance` | A.6 |
@@ -819,33 +806,27 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `racr` | 6 |
 | `racr_acotado` | 9 |
 | `receiving_10` | 6 |
-| `receiving_10_last3_avg` | 8 |
 | `receiving_16` | 6 |
-| `receiving_16_last5_avg` | 8 |
 | `receiving_20` | 6 |
-| `receiving_20_last3_avg` | 8 |
 | `receiving_2pt_conversions` | 6 |
 | `receiving_40` | 6 |
 | `receiving_air_yards` | 6 |
-| `receiving_air_yards_season_avg` | 8 |
 | `receiving_epa` | 6 |
-| `receiving_epa_last3_avg` | 8 |
 | `receiving_first_downs` | 6 |
 | `receiving_first_downs_career_avg` | 8 |
-| `receiving_first_downs_last5_avg` | 8 |
 | `receiving_fumbles` | 6 |
 | `receiving_fumbles_lost` | 6 |
 | `receiving_tds` | 5, 6 |
 | `receiving_tds_pred` | 10 |
 | `receiving_tds_real` | 10 |
-| `receiving_tds_season_avg` | 8 |
 | `receiving_yards` | 5, 6 |
 | `receiving_yards_after_catch` | 6 |
+| `receiving_yards_after_catch_career_avg` | 8 |
+| `receiving_yards_after_catch_season_avg` | 8 |
 | `receiving_yards_career_avg` | 8 |
-| `receiving_yards_last3_avg` | 8 |
+| `receiving_yards_last5_avg` | 8 |
 | `receiving_yards_pred` | 10 |
 | `receiving_yards_real` | 10 |
-| `receiving_yards_season_avg` | 8 |
 | `receiving_yards_volatilidad5` | 9 |
 | `receptions` | 5, 6 |
 | `receptions_career_avg` | 8 |
@@ -890,18 +871,18 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `suffix` | B.1 |
 | `surface` | 9, B.2 |
 | `target_share` | 6 |
-| `target_share_career_avg` | 8 |
 | `target_share_last3_avg` | 8 |
 | `target_share_last5_avg` | 8 |
-| `target_share_x_ofensiva_equipo` | 9 |
+| `target_share_season_avg` | 8 |
+| `target_share_x_ofensiva_equipo` | 8 |
 | `targets` | 6 |
-| `targets_last3_avg` | 8 |
 | `targets_last5_avg` | 8 |
 | `targets_season_avg` | 8 |
 | `targets_volatilidad5` | 9 |
 | `team` | 4 |
 | `temp` | 9, B.2 |
 | `total` | B.2 |
+| `total_implicito_equipo` | 8 |
 | `total_line` | 9, B.2 |
 | `under_odds` | B.2 |
 | `week` | 4, B.2 |
@@ -910,7 +891,6 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `wind` | 9, B.2 |
 | `wopr` | 6 |
 | `wopr_last3_avg` | 8 |
-| `wopr_last5_avg` | 8 |
+| `wopr_season_avg` | 8 |
 | `yards_per_target` | 7.1 |
 | `years_of_experience` | B.1 |
-

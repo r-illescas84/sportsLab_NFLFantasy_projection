@@ -328,17 +328,32 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
 - [x] **Enlaces relativos rotos a `docs/` en `1.1_calidad_fuentes.ipynb`.** Usaban `../../docs/`
   cuando desde `weekly/wr/notebooks/` la ruta correcta es `../../../docs/`. **Resuelto.**
 
-- [ ] **La selección de variables usó como validación los mismos años que después son prueba del
+- [x] **La selección de variables usó como validación los mismos años que después son prueba del
   modelado.** `3.2_seleccion_features.ipynb` eligió variables con validación 2024-2025, que en la
-  etapa 4 es el conjunto de prueba: el resultado de prueba puede ser algo optimista. Además, su
+  etapa 4 es el conjunto de prueba: el resultado de prueba podía ser algo optimista. Además, su
   importancia por permutación se midió con MAE, que en touchdowns deja casi todas las importancias en
-  cero. Además, el corte por «las 15 más importantes de cada resultado» es inestable: con el dato de
-  alineaciones corregido, la misma regla daría 31 variables en lugar de las 34 que usan los modelos
-  (entrarían 6 y saldrían 9). Se mantienen las 34. `5.3_explicabilidad_y_casos.ipynb` comparaba
-  SHAP contra el orden de la corrida anterior; ya cita la actual, en la que ninguna variable de
-  carrera queda entre las 15 primeras de yardas. No se corrige en esta fase (el cambio de métricas
-  empieza después de la selección de variables); la verificación sin ningún uso previo es la temporada 2026
-  (`6.1_modelo_final_y_temporada_actual.ipynb`).
+  cero, y el corte por «las 15 más importantes de cada resultado» era inestable: con el dato de
+  alineaciones corregido, la misma regla daba 31 variables en lugar de 34. **Resuelto** en
+  `3.3_seleccion_estable.ipynb` (ADR 0005): orden estable por eliminación recursiva con la métrica
+  principal, sin tocar la validación, y tamaño elegido en validación 2022-2023 con una prueba de no
+  inferioridad. Quedan 25 variables.
+
+- [x] **La primera regla para elegir el tamaño del conjunto confundía empate con no inferioridad.**
+  Elegía el conjunto más chico cuyo intervalo de diferencia contra el mejor incluyera cero, con el nivel
+  ajustado por Bonferroni. Así gana el conjunto cuyas diferencias tienen más ruido, no el que pierde
+  menos: elegía 10 variables mientras que los conjuntos de 15 a 40 quedaban fuera, y el ajuste, al
+  ensanchar los intervalos, lo agrava. Se hizo visible al reportar la prueba, donde ese conjunto quedaba
+  peor que las 34 anteriores en recepciones. **Resuelto:** prueba de no inferioridad con margen de 1%
+  (la cota superior del intervalo de 95% no debe pasar de 1% de la pérdida del mejor), aplicada solo en
+  validación (`experimentos.elegir_conjunto_no_inferior`). La prueba ya se había visto al corregir; la
+  verificación limpia es la temporada 2026.
+
+- [x] **4.4 y 4.6 no aplicaban el ajuste por comparaciones múltiples del ADR 0004.** Comparaban la
+  mejor de varias alternativas contra el modelo elegido con intervalos de 95%. Con las 25 variables, el
+  ajuste compacto de recepciones (4.4) y los dos ensambles de recepciones (4.6) excluían el cero así.
+  **Resuelto:** 4.4 usa el nivel ajustado por las 30 combinaciones y 4.6 por sus 4 comparaciones. Con
+  él, el ajuste compacto empata; el ensamble de cuatro modelos sigue mejorando (0.26% del RMSE) y no se
+  adopta por su costo (ADR 0004: la regla es condición necesaria, no suficiente).
 
 - [x] **El modelo jerárquico de yardas se comparaba sin corregir la retransformación.** Se ajusta en
   escala logarítmica, y deshacer el logaritmo del promedio da algo cercano a la mediana, no al valor

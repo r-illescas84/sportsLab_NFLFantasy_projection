@@ -445,3 +445,147 @@ def guardar_modelo(modelo, carpeta, target, variables, media_entrenamiento, metr
         "limitaciones_conocidas": list(limitaciones),
     }
     (carpeta / f"{target}_metadata.json").write_text(json.dumps(metadata, indent=2, ensure_ascii=False, default=float))
+
+
+# --- Seleccion de variables (docs/decisions/0005-seleccion-de-variables.md) ---
+
+def codificar_candidatas(df, numericas, categoricas):
+    """Matriz de candidatas para XGBoost: las numericas como float y cada categorica en
+    indicadoras (con una para el faltante). Regresa (X, unidades): `unidades` asocia cada
+    candidata con sus columnas de X, para que las indicadoras de una categorica se permuten y
+    se eliminen juntas."""
+    X = df[numericas].astype(float)
+    unidades = {c: [c] for c in numericas}
+    for c in categoricas:
+        indicadoras = pd.get_dummies(df[c], prefix=c, dummy_na=True).astype(float)
+        X = pd.concat([X, indicadoras], axis=1)
+        unidades[c] = list(indicadoras.columns)
+    return X, unidades
+
+
+def _perdida(y, pred, criterio):
+    return float(_perdida_por_fila(y, pred, criterio).mean())
+
+
+def importancia_permutacion(modelos, X_eval, ys_eval, unidades, n_repeticiones=3, semilla=0):
+    """Importancia por permutacion (Breiman, 2001) con la metrica principal de cada target:
+    aumento relativo de la perdida (MSE o deviance de Poisson por fila) en X_eval al revolver
+    las columnas de cada unidad, promedio de `n_repeticiones`. `modelos`: {target: modelo
+    ajustado con las columnas de X_eval, en ese orden}; `ys_eval`: {target: y}. Regresa un
+    DataFrame unidades x targets."""
+    rng = np.random.RandomState(semilla)
+    base = X_eval.to_numpy(dtype=float)
+    permutada = base.copy()
+    posiciones = {u: [X_eval.columns.get_loc(c) for c in cols] for u, cols in unidades.items()}
+    perdida_base = {t: _perdida(ys_eval[t], clip_no_negativo(m.predict(base)), METRICA_PRINCIPAL[t])
+                    for t, m in modelos.items()}
+    resultado = {}
+    for unidad, pos in posiciones.items():
+        aumentos = {t: [] for t in modelos}
+        for _ in range(n_repeticiones):
+            permutada[:, pos] = base[rng.permutation(len(base))][:, pos]
+            for t, m in modelos.items():
+                perdida = _perdida(ys_eval[t], clip_no_negativo(m.predict(permutada)), METRICA_PRINCIPAL[t])
+                aumentos[t].append(perdida / perdida_base[t] - 1)
+        permutada[:, pos] = base[:, pos]
+        resultado[unidad] = {t: float(np.mean(v)) for t, v in aumentos.items()}
+    return pd.DataFrame(resultado).T
+
+
+def eliminacion_recursiva(X, ys, unidades, mascara_ajuste, mascara_eval, configs, fraccion=0.1,
+                          n_repeticiones=3, semilla=0):
+    """Eliminacion recursiva con importancia por permutacion (Gregorutti, Michel y
+    Saint-Pierre, 2017): en cada ronda se ajusta un XGBoost por target (`configs`: {target:
+    hiperparametros}) con las unidades que quedan, se mide su importancia en `mascara_eval` y
+    sale el `fraccion` de unidades con menor calificacion (al menos una). La calificacion de
+    una unidad es su mayor importancia relativa entre los targets: el conjunto es compartido,
+    asi que sale solo lo que es debil para todos. Al recalcular la importancia despues de cada
+    ronda, cuando sale una de dos variables casi iguales la otra recupera la suya.
+
+    Regresa un DataFrame con una fila por unidad: `ronda` en que salio (la ultima en quedar
+    tiene la ronda mas alta) y su `calificacion` en esa ronda."""
+    restantes = dict(unidades)
+    registro, ronda = [], 0
+    while restantes:
+        columnas = [c for cols in restantes.values() for c in cols]
+        if len(restantes) == 1:
+            registro.append({"unidad": next(iter(restantes)), "ronda": ronda, "calificacion": np.nan})
+            break
+        X_ajuste = X.loc[mascara_ajuste, columnas].to_numpy(dtype=float)
+        modelos = {t: XGBRegressor(**cfg, random_state=semilla, n_jobs=-1).fit(X_ajuste, ys[t][mascara_ajuste])
+                   for t, cfg in configs.items()}
+        importancia = importancia_permutacion(
+            modelos, X.loc[mascara_eval, columnas], {t: ys[t][mascara_eval] for t in configs},
+            restantes, n_repeticiones=n_repeticiones, semilla=semilla + ronda)
+        calificacion = importancia.max(axis=1).sort_values()
+        for unidad in calificacion.index[:max(1, int(np.ceil(fraccion * len(restantes))))]:
+            registro.append({"unidad": unidad, "ronda": ronda, "calificacion": float(calificacion[unidad])})
+            del restantes[unidad]
+        ronda += 1
+    return pd.DataFrame(registro)
+
+
+def orden_estable(df, X, ys, unidades, mascara_ajuste, mascara_eval, configs, n_submuestras=10,
+                  fraccion_semanas=0.5, semilla=0, **kwargs):
+    """Repite eliminacion_recursiva() ajustando cada vez con una submuestra de
+    `fraccion_semanas` de las semanas (season, week) de `mascara_ajuste`, sin reemplazo -- en
+    el espiritu de la seleccion por estabilidad (Meinshausen y Buhlmann, 2010). Regresa
+    (orden, rondas): `orden` tiene por unidad la ronda promedio, minima y maxima en que salio,
+    ordenado de la que dura mas a la que dura menos; `rondas` es la tabla unidad x submuestra."""
+    rng = np.random.RandomState(semilla)
+    clave = df["season"] * 100 + df["week"]
+    semanas = np.unique(clave[mascara_ajuste])
+    rondas = {}
+    for b in range(n_submuestras):
+        elegidas = rng.choice(semanas, size=int(round(fraccion_semanas * len(semanas))), replace=False)
+        submuestra = mascara_ajuste & clave.isin(elegidas)
+        registro = eliminacion_recursiva(X, ys, unidades, submuestra, mascara_eval, configs, semilla=semilla + b, **kwargs)
+        rondas[f"submuestra_{b + 1}"] = registro.set_index("unidad")["ronda"]
+    rondas = pd.DataFrame(rondas)
+    orden = pd.DataFrame({
+        "ronda_promedio": rondas.mean(axis=1), "ronda_minima": rondas.min(axis=1), "ronda_maxima": rondas.max(axis=1),
+    }).sort_values("ronda_promedio", ascending=False)
+    return orden, rondas.loc[orden.index]
+
+
+def elegir_conjunto_no_inferior(df_val, ys_val, predicciones, tamanos, margen=0.01, nivel=0.95,
+                                referencia=None, n_remuestreos=20000, semilla=0):
+    """Regla de 0005: el conjunto mas chico que no es peor que el mejor por mas de `margen`
+    (fraccion de la perdida del mejor) en ningun target, con `nivel` de confianza. Para cada
+    target, el mejor es el de menor perdida en validacion; cada conjunto se compara contra el con
+    diferencia_bootstrap() y es no inferior si la cota superior del intervalo de la diferencia
+    no pasa de margen x perdida del mejor (prueba de no inferioridad con margen explicito).
+
+    No basta con que el intervalo incluya cero: eso solo dice que no se distinguio del mejor, y
+    favorece a los conjuntos cuyas diferencias tienen mas ruido. Por la misma razon no se ajusta
+    por comparaciones multiples: un intervalo mas ancho haria mas facil declarar no inferior a un
+    conjunto peor.
+
+    `predicciones`: {conjunto: {target: prediccion de validacion}}; `tamanos`: {conjunto: numero
+    de variables}; `referencia`: conjunto vigente, contra el que tambien se reporta la diferencia.
+    Regresa (elegido, tabla)."""
+    nombres = list(predicciones)
+    filas = []
+    for t in ys_val:
+        criterio = METRICA_PRINCIPAL[t]
+        perdidas = {n: metricas_target(t, ys_val[t], predicciones[n][t])[criterio] for n in nombres}
+        mejor = min(perdidas, key=perdidas.get)
+        for n in nombres:
+            c = diferencia_bootstrap(df_val, ys_val[t], predicciones[n][t], predicciones[mejor][t], criterio,
+                                     n_remuestreos=n_remuestreos, semilla=semilla, nivel=nivel)
+            fila = {"conjunto": n, "target": t, "variables": tamanos[n], "metrica": criterio, "perdida": perdidas[n],
+                    "mejor": mejor, "dif_vs_mejor": c["diferencia"], "ic_inf_vs_mejor": c["ic_inferior"],
+                    "ic_sup_vs_mejor": c["ic_superior"],
+                    "cota_relativa": c["ic_superior"] / perdidas[mejor],
+                    "no_inferior": c["ic_superior"] <= margen * perdidas[mejor]}
+            if referencia is not None:
+                r = diferencia_bootstrap(df_val, ys_val[t], predicciones[n][t], predicciones[referencia][t], criterio,
+                                         n_remuestreos=n_remuestreos, semilla=semilla, nivel=nivel)
+                fila.update({"dif_vs_referencia": r["diferencia"], "ic_inf_vs_referencia": r["ic_inferior"],
+                             "ic_sup_vs_referencia": r["ic_superior"]})
+            filas.append(fila)
+    tabla = pd.DataFrame(filas)
+    no_inferior = tabla.groupby("conjunto")["no_inferior"].all()
+    elegido = min((n for n in nombres if no_inferior[n]), key=lambda n: tamanos[n])
+    tabla["no_inferior_en_los_tres"] = tabla["conjunto"].map(no_inferior)
+    return elegido, tabla

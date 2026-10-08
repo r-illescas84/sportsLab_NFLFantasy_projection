@@ -28,6 +28,7 @@ sin depender de correr notebooks a mano uno por uno.
 | 5.2 Modelos más explicativos | Modelo jerárquico (efectos mixtos) + Binomial Negativa en los 3 targets; revisión de la ventana de entrenamiento/evaluación | `pymc`/`bambi` nuevo en el proyecto + 3 notebooks (`24`-`26`) | ✅ Cerrada 2026-09-30 |
 | 5.3 Arquitectura semanal | Separar lo que corre cada semana (`data`, `features`, `modeling`, `pipeline`) de lo exploratorio (`experimentos`, `features_exploratorio`, notebooks); un orquestador que aplica los modelos ya guardados y trae métricas | `pipeline.py`, `modeling.py` reescrito, `experimentos.py`, `features_exploratorio.py` | ✅ Cerrada 2026-10-01 |
 | 5.4 Métricas de selección y orden por etapa | Métricas de selección consistentes con lo que se predice, con base en la literatura; selección siempre en validación; notebooks reordenados por etapa (`etapa.paso`); modelo de touchdowns corregido | ADR 0004, política de métricas en `modeling.py`/`experimentos.py`, notebooks 4.1-6.2 re-ejecutados, modelos y salidas de 2026 regenerados | ✅ Cerrada 2026-10-07 |
+| 5.5 Selección de variables estable | Rehacer la selección de variables con la métrica principal, sin usar la prueba y con un orden estable; evaluar el total implícito de las líneas de apuestas | ADR 0005, `3.3_seleccion_estable.ipynb`, 25 variables en `features.py`, etapas 4 a 6 re-ejecutadas, modelos y salidas de 2026 regenerados | ✅ Cerrada 2026-10-07 |
 | 6. Estabilidad / ciclo de vida | `tracking.csv` por corrida; chequeo recurrente de las 6 dimensiones de calidad | Historial de métricas, visible si el modelo se degrada | Pendiente |
 | 7. Documentar el patrón | Forma del pipeline en términos genéricos, para adaptarlo a las demás posiciones | Guía corta de replicación en `weekly/README.md` | Pendiente |
 | **Entregable final** | — | Predicción semanal real por WR (recepciones, yardas, touchdowns), con las métricas de la semana cuando ya se jugó. El rango P10/P50/P90 se exploró (nb 4.5) y queda fuera del flujo semanal | — |
@@ -356,7 +357,7 @@ tomado mirando la prueba. Decisión en `docs/decisions/0004-metricas-de-seleccio
   WR de los 30 equipos que juegan.
 - **Fuera de alcance**: la selección de variables (3.2) sigue usando MAE y la prueba como validación,
   y con el dato corregido su regla daría 31 variables en lugar de las 34 vigentes (ver `HALLAZGOS.md`);
-  se mantienen las 34 hasta rehacerla con un método estable.
+  se mantienen las 34 hasta rehacerla con un método estable (resuelto en la Fase 5.5).
 - **Limpieza de texto de los notebooks (1.1 a 6.2)**: cada cifra citada se verificó contra las
   salidas ejecutadas. Corrigió, entre otros, la fórmula del total implícito de las líneas de apuestas
   (2.3), la comparación de SHAP contra el orden de permutación de la corrida anterior de 3.2 (5.3) y la
@@ -393,3 +394,38 @@ Equivalencia de nombres:
 | `17_explicabilidad_shap` | `5.3_explicabilidad_y_casos` |
 | `18_validacion_temporada_actual` | `6.1_modelo_final_y_temporada_actual` |
 | `19_cierre_fase5` | `6.2_cierre` |
+
+### Fase 5.5 — Selección de variables estable (cerrada 2026-10-07)
+
+La selección de `3.2_seleccion_features.ipynb` medía la importancia con MAE, usaba como validación
+los años de prueba y su regla era inestable. Se rehízo en `3.3_seleccion_estable.ipynb` con la regla
+de `docs/decisions/0005-seleccion-de-variables.md`, fijada antes de ver los resultados.
+
+- **Método**: 110 candidatas (las de 3.2 más el total implícito de las líneas de apuestas). Como casi
+  todas las de volumen y participación están muy correlacionadas (un grupo de 53 con correlación media
+  de 0.7 o más), se ordenan por eliminación recursiva con importancia por permutación (métrica
+  principal, ajuste 2016-2019, medición 2020-2021, 10 submuestras). El tamaño se elige en validación
+  2022-2023: el conjunto más chico que, con 95% de confianza, no es más de 1% peor que el mejor en
+  ninguno de los tres resultados.
+- **Resultado**: 25 variables. Entran el total implícito, las yardas tras la recepción y la
+  interacción de participación con la ofensiva del equipo; salen, entre otras, la experiencia, el EPA,
+  la tasa de atrapadas y las jugadas de 10, 16 y 20 yardas o más. El total implícito, la ofensiva del
+  equipo y la interacción pasan al flujo semanal (`features.py`).
+- **Regla corregida**: la primera versión tomaba un empate como prueba de no inferioridad y elegía 10
+  variables; se cambió por la prueba con margen, aplicada solo en validación (ver `HALLAZGOS.md`). La
+  prueba ya se había visto al corregir; la verificación limpia es la temporada 2026.
+- **Modelos**: XGBoost con error cuadrático para recepciones y yardas (profundidad 3, 200 árboles,
+  tasa 0.03) y XGBoost con objetivo Poisson para touchdowns (profundidad 3, 400 árboles, tasa 0.03).
+  Validación: RMSE 1.931 y 29.50, deviance 0.613; prueba: 1.836, 27.93 y 0.622; R² fuera de muestra
+  de 0.436, 0.366 y 0.090 en validación. Los tres cumplen los requisitos en validación y en cada año
+  de 2021 a 2025.
+- **Comparaciones múltiples**: `4.4_ajuste_hiperparametros.ipynb` y `4.6_ensamble_simple.ipynb` no
+  aplicaban el ajuste del ADR 0004; ya lo aplican. Con él, el ajuste compacto de hiperparámetros no se
+  adopta. En 4.6, el ensamble de cuatro modelos en recepciones mejora 0.26% del RMSE con el intervalo
+  ajustado y no se adopta: pasar la regla es condición necesaria, no suficiente (ADR 0004).
+- **Evaluación**: contra el flujo heredado, mejor en yardas y touchdowns aun con el intervalo
+  ajustado y empate ajustado en recepciones (5.2). En las semanas 1-4 de 2026 los tres quedan al nivel
+  de validación en R² fuera de muestra (0.453, 0.364 y 0.093), con una subestimación a vigilar (−3.1
+  yardas por receptor) y la pendiente de yardas apenas por encima del rango (1.105).
+- `4.4_ajuste_hiperparametros.ipynb` deja de probar conjuntos de variables propios por resultado: el
+  conjunto compartido es parte de la decisión del ADR 0005.

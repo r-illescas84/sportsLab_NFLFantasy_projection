@@ -158,14 +158,14 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
     <div>
       <h3>Contiene</h3>
       <div class="group"><small>Variables</small><div class="chips">
-        <span class="chip">agregar_promedios_jugador</span><span class="chip">calcular_ratios_eficiencia</span><span class="chip">agregar_edad_experiencia</span><span class="chip">agregar_experiencia_no_lineal</span><span class="chip">agregar_draft_pick</span></div></div>
+        <span class="chip">agregar_promedios_jugador</span><span class="chip">calcular_ratios_eficiencia</span><span class="chip">agregar_edad_experiencia</span><span class="chip">agregar_experiencia_no_lineal</span><span class="chip">agregar_draft_pick</span><span class="chip">agregar_ofensiva_equipo</span><span class="chip">agregar_interaccion</span><span class="chip">agregar_total_implicito</span></div></div>
       <div class="group"><small>Orquesta y selecciona</small><div class="chips">
         <span class="chip">construir_tabla_modelado</span><span class="chip">columnas_por_modelo</span><span class="chip">filas_de_la_semana</span></div></div>
     </div>
     <div>
       <h3>Entrega</h3>
       <p>Tabla de WR por jugador-semana con las variables que usan los modelos.</p>
-      <div class="chips"><span class="chip set">set árbol · 34 variables</span></div>
+      <div class="chips"><span class="chip set">set árbol · 25 variables</span></div>
     </div>
   </div>
 </section>
@@ -211,12 +211,12 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
     <div class="tablewrap"><table>
       <thead><tr><th>semana</th><th>receptions · RMSE</th><th>receiving_yards · RMSE</th><th>receiving_tds · deviance</th></tr></thead>
       <tbody>
-        <tr><td>1</td><td>1.80</td><td>28.63</td><td>0.597</td></tr>
-        <tr><td>2</td><td>1.86</td><td>30.66</td><td>0.666</td></tr>
-        <tr><td>3</td><td>1.78</td><td>27.26</td><td>0.606</td></tr>
-        <tr><td>4</td><td>2.00</td><td>31.90</td><td>0.651</td></tr>
-        <tr><td>referencia · validación 2022-2023</td><td>1.93</td><td>29.57</td><td>0.617</td></tr>
-        <tr><td>referencia · prueba 2024-2025</td><td>1.83</td><td>27.91</td><td>0.625</td></tr>
+        <tr><td>1</td><td>1.81</td><td>28.57</td><td>0.595</td></tr>
+        <tr><td>2</td><td>1.86</td><td>30.39</td><td>0.671</td></tr>
+        <tr><td>3</td><td>1.79</td><td>27.48</td><td>0.604</td></tr>
+        <tr><td>4</td><td>2.02</td><td>31.80</td><td>0.645</td></tr>
+        <tr><td>referencia · validación 2022-2023</td><td>1.93</td><td>29.50</td><td>0.613</td></tr>
+        <tr><td>referencia · prueba 2024-2025</td><td>1.84</td><td>27.93</td><td>0.622</td></tr>
       </tbody>
     </table></div>
     <p class="cap">151 a 154 WR por semana. Semanas fuera de muestra: los modelos se entrenaron con 2016-2025. Menor = mejor en las tres métricas. La semana 5, todavía sin jugarse, salió con 186 WR de los 30 equipos que juegan.</p>
@@ -230,21 +230,21 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
     <div class="layer-head"><code>experimentos.py</code><span>decide qué modelo usar</span></div>
     <div class="pad">
       <div class="chips">
-        <span class="chip">dividir_temporal</span><span class="chip">folds_walk_forward</span><span class="chip">entrenar_y_evaluar</span><span class="chip">buscar_hiperparametros</span><span class="chip">entrenar_hurdle</span><span class="chip">evaluar_modelo</span><span class="chip">BaselinePromedioJugador</span><span class="chip">resumen_resultados</span><span class="chip">diferencia_bootstrap</span><span class="chip">cumple_requisitos</span><span class="chip">spearman_semanal</span><span class="chip">guardar_modelo</span>
+        <span class="chip">dividir_temporal</span><span class="chip">folds_walk_forward</span><span class="chip">entrenar_y_evaluar</span><span class="chip">buscar_hiperparametros</span><span class="chip">entrenar_hurdle</span><span class="chip">evaluar_modelo</span><span class="chip">BaselinePromedioJugador</span><span class="chip">resumen_resultados</span><span class="chip">diferencia_bootstrap</span><span class="chip">cumple_requisitos</span><span class="chip">spearman_semanal</span><span class="chip">eliminacion_recursiva</span><span class="chip">orden_estable</span><span class="chip">elegir_conjunto_no_inferior</span><span class="chip">guardar_modelo</span>
       </div>
     </div>
   </section>
   <section class="layer feat explo">
-    <div class="layer-head"><code>features_exploratorio.py</code><span>variables que no entraron</span></div>
+    <div class="layer-head"><code>features_exploratorio.py</code><span>candidatas y variables que no entraron</span></div>
     <div class="pad">
       <div class="chips">
-        <span class="chip">agregar_volatilidad_jugador</span><span class="chip">agregar_interaccion</span><span class="chip">agregar_cambio_qb_titular</span><span class="chip">agregar_ofensiva_equipo</span><span class="chip">acotar_variable</span>
+        <span class="chip">agregar_volatilidad_jugador</span><span class="chip">agregar_cambio_qb_titular</span><span class="chip">acotar_variable</span><span class="chip">construir_tabla_candidatas</span><span class="chip">columnas_candidatas</span>
       </div>
     </div>
   </section>
 </div>
 
-<p class="note"><i></i>Borde punteado: no corre en el flujo semanal. Los notebooks usan estos módulos para decidir qué modelo y qué variables; <b style="font-weight:500;color:var(--text-primary)">guardar_modelo</b> deja el archivo ya evaluado en <code class="i">weekly/wr/models/</code>, que es lo que <code class="i">modeling.py</code> aplica cada semana. El flujo no reentrena: reentrenar se decide en los notebooks. Cada modelo se elige con la métrica principal en validación y debe cumplir requisitos de calibración (<code class="i">docs/decisions/0004-metricas-de-seleccion.md</code>). Los modelos de cuantil, los ensambles, el de dos etapas y los jerárquicos se exploraron y quedan en <code class="i">weekly/wr/models/exploratorio/</code>, fuera del flujo semanal.</p>
+<p class="note"><i></i>Borde punteado: no corre en el flujo semanal. Los notebooks usan estos módulos para decidir qué modelo y qué variables; <b style="font-weight:500;color:var(--text-primary)">guardar_modelo</b> deja el archivo ya evaluado en <code class="i">weekly/wr/models/</code>, que es lo que <code class="i">modeling.py</code> aplica cada semana. El flujo no reentrena: reentrenar se decide en los notebooks. Cada modelo se elige con la métrica principal en validación y debe cumplir requisitos de calibración (<code class="i">docs/decisions/0004-metricas-de-seleccion.md</code>); las variables, con un orden estable y una regla de no inferioridad (<code class="i">docs/decisions/0005-seleccion-de-variables.md</code>). De las alternativas exploradas, <code class="i">weekly/wr/models/exploratorio/</code> guarda solo los modelos de cuantil y el jerárquico de touchdowns (sin versionar), más la metadata de las que no se adoptaron; ninguna entra al flujo semanal.</p>
 
 <footer>weekly/wr/src · pipeline.py → data.py → features.py → modeling.py · modelos en weekly/wr/models/</footer>
 

@@ -337,6 +337,21 @@ ADR `0004-metricas-de-seleccion.md`; detalle y resultados en `docs/PLAN.md` (Fas
   3.2; en 6.1, yardas y touchdowns de 2026 quedan un poco por encima de las referencias en la
   métrica principal, no dentro del rango.
 
-**Pendiente:** rehacer la selección de variables con un método estable (incluye evaluar el total implícito) (métrica principal,
-validación 2022-2023 y revisión de estabilidad); Fase 6
-(`tracking.csv`) y Fase 7.
+## 2026-10-07 (continuación) — Fase 5.5 completa (selección de variables estable)
+
+La selección de variables se rehízo en `3.3_seleccion_estable.ipynb` (ADR 0005): orden estable de
+110 candidatas por eliminación recursiva con la métrica principal, sin usar la prueba, y tamaño elegido
+en validación con una prueba de no inferioridad (margen de 1%). Quedan 25 variables; entra el total
+implícito de las líneas de apuestas. Detalle en `docs/PLAN.md` (Fase 5.5).
+
+- La primera regla para elegir el tamaño tomaba un empate como no inferioridad; se corrigió (ver
+  `HALLAZGOS.md`).
+- `features.py` adopta las 25; el total implícito, la ofensiva del equipo y su interacción pasan al
+  flujo semanal. Se re-ejecutaron las etapas 4 a 6, se reentrenaron los modelos y se regeneraron las
+  salidas de 2026. La configuración de touchdowns cambia a 400 árboles con tasa 0.03.
+- 4.4 y 4.6 ya aplican el ajuste por comparaciones múltiples del ADR 0004. El ensamble de cuatro
+  modelos en recepciones mejora 0.26% con el intervalo ajustado y no se adopta por su costo.
+- Glosario (sección 8 y marcas de uso), página de arquitectura, ADR 0004 y 0005 al día.
+
+**Pendiente:** Fase 6 (`tracking.csv`) y Fase 7; correr el flujo semanal de la semana 5 de 2026 cuando
+termine.
