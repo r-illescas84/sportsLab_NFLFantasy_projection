@@ -379,3 +379,15 @@ El flujo semanal ya deja historial y se audita (ADR 0006). Detalle en `docs/PLAN
 **Pendiente:** evaluar la semana 5 de 2026 cuando termine su último partido (lunes 12 de octubre), la
 primera predicción emitida; emitir la semana 6 antes de sus partidos. Fase 7.
 
+## 2026-10-08 (continuación) — Fase 7 completa (guía para una posición nueva)
+
+- `weekly/GUIA_NUEVA_POSICION.md`: pasos, qué se cambia en el código, qué se vuelve a decidir y un
+  punto de partida para QB, RB y TE. Detalle en `docs/PLAN.md` (Fase 7).
+- `features.POSICION` y `pipeline.COLUMNA_ORDEN` reemplazan los valores fijos de WR; verificado que
+  el flujo da los mismos archivos.
+- La semana 5 de 2026 se volvió a emitir antes del primer partido: la alineación del día cambió el
+  lugar de 5 receptores. Cuenta la última emisión (ADR 0006).
+
+**Pendiente:** evaluar la semana 5 cuando termine su último partido (lunes 12 de octubre); emitir la
+semana 6 antes de sus partidos.
+

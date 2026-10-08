@@ -357,7 +357,7 @@ Una fila por corrida y resultado; las filas nunca se reescriben. Para tablas y a
 | `n_predichos_sin_real` | Receptores con predicción emitida que no registraron estadísticas esa semana (por ejemplo, inactivos); no entran a las métricas. | 0 |
 | `n_reales_sin_prediccion` | Receptores con estadísticas que no tenían predicción emitida (no estaban en la alineación). | 0 |
 | `modelo_entrenado_con`, `modelo_fecha_guardado` | Con qué temporadas se entrenó el modelo y cuándo se guardó: identifican la versión del modelo. | 2016-2025; 2026-10-08T05:35:43 |
-| `huella_variables` | Primeros 16 caracteres del SHA-256 de `variables_semana_N.csv`: con ese archivo y el modelo guardado se reproduce la predicción. Vacía si la predicción es reconstruida. | 76991428c3624f96 |
+| `huella_variables` | Primeros 16 caracteres del SHA-256 de `variables_semana_N.csv`: con ese archivo y el modelo guardado se reproduce la predicción. Vacía si la predicción es reconstruida. | ce8183eb758cf2cd |
 | `metrica_principal`, `valor` | La métrica principal y su valor en la semana (sección 10.2). | rmse, 31.800 |
 | `referencia_validacion`, `referencia_prueba` | Como en la sección 10.2. | 29.500, 27.935 |
 | `r2_oos`, `sesgo`, `pendiente_calibracion` | Como en la sección 10.2, de la semana. | 0.394, -5.379, 1.277 |

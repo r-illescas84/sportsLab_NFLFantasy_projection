@@ -30,7 +30,7 @@ sin depender de correr notebooks a mano uno por uno.
 | 5.4 Métricas de selección y orden por etapa | Métricas de selección consistentes con lo que se predice, con base en la literatura; selección siempre en validación; notebooks reordenados por etapa (`etapa.paso`); modelo de touchdowns corregido | ADR 0004, política de métricas en `modeling.py`/`experimentos.py`, notebooks 4.1-6.2 re-ejecutados, modelos y salidas de 2026 regenerados | ✅ Cerrada 2026-10-07 |
 | 5.5 Selección de variables estable | Rehacer la selección de variables con la métrica principal, sin usar la prueba y con un orden estable; evaluar el total implícito de las líneas de apuestas | ADR 0005, `3.3_seleccion_estable.ipynb`, 25 variables en `features.py`, etapas 4 a 6 re-ejecutadas, modelos y salidas de 2026 regenerados | ✅ Cerrada 2026-10-07 |
 | 6. Estabilidad / ciclo de vida | Historial de cada corrida; chequeo de las 6 dimensiones de calidad en cada corrida; predicción emitida guardada y evaluada tal cual; límites de control y política de reentrenamiento | ADR 0006, `seguimiento.py`, `tracking.csv`, límites en la metadata de los modelos, `6.3_seguimiento_semanal.ipynb` | ✅ Cerrada 2026-10-07 |
-| 7. Documentar el patrón | Forma del pipeline en términos genéricos, para adaptarlo a las demás posiciones | Guía corta de replicación en `weekly/README.md` | Pendiente |
+| 7. Documentar el patrón | Forma del pipeline en términos genéricos, para adaptarlo a las demás posiciones | `weekly/GUIA_NUEVA_POSICION.md`, enlazada desde `weekly/README.md`; la posición como constante en el código | ✅ Cerrada 2026-10-08 |
 | **Entregable final** | — | Predicción semanal real por WR (recepciones, yardas, touchdowns), con las métricas de la semana cuando ya se jugó. El rango P10/P50/P90 se exploró (nb 4.5) y queda fuera del flujo semanal | — |
 
 Las fases 2 a 5.3 se escribieron con la numeración anterior de notebooks (`01` a `26`); los nombres ya se actualizaron en el texto, y la equivalencia completa está en el registro de la Fase 5.4.
@@ -460,4 +460,22 @@ política quedó en `docs/decisions/0006-seguimiento-semanal.md`.
   ventana 1-4 da una alerta suelta en el sesgo de yardas (−3.07 contra un límite de −1.84).
 - **Pendiente operativo**: evaluar la semana 5, la primera predicción emitida, cuando termine su
   último partido (lunes 12 de octubre).
+
+### Fase 7 — Documentar el patrón (cerrada 2026-10-08)
+
+- **Guía** en `weekly/GUIA_NUEVA_POSICION.md`, para quien adapte el flujo a QB, RB o TE (ADR 0003):
+  la forma de carpetas, los primeros pasos, las seis etapas con su ejemplo en WR, qué se copia y qué
+  se cambia en cada módulo, qué se vuelve a decidir con los datos de la posición (resultados y su
+  métrica, variables, configuración, límites) y qué se reutiliza (partición, bootstrap, Bonferroni,
+  requisitos, margen de no inferioridad, alertas y reentrenamiento).
+- **Punto de partida por posición**: resultados candidatos, filtro y lo que ya se sabe de los datos,
+  como propuesta para el análisis exploratorio de cada una. Los códigos de posición se verificaron en
+  las estadísticas y en los dos esquemas de alineación: los corredores aparecen como `RB`, `HB` o `FB`
+  hasta 2024.
+- **Código**: la posición pasa a una constante (`features.POSICION`) y el orden de la salida a
+  `pipeline.COLUMNA_ORDEN`. Adaptar el flujo es cambiar esas constantes, `TARGETS` y
+  `POLITICA_METRICAS`. Con los mismos datos, el flujo da archivos idénticos a los de antes del
+  cambio.
+- No se armó un núcleo compartido entre posiciones: se diseñaría antes de tener una segunda posición
+  que lo pruebe.
 

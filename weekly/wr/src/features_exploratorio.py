@@ -155,10 +155,10 @@ def construir_tabla_candidatas(seasons=range(2016, 2026)):
     stats = data.cargar_stats_semanales(seasons)
     jugadores = data.cargar_jugadores()
     calendario = data.cargar_calendario(seasons)
-    depth = data.cargar_depth_charts_unificado(seasons, calendario=calendario)
+    depth = data.cargar_depth_charts_unificado(seasons, calendario=calendario, posicion=features.POSICION)
     qb_titular = data.identificar_qb_titular(stats)
 
-    wr = stats[stats["position"] == "WR"].copy()
+    wr = stats[stats["position"] == features.POSICION].copy()
     wr = features.calcular_ratios_eficiencia(wr)
     wr["racr"] = (wr["receiving_yards"] / wr["receiving_air_yards"]).where(wr["receiving_air_yards"] > 0)
     wr = acotar_variable(wr, "racr", percentil=0.99)

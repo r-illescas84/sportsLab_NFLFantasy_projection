@@ -133,7 +133,7 @@ player_id,player_display_name,team,season,week,receptions_pred,receiving_yards_p
 00-0032398,Chris Moore,BAL,2026,5,1.165,14.122,0.108
 00-0039062,Jonathan Mingo,DAL,2026,5,1.042,13.801,0.096
 00-0040277,Jahdae Walker,CHI,2026,5,1.12,13.625,0.095
-00-0037837,Calvin Austin III,NYG,2026,5,1.061,13.36,0.081
+00-0037837,Calvin Austin III,NYG,2026,5,1.061,13.587,0.081
 00-0040948,J. Michael Sturdivant,GB,2026,5,0.905,13.035,0.087
 00-0041132,Deion Burks,IND,2026,5,0.778,12.932,0.076
 00-0034272,Marquez Valdes-Scantling,LAC,2026,5,0.947,12.847,0.075
@@ -175,13 +175,13 @@ player_id,player_display_name,team,season,week,receptions_pred,receiving_yards_p
 00-0035544,Tom Kennedy,DET,2026,5,0.393,4.762,0.028
 00-0040405,Jamaal Pritchett,NYJ,2026,5,0.364,4.76,0.032
 00-0040621,Montorie Foster Jr,SEA,2026,5,0.333,4.76,0.024
+00-0038576,Charlie Jones,NYG,2026,5,0.402,4.756,0.021
 00-0037524,Tay Martin,DET,2026,5,0.31,4.653,0.029
 00-0040164,Jaylin Lane,WAS,2026,5,0.368,4.63,0.038
-00-0038576,Charlie Jones,NYG,2026,5,0.343,4.613,0.021
 00-0041397,Kaden Wetjen,PIT,2026,5,0.347,4.533,0.028
 00-0039816,Anthony Gould,IND,2026,5,0.347,4.533,0.023
 00-0036646,Simi Fehoko,ARI,2026,5,0.316,4.488,0.023
 00-0036331,Devin Duvernay,ARI,2026,5,0.323,4.365,0.023
 00-0035602,Alex Bachman,LA,2026,5,0.283,4.329,0.025
-00-0034419,Braxton Berrios,NYG,2026,5,0.381,4.267,0.025
 00-0037132,Britain Covey,PHI,2026,5,0.312,4.183,0.022
+00-0034419,Braxton Berrios,NYG,2026,5,0.303,3.897,0.025

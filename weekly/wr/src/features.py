@@ -39,6 +39,11 @@ features_exploratorio.VARIABLES_SELECCION_3_2.
 import numpy as np
 import pandas as pd
 
+POSICION = "WR"
+"""Posicion de este flujo: filtra las estadisticas (columna `position`) y las alineaciones
+(data.cargar_depth_charts_unificado). Para adaptar el flujo a otra posicion, ver
+weekly/GUIA_NUEVA_POSICION.md."""
+
 
 def _promedio_expandido_desfasado(serie):
     """Promedio de todo lo anterior a la fila actual -- NUNCA incluye el
@@ -270,8 +275,8 @@ def construir_tabla_modelado(seasons=range(2016, 2026), filas_extra=None):
     stats = data.cargar_stats_semanales(seasons)
     jugadores = data.cargar_jugadores()
     calendario = data.cargar_calendario(seasons)
-    depth = data.cargar_depth_charts_unificado(seasons, calendario=calendario)
-    wr = stats[stats["position"] == "WR"].copy()
+    depth = data.cargar_depth_charts_unificado(seasons, calendario=calendario, posicion=POSICION)
+    wr = stats[stats["position"] == POSICION].copy()
     wr["es_prediccion"] = False
     if filas_extra is not None:
         filas_extra = filas_extra.copy()
@@ -305,9 +310,9 @@ def filas_de_la_semana(season, week):
     import data
 
     stats = data.cargar_stats_semanales([season - 1, season])
-    con_historia = set(stats.loc[stats["position"] == "WR", "player_id"])
+    con_historia = set(stats.loc[stats["position"] == POSICION, "player_id"])
 
-    depth = data.cargar_depth_charts_unificado([season])
+    depth = data.cargar_depth_charts_unificado([season], posicion=POSICION)
     depth = depth[(depth["season"] == season) & (depth["week"] == week)]
     depth = depth[depth["player_id"].isin(con_historia)]
     depth = depth.sort_values("depth_team").drop_duplicates("player_id")
@@ -318,7 +323,7 @@ def filas_de_la_semana(season, week):
     filas = depth[["player_id", "team"]].merge(nombres, on="player_id", how="left")
     filas["season"] = season
     filas["week"] = week
-    filas["position"] = "WR"
+    filas["position"] = POSICION
     for columna in COLUMNAS_BASE_MODELADO:
         filas[columna] = np.nan
     return filas.reset_index(drop=True)

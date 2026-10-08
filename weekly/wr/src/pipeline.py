@@ -28,6 +28,9 @@ import features
 import modeling
 import seguimiento
 
+COLUMNA_ORDEN = "receiving_yards_pred"
+"""Columna por la que se ordenan la prediccion y la evaluacion de cada semana."""
+
 RAIZ = Path(__file__).resolve().parents[1]
 CARPETA_MODELOS = RAIZ / "models"
 CARPETA_SALIDAS = RAIZ / "outputs"
@@ -83,7 +86,7 @@ def _emitir(semana, variables, modelos, destino, season, week, chequeos, ahora):
     semana[seguimiento.COLUMNAS_ID + variables].sort_values("player_id").to_csv(ruta_variables, index=False)
     tabla_variables = pd.read_csv(ruta_variables)
     predicciones = modeling.predecir(tabla_variables, modelos).round(3)
-    predicciones = predicciones.sort_values("receiving_yards_pred", ascending=False)
+    predicciones = predicciones.sort_values(COLUMNA_ORDEN, ascending=False)
     predicciones.to_csv(destino / f"predicciones_semana_{week}.csv", index=False)
 
     huella = seguimiento.huella(ruta_variables)
@@ -125,7 +128,7 @@ def _evaluar(semana, modelos, destino, season, week, chequeos, tracking, ahora):
         "prediccion emitida encontrada", origen == "reconstruida",
         "se recalculo con los modelos vigentes" if origen == "reconstruida" else "")])
     evaluacion["origen_prediccion"] = origen
-    evaluacion = evaluacion.sort_values("receiving_yards_pred", ascending=False)
+    evaluacion = evaluacion.sort_values(COLUMNA_ORDEN, ascending=False)
     evaluacion.to_csv(destino / f"evaluacion_semana_{week}.csv", index=False)
 
     metricas = modeling.evaluar_predicciones(
@@ -197,14 +200,14 @@ def ejecutar_semana(season, week, carpeta_modelos=CARPETA_MODELOS, carpeta_salid
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Prediccion semanal de WR")
+    parser = argparse.ArgumentParser(description=f"Prediccion semanal de {features.POSICION}")
     parser.add_argument("--season", type=int, required=True)
     parser.add_argument("--week", type=int, required=True)
     args = parser.parse_args()
 
     resultado = ejecutar_semana(args.season, args.week)
     print(f"semana {args.week} de {args.season}: {resultado['estado']}, "
-          f"{len(resultado['predicciones'])} WR")
+          f"{len(resultado['predicciones'])} {features.POSICION}")
     print(f"modelos entrenados con: {resultado['entrenado_con']}")
     texto = seguimiento.advertencias(resultado["chequeos"])
     print(f"advertencias de calidad: {texto or 'ninguna'}")
