@@ -41,7 +41,7 @@
   "media_entrenamiento": 0.20876747141041932,
   "metrica_principal": "deviance_poisson",
   "entrenado_con": "2016-2025 (temporadas completas); configuracion elegida en 4.4_ajuste_hiperparametros.ipynb",
-  "fecha_de_guardado": "2026-10-08T01:43:29.302412+00:00",
+  "fecha_de_guardado": "2026-10-08T05:35:43.020400+00:00",
   "metricas_referencia": {
     "validacion": {
       "rmse": 0.4329,
@@ -118,6 +118,37 @@
       "d2_oos": 0.1259,
       "brier_anota": 0.1266,
       "auc_anota": 0.7061
+    }
+  },
+  "limites_seguimiento": {
+    "ventana_semanas": 4,
+    "temporadas": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "nivel": 0.95,
+    "n_series": 9,
+    "percentiles": [
+      0.277777777777778,
+      99.72222222222223
+    ],
+    "n_ventanas": 75,
+    "metricas": {
+      "deviance_poisson": {
+        "inferior": 0.525055395379263,
+        "superior": 0.691918732712424
+      },
+      "sesgo": {
+        "inferior": -0.057560404065641335,
+        "superior": 0.05502771633761961
+      },
+      "pendiente_calibracion": {
+        "inferior": 0.6597881286453254,
+        "superior": 1.5670427556766418
+      }
     }
   },
   "requisitos": {

@@ -44,9 +44,10 @@ Opción 3, en `3.3_seleccion_estable.ipynb`, con estas reglas fijadas antes de v
   más perfil, contexto de equipo y de partido, volatilidad, cambios e interacciones), con la
   alineación unificada (incluye 2025), más el total implícito de puntos del equipo. Las categóricas
   (`roof`, `surface`, `anios_experiencia_bucket`) entran como una unidad cada una.
-- **Modelo:** el XGBoost elegido para cada resultado (configuración de
-  `4.4_ajuste_hiperparametros.ipynb`). La importancia se mide con la métrica principal de cada
-  resultado (ADR 0004), como aumento relativo de la pérdida al permutar la variable.
+- **Modelo:** el XGBoost de cada resultado con la configuración vigente al seleccionar, la elegida
+  con las 34 variables anteriores (en touchdowns, 200 árboles con tasa 0.08). La importancia se mide
+  con la métrica principal de cada resultado (ADR 0004), como aumento relativo de la pérdida al
+  permutar la variable.
 - **Orden sin tocar la validación:** se ajusta con 2016-2019 y la importancia se mide en 2020-2021.
   El conjunto es compartido por los tres resultados, así que cada variable se califica con su mayor
   importancia relativa entre los tres. En cada ronda sale el 10% de las variables con menor
@@ -82,6 +83,10 @@ verificación sin ningún uso previo es la temporada 2026.
 - Contra las 34 actuales, en validación empatan en los tres resultados. En la prueba quedan peor en
   recepciones (+0.0097 de RMSE, intervalo de +0.0044 a +0.0151) y empatan en yardas y touchdowns;
   esa comparación favorece a las 34, que se eligieron midiendo la importancia en los años de prueba.
+- Con las 25 variables, la etapa 4 llega después a otra configuración de touchdowns (400 árboles con
+  tasa 0.03). Repetir la selección con ella da el mismo tamaño y cambia una variable en el borde del
+  orden: entra `targets_last3_avg` y sale `air_yards_share_last3_avg`. Las 25 adoptadas también pasan
+  la regla, con pérdidas de validación prácticamente iguales, y se mantienen (sección 7 de 3.3).
 - Entran el total implícito (octavo del orden estable), las yardas tras la recepción, la interacción
   de participación con la ofensiva del equipo y otras ventanas de las mismas estadísticas; salen,
   entre otras, la experiencia, el EPA, la tasa de atrapadas y las jugadas de 10, 16 y 20 yardas o más.

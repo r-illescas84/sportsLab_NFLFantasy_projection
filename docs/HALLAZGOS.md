@@ -396,5 +396,32 @@ en la fase de gobernanza. Cada entrada: qué es, dónde, por qué importa.
   **Resuelto** en 2.3. De ese resultado salía la conclusión «Vegas/clima sin efecto», por la que el
   total implícito nunca entró a la evaluación de `3.2_seleccion_features.ipynb`.
 
-- [ ] **Evaluar el total implícito como variable.** Queda como candidata para la selección de
-  variables que se rehará (ver la entrada de `3.2_seleccion_features.ipynb` arriba).
+- [x] **Evaluar el total implícito como variable.** Queda como candidata para la selección de
+  variables que se rehará (ver la entrada de `3.2_seleccion_features.ipynb` arriba). **Resuelto** en
+  `3.3_seleccion_estable.ipynb`: queda octavo en el orden estable y entra entre las 25 variables.
+
+- [x] **El flujo semanal sobrescribía la predicción emitida al evaluar la semana.** Cuando la semana
+  ya se había jugado, `pipeline.ejecutar_semana` volvía a predecir con los modelos de ese momento y
+  escribía encima de `predicciones_semana_N.csv`. Lo que se predijo antes de los partidos se perdía, y
+  si los modelos cambiaban entre una corrida y otra, la evaluación medía a un modelo que no había
+  hecho esa predicción. **Resuelto** (ADR 0006): la predicción emitida y sus variables se guardan
+  aparte y la evaluación las lee sin modificarlas (`evaluacion_semana_N.csv`). Las semanas 1-4 de
+  2026 quedan en el historial como `reconstruida`.
+
+- [x] **La primera regla de alertas habría sonado todas las temporadas.** Con límites en los
+  percentiles 2.5 y 97.5 de cada serie y «persistente» como dos ventanas seguidas fuera, las cinco
+  temporadas 2021-2025 habrían tenido alguna alerta persistente, aunque el modelo cumplió los
+  requisitos en todas. La prueba calcula los límites de cada temporada sin ella. Hay dos causas: se
+  vigilan nueve series a la vez (tres resultados por tres métricas), y dos ventanas seguidas
+  comparten tres de sus cuatro semanas. **Resuelto** antes de adoptarla, en
+  `6.3_seguimiento_semanal.ipynb`: el 5% se reparte entre las nueve series (percentiles 0.28 y
+  99.72) y la persistencia se mide contra la ventana sin semanas en común. Con eso queda una
+  temporada de cinco con alerta persistente.
+
+- [x] **`3.3_seleccion_estable.ipynb` decía usar la configuración de 4.4, pero en touchdowns usaba la
+  anterior.** La selección se hizo con la configuración vigente en ese momento, elegida con las 34
+  variables: 200 árboles con tasa 0.08. Con las 25 variables, 4.3 llega después a 400 árboles con tasa
+  0.03, y el texto seguía remitiendo a 4.4. **Resuelto:** el texto dice qué configuración se usó, y la
+  sección 7 de 3.3 repite la selección con la final. Da el mismo tamaño (25) y cambia una variable en
+  el borde del orden: entra `targets_last3_avg` y sale `air_yards_share_last3_avg`. Las 25 adoptadas
+  también pasan la regla, con pérdidas de validación prácticamente iguales, y se mantienen.

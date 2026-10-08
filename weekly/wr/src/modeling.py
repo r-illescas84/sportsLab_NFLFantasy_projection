@@ -110,7 +110,8 @@ def clip_no_negativo(pred):
 def cargar_modelos(carpeta, targets=TARGETS):
     """Lee el modelo y la metadata de cada target. Regresa
     {target: {"booster", "variables", "media_entrenamiento", "metrica_principal",
-    "referencia", "entrenado_con"}}."""
+    "referencia", "limites_seguimiento", "entrenado_con", "fecha_de_guardado"}}.
+    `limites_seguimiento` es None en un modelo guardado sin ellos."""
     carpeta = Path(carpeta)
     modelos = {}
     for target in targets:
@@ -123,7 +124,9 @@ def cargar_modelos(carpeta, targets=TARGETS):
             "media_entrenamiento": metadata.get("media_entrenamiento"),
             "metrica_principal": metadata.get("metrica_principal", METRICA_PRINCIPAL[target]),
             "referencia": metadata["metricas_referencia"],
+            "limites_seguimiento": metadata.get("limites_seguimiento"),
             "entrenado_con": metadata["entrenado_con"],
+            "fecha_de_guardado": metadata.get("fecha_de_guardado"),
         }
     return modelos
 

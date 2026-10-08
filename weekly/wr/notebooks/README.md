@@ -63,9 +63,10 @@ El planteamiento del problema y las decisiones de alcance están en
 
 | Notebook | Pregunta |
 |---|---|
-| [`6.1_modelo_final_y_temporada_actual`](6.1_modelo_final_y_temporada_actual.ipynb) | Entrenamiento con toda la historia, guardado y validación con la temporada en curso |
+| [`6.1_modelo_final_y_temporada_actual`](6.1_modelo_final_y_temporada_actual.ipynb) | Entrenamiento con toda la historia, límites de seguimiento, guardado y validación con la temporada en curso |
 | [`6.2_cierre`](6.2_cierre.ipynb) | Síntesis y tarjeta de cada modelo |
+| [`6.3_seguimiento_semanal`](6.3_seguimiento_semanal.ipynb) | ¿Cómo se sabe cada semana si el modelo se está desviando, y cuándo se reentrena? |
 
 El flujo semanal que aplica estos modelos se ejecuta con `weekly/wr/src/pipeline.py` (ver
-[`docs/arquitectura/`](../../../docs/arquitectura/)). `_reference/` guarda los notebooks originales
+[`weekly/README.md`](../../README.md) y [`docs/arquitectura/`](../../../docs/arquitectura/)). `_reference/` guarda los notebooks originales
 del proyecto, congelados como referencia.

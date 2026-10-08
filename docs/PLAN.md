@@ -29,7 +29,7 @@ sin depender de correr notebooks a mano uno por uno.
 | 5.3 Arquitectura semanal | Separar lo que corre cada semana (`data`, `features`, `modeling`, `pipeline`) de lo exploratorio (`experimentos`, `features_exploratorio`, notebooks); un orquestador que aplica los modelos ya guardados y trae métricas | `pipeline.py`, `modeling.py` reescrito, `experimentos.py`, `features_exploratorio.py` | ✅ Cerrada 2026-10-01 |
 | 5.4 Métricas de selección y orden por etapa | Métricas de selección consistentes con lo que se predice, con base en la literatura; selección siempre en validación; notebooks reordenados por etapa (`etapa.paso`); modelo de touchdowns corregido | ADR 0004, política de métricas en `modeling.py`/`experimentos.py`, notebooks 4.1-6.2 re-ejecutados, modelos y salidas de 2026 regenerados | ✅ Cerrada 2026-10-07 |
 | 5.5 Selección de variables estable | Rehacer la selección de variables con la métrica principal, sin usar la prueba y con un orden estable; evaluar el total implícito de las líneas de apuestas | ADR 0005, `3.3_seleccion_estable.ipynb`, 25 variables en `features.py`, etapas 4 a 6 re-ejecutadas, modelos y salidas de 2026 regenerados | ✅ Cerrada 2026-10-07 |
-| 6. Estabilidad / ciclo de vida | `tracking.csv` por corrida; chequeo recurrente de las 6 dimensiones de calidad | Historial de métricas, visible si el modelo se degrada | Pendiente |
+| 6. Estabilidad / ciclo de vida | Historial de cada corrida; chequeo de las 6 dimensiones de calidad en cada corrida; predicción emitida guardada y evaluada tal cual; límites de control y política de reentrenamiento | ADR 0006, `seguimiento.py`, `tracking.csv`, límites en la metadata de los modelos, `6.3_seguimiento_semanal.ipynb` | ✅ Cerrada 2026-10-07 |
 | 7. Documentar el patrón | Forma del pipeline en términos genéricos, para adaptarlo a las demás posiciones | Guía corta de replicación en `weekly/README.md` | Pendiente |
 | **Entregable final** | — | Predicción semanal real por WR (recepciones, yardas, touchdowns), con las métricas de la semana cuando ya se jugó. El rango P10/P50/P90 se exploró (nb 4.5) y queda fuera del flujo semanal | — |
 
@@ -429,3 +429,35 @@ de `docs/decisions/0005-seleccion-de-variables.md`, fijada antes de ver los resu
   yardas por receptor) y la pendiente de yardas apenas por encima del rango (1.105).
 - `4.4_ajuste_hiperparametros.ipynb` deja de probar conjuntos de variables propios por resultado: el
   conjunto compartido es parte de la decisión del ADR 0005.
+
+### Fase 6 — Seguimiento semanal y ciclo de vida (cerrada 2026-10-07)
+
+El flujo semanal predecía y evaluaba, pero no dejaba historial, al evaluar una semana sobrescribía la
+predicción emitida con una recalculada, y la calidad de los datos se había auditado una sola vez. La
+política quedó en `docs/decisions/0006-seguimiento-semanal.md`.
+
+- **Predicción emitida**: en una semana pendiente se guardan la predicción
+  (`predicciones_semana_N.csv`) y las variables con que se hizo (`variables_semana_N.csv`, con su
+  huella SHA-256). La predicción se hace leyendo ese archivo, así que se reproduce exacta con el
+  modelo guardado. Al evaluar se usa la emitida, sin modificarla (`evaluacion_semana_N.csv`); si no
+  existe, se recalcula y queda marcada como `reconstruida`.
+- **Chequeos de calidad** en cada corrida, por dimensión (`seguimiento.chequear_calidad`): bloquea
+  solo lo que invalida la predicción (jugador repetido, variable ausente o vacía, equipo sin
+  alineación, estadísticas de la semana anterior sin cargar); lo demás es advertencia.
+- **Historial** (`weekly/wr/outputs/tracking.csv`): una fila por corrida y resultado, nunca se
+  reescribe. Incluye la versión del modelo, la huella de las variables, las métricas de la semana y
+  de las cuatro últimas semanas, alertas y advertencias.
+- **Límites de control**: ventanas de cuatro semanas del walk-forward 2021-2025 (75 por resultado),
+  percentiles con el 5% repartido entre las nueve series (0.28 y 99.72). Alerta persistente: la misma
+  métrica fuera también en la ventana sin semanas en común. Se calculan en 6.1 y se guardan con cada
+  modelo.
+- **Regla de alertas corregida antes de adoptarla**: la primera versión (percentiles 2.5/97.5 y dos
+  ventanas seguidas) habría dado alguna alerta persistente en las cinco temporadas 2021-2025,
+  probando cada una con límites calculados sin ella; la adoptada, en una (ver `HALLAZGOS.md`).
+- **Reentrenamiento**: al cerrar la temporada regular, re-ejecutando 6.1; a mitad de temporada solo
+  con alerta persistente confirmada en una revisión. El flujo nunca reentrena solo.
+- **2026**: las semanas 1-4 quedan en el historial como reconstruidas y la 5 ya está emitida. La
+  ventana 1-4 da una alerta suelta en el sesgo de yardas (−3.07 contra un límite de −1.84).
+- **Pendiente operativo**: evaluar la semana 5, la primera predicción emitida, cuando termine su
+  último partido (lunes 12 de octubre).
+

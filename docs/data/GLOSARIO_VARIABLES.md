@@ -301,16 +301,27 @@ También se evaluaron en la Fase 3 y no tienen columna en el pipeline: la dureza
 
 ## 10. Salida del pipeline
 
-`pipeline.py` escribe en `weekly/wr/outputs/{temporada}/` un archivo de predicciones por semana y, si la semana ya se jugó, otro de métricas.
+`pipeline.py` escribe en `weekly/wr/outputs/{temporada}/`, según el estado de la semana
+([ADR 0006](../decisions/0006-seguimiento-semanal.md)):
+
+- **Semana pendiente:** `predicciones_semana_N.csv`, la predicción emitida, y `variables_semana_N.csv`, las 25 variables de la sección 8 con que se hizo, una fila por receptor de la alineación.
+- **Semana jugada:** `evaluacion_semana_N.csv`, predicción y valor real por receptor, y `metricas_semana_N.csv`, las métricas de la semana.
+
+Cada corrida agrega además sus filas al historial, `weekly/wr/outputs/tracking.csv` (sección 10.3).
+
+### 10.1 Predicción y evaluación
 
 | Columna | Qué es | Ejemplo (Chase, semana 3 de 2026) |
 |---|---|---|
 | `receptions_pred` | Recepciones esperadas. | 6.236 |
 | `receiving_yards_pred` | Yardas esperadas. | 76.745 |
 | `receiving_tds_pred` | Touchdowns esperados: un promedio, no un 0 o un 1. Un valor de 0.3 equivale a un TD cada tres partidos con este perfil. | 0.485 |
-| `receptions_real`, `receiving_yards_real`, `receiving_tds_real` | Lo que de verdad pasó. Solo aparecen en semanas ya jugadas. | 9, 98, 1 |
+| `receptions_real`, `receiving_yards_real`, `receiving_tds_real` | Lo que de verdad pasó. Solo en la evaluación. | 9, 98, 1 |
+| `origen_prediccion` | `emitida` si es la predicción guardada antes de los partidos; `reconstruida` si no existía y se recalculó con los modelos vigentes (las semanas 1-4 de 2026). Solo en la evaluación. | reconstruida |
 
-Archivo de métricas, una fila por resultado (semana 3 de 2026). «—» = la métrica no aplica a ese resultado:
+### 10.2 Métricas de la semana
+
+Una fila por resultado (semana 3 de 2026). «—» = la métrica no aplica a ese resultado:
 
 | Columna | Qué es | `receptions` | `receiving_yards` | `receiving_tds` |
 |---|---|---|---|---|
@@ -319,17 +330,41 @@ Archivo de métricas, una fila por resultado (semana 3 de 2026). «—» = la m�
 | `rmse` | Raíz del error cuadrático medio: en las unidades del resultado, castiga más los errores grandes. Menor = mejor. | 1.793 | 27.482 | 0.402 |
 | `mae` | Error absoluto medio: en promedio, cuántas unidades se equivoca la predicción. Se reporta, pero no decide: premia la mediana, no el valor esperado. | 1.308 | 19.334 | 0.280 |
 | `r2` | Parte de la variación explicada, contra el promedio de la propia semana. | 0.497 | 0.396 | 0.068 |
-| `r2_oos` | R² fuera de muestra: contra la media de entrenamiento guardada con el modelo. 0 = igual que predecir el promedio histórico; negativo = peor que eso. | 0.502 | 0.399 | 0.068 |
+| `r2_oos` | R² fuera de muestra: contra la media de entrenamiento guardada con el modelo. 0 = igual que predecir el promedio histórico; negativo = peor que eso. | 0.503 | 0.399 | 0.068 |
 | `sesgo` | Promedio predicho menos promedio real. Positivo = el modelo se pasó en promedio. | -0.175 | -2.815 | -0.028 |
-| `sesgo_media_entrenamiento` | El sesgo que tendría predecir la media de entrenamiento: refleja qué tanto cambió el nivel de esa semana respecto a la historia. | 0.270 | 2.635 | 0.007 |
+| `sesgo_media_entrenamiento` | El sesgo que tendría predecir la media de entrenamiento: refleja qué tanto cambió el nivel de esa semana respecto a la historia. | 0.269 | 2.635 | 0.007 |
 | `media_real` | Promedio real de la semana. | 2.429 | 31.643 | 0.201 |
-| `pendiente_calibracion` | Pendiente de lo real sobre lo predicho: 1 = predicciones en la escala correcta; menor a 1 = demasiado extremas; mayor a 1 = demasiado tímidas. | 1.137 | 1.082 | 0.848 |
+| `pendiente_calibracion` | Pendiente de lo real sobre lo predicho: 1 = predicciones en la escala correcta; menor a 1 = demasiado extremas; mayor a 1 = demasiado tímidas. | 1.137 | 1.082 | 0.847 |
 | `deviance_poisson` | Deviance de Poisson: el error propio de un conteo, la métrica principal de touchdowns. Menor = mejor. No aplica a yardas. | 1.333 | — | 0.604 |
-| `d2_oos` | Fracción de la deviance de Poisson explicada contra la media de entrenamiento (el equivalente de `r2_oos` para conteos). | 0.506 | — | 0.089 |
-| `referencia_validacion` | Valor de la métrica principal del modelo en validación (2022–2023), guardado con el modelo, para comparar contra la semana. | 1.931 | 29.500 | 0.613 |
-| `referencia_prueba` | Lo mismo en la prueba (2024–2025). | 1.835 | 27.935 | 0.622 |
+| `d2_oos` | Fracción de la deviance de Poisson explicada contra la media de entrenamiento (el equivalente de `r2_oos` para conteos). | 0.507 | — | 0.089 |
+| `referencia_validacion` | Valor de la métrica principal del modelo en validación (2022–2023), guardado con el modelo, para comparar contra la semana. | 1.9315 | 29.500 | 0.613 |
+| `referencia_prueba` | Lo mismo en la prueba (2024–2025). | 1.8355 | 27.935 | 0.622 |
 | `brier_anota` | Solo touchdowns: error cuadrático de la probabilidad de anotar al menos uno, calculada como 1 − e^(−predicción). Menor = mejor. | — | — | 0.148 |
-| `auc_anota` | Solo touchdowns: qué tan bien ordena el modelo a quienes anotan por encima de quienes no (0.5 = azar, 1 = perfecto). | — | — | 0.693 |
+| `auc_anota` | Solo touchdowns: qué tan bien ordena el modelo a quienes anotan por encima de quienes no (0.5 = azar, 1 = perfecto). | — | — | 0.692 |
+
+### 10.3 Historial de corridas (`tracking.csv`)
+
+Una fila por corrida y resultado; las filas nunca se reescriben. Para tablas y alertas se usa la corrida más reciente de cada temporada, semana, estado y resultado. Ejemplo: la evaluación de la semana 4 de 2026 en `receiving_yards`. La huella es de la semana 5, la primera emitida.
+
+| Columna | Qué es | Ejemplo |
+|---|---|---|
+| `fecha_corrida` | Fecha y hora de la corrida (UTC). | 2026-10-08T05:36:37+00:00 |
+| `season`, `week` | Temporada y semana. | 2026, 4 |
+| `estado` | `pendiente` (se predijo antes de los partidos) o `jugada` (se evaluó). | jugada |
+| `target` | El resultado de la fila. | receiving_yards |
+| `origen_prediccion` | `emitida` o `reconstruida` (sección 10.1). | reconstruida |
+| `n_wr` | Receptores predichos (semana pendiente) o evaluados (semana jugada). | 151 |
+| `n_predichos_sin_real` | Receptores con predicción emitida que no registraron estadísticas esa semana (por ejemplo, inactivos); no entran a las métricas. | 0 |
+| `n_reales_sin_prediccion` | Receptores con estadísticas que no tenían predicción emitida (no estaban en la alineación). | 0 |
+| `modelo_entrenado_con`, `modelo_fecha_guardado` | Con qué temporadas se entrenó el modelo y cuándo se guardó: identifican la versión del modelo. | 2016-2025; 2026-10-08T05:35:43 |
+| `huella_variables` | Primeros 16 caracteres del SHA-256 de `variables_semana_N.csv`: con ese archivo y el modelo guardado se reproduce la predicción. Vacía si la predicción es reconstruida. | 76991428c3624f96 |
+| `metrica_principal`, `valor` | La métrica principal y su valor en la semana (sección 10.2). | rmse, 31.800 |
+| `referencia_validacion`, `referencia_prueba` | Como en la sección 10.2. | 29.500, 27.935 |
+| `r2_oos`, `sesgo`, `pendiente_calibracion` | Como en la sección 10.2, de la semana. | 0.394, -5.379, 1.277 |
+| `ventana` | Las cuatro últimas semanas jugadas de la temporada; vacía hasta la semana 4. | 1-4 |
+| `ventana_valor`, `ventana_sesgo`, `ventana_pendiente` | Métrica principal, sesgo y pendiente de las cuatro semanas juntas. | 29.596, -3.074, 1.105 |
+| `alertas` | Métricas de la ventana fuera de sus límites de control, con el límite. «(persistente)» si también lo estaba la ventana que termina cuatro semanas antes. | sesgo -3.074 < -1.84 |
+| `advertencias` | Chequeos de calidad que fallaron sin detener la corrida. | valores dentro del rango historico: air_yards_share_last3_avg (1 filas); prediccion emitida encontrada: se recalculo con los modelos vigentes |
 
 ## Apéndice A. Resto de columnas de la tabla de estadísticas
 
@@ -603,14 +638,16 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 
 | Variable | Secciones |
 |---|---|
+| `advertencias` | 10.3 |
 | `air_yards_per_target` | 7.1 |
 | `air_yards_share` | 6 |
 | `air_yards_share_last3_avg` | 8 |
+| `alertas` | 10.3 |
 | `anios_experiencia` | 7.3 |
 | `anios_experiencia_bucket` | 7.3 |
 | `anios_experiencia_sq` | 7.3 |
 | `attempts` | A.1 |
-| `auc_anota` | 10 |
+| `auc_anota` | 10.2 |
 | `away_coach` | B.2 |
 | `away_moneyline` | B.2 |
 | `away_qb_id` | B.2 |
@@ -620,7 +657,7 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `away_spread_odds` | B.2 |
 | `away_team` | B.2 |
 | `birth_date` | B.1 |
-| `brier_anota` | 10 |
+| `brier_anota` | 10.2 |
 | `cambio_equipo` | 9 |
 | `cambio_qb_titular` | 9 |
 | `cambio_qb_x_target_share` | 9 |
@@ -630,7 +667,7 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `college_name` | B.1 |
 | `common_first_name` | B.1 |
 | `completions` | A.1 |
-| `d2_oos` | 10 |
+| `d2_oos` | 10.2 |
 | `def_2pt_atts` | A.3 |
 | `def_2pt_made` | A.3 |
 | `def_fg_blocks` | A.3 |
@@ -652,7 +689,7 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `def_tackles_with_assist` | A.3 |
 | `def_tds` | A.3 |
 | `depth_team` | 7.3, 8 |
-| `deviance_poisson` | 10 |
+| `deviance_poisson` | 10.2 |
 | `display_name` | B.1 |
 | `div_game` | 9, B.2 |
 | `draft_pick` | 7.3, 8, B.1 |
@@ -666,11 +703,13 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `esb_id` | B.1 |
 | `espn` | B.2 |
 | `espn_id` | B.1 |
+| `estado` | 10.3 |
 | `fantasy_points` | 6 |
 | `fantasy_points_ppr` | 6 |
 | `fantasy_points_ppr_career_avg` | 8 |
 | `fantasy_points_ppr_last3_avg` | 8 |
 | `fantasy_points_ppr_last5_avg` | 8 |
+| `fecha_corrida` | 10.3 |
 | `fg_att` | A.6 |
 | `fg_blocked` | A.6 |
 | `fg_blocked_distance` | A.6 |
@@ -730,6 +769,7 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `home_score` | B.2 |
 | `home_spread_odds` | B.2 |
 | `home_team` | B.2 |
+| `huella_variables` | 10.3 |
 | `jersey_number` | B.1 |
 | `kickoff_return_yards` | A.5 |
 | `kickoff_returns` | A.5 |
@@ -737,11 +777,16 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `last_season` | B.1 |
 | `latest_team` | B.1 |
 | `location` | B.2 |
-| `mae` | 10 |
-| `media_real` | 10 |
-| `metrica_principal` | 10 |
+| `mae` | 10.2 |
+| `media_real` | 10.2 |
+| `metrica_principal` | 10.2, 10.3 |
 | `misc_yards` | A.4 |
-| `n` | 10 |
+| `modelo_entrenado_con` | 10.3 |
+| `modelo_fecha_guardado` | 10.3 |
+| `n` | 10.2 |
+| `n_predichos_sin_real` | 10.3 |
+| `n_reales_sin_prediccion` | 10.3 |
+| `n_wr` | 10.3 |
 | `nfl_detail_id` | B.2 |
 | `nfl_id` | B.1 |
 | `ngs_position` | B.1 |
@@ -750,6 +795,7 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `ngs_status_short_description` | B.1 |
 | `old_game_id` | B.2 |
 | `opponent_team` | 4 |
+| `origen_prediccion` | 10.1, 10.3 |
 | `otc_id` | B.1 |
 | `over_odds` | B.2 |
 | `overtime` | B.2 |
@@ -774,7 +820,7 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `pat_pct` | A.6 |
 | `penalties` | A.4 |
 | `penalty_yards` | A.4 |
-| `pendiente_calibracion` | 10 |
+| `pendiente_calibracion` | 10.2, 10.3 |
 | `pff` | B.2 |
 | `pff_id` | B.1 |
 | `pff_position` | B.1 |
@@ -801,8 +847,8 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `pt_yards` | A.7 |
 | `punt_return_yards` | A.5 |
 | `punt_returns` | A.5 |
-| `r2` | 10 |
-| `r2_oos` | 10 |
+| `r2` | 10.2 |
+| `r2_oos` | 10.2, 10.3 |
 | `racr` | 6 |
 | `racr_acotado` | 9 |
 | `receiving_10` | 6 |
@@ -817,29 +863,29 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `receiving_fumbles` | 6 |
 | `receiving_fumbles_lost` | 6 |
 | `receiving_tds` | 5, 6 |
-| `receiving_tds_pred` | 10 |
-| `receiving_tds_real` | 10 |
+| `receiving_tds_pred` | 10.1 |
+| `receiving_tds_real` | 10.1 |
 | `receiving_yards` | 5, 6 |
 | `receiving_yards_after_catch` | 6 |
 | `receiving_yards_after_catch_career_avg` | 8 |
 | `receiving_yards_after_catch_season_avg` | 8 |
 | `receiving_yards_career_avg` | 8 |
 | `receiving_yards_last5_avg` | 8 |
-| `receiving_yards_pred` | 10 |
-| `receiving_yards_real` | 10 |
+| `receiving_yards_pred` | 10.1 |
+| `receiving_yards_real` | 10.1 |
 | `receiving_yards_volatilidad5` | 9 |
 | `receptions` | 5, 6 |
 | `receptions_career_avg` | 8 |
 | `receptions_last3_avg` | 8 |
 | `receptions_last5_avg` | 8 |
-| `receptions_pred` | 10 |
-| `receptions_real` | 10 |
+| `receptions_pred` | 10.1 |
+| `receptions_real` | 10.1 |
 | `receptions_season_avg` | 8 |
 | `referee` | B.2 |
-| `referencia_prueba` | 10 |
-| `referencia_validacion` | 10 |
+| `referencia_prueba` | 10.2, 10.3 |
+| `referencia_validacion` | 10.2, 10.3 |
 | `result` | B.2 |
-| `rmse` | 10 |
+| `rmse` | 10.2 |
 | `roof` | 9, B.2 |
 | `rookie_season` | B.1 |
 | `rushing_10` | A.2 |
@@ -857,10 +903,10 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `sack_fumbles_lost` | A.1 |
 | `sack_yards_lost` | A.1 |
 | `sacks_suffered` | A.1 |
-| `season` | 4, B.2 |
+| `season` | 4, 10.3, B.2 |
 | `season_type` | 4 |
-| `sesgo` | 10 |
-| `sesgo_media_entrenamiento` | 10 |
+| `sesgo` | 10.2, 10.3 |
+| `sesgo_media_entrenamiento` | 10.2 |
 | `short_name` | B.1 |
 | `smart_id` | B.1 |
 | `special_teams_tds` | 6 |
@@ -870,6 +916,7 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `status` | B.1 |
 | `suffix` | B.1 |
 | `surface` | 9, B.2 |
+| `target` | 10.3 |
 | `target_share` | 6 |
 | `target_share_last3_avg` | 8 |
 | `target_share_last5_avg` | 8 |
@@ -885,7 +932,12 @@ Cada variable con las secciones donde se define (un nombre puede repetirse en va
 | `total_implicito_equipo` | 8 |
 | `total_line` | 9, B.2 |
 | `under_odds` | B.2 |
-| `week` | 4, B.2 |
+| `valor` | 10.3 |
+| `ventana` | 10.3 |
+| `ventana_pendiente` | 10.3 |
+| `ventana_sesgo` | 10.3 |
+| `ventana_valor` | 10.3 |
+| `week` | 4, 10.3, B.2 |
 | `weekday` | B.2 |
 | `weight` | B.1 |
 | `wind` | 9, B.2 |

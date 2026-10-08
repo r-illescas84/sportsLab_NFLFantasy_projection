@@ -96,7 +96,7 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
 <header>
 <h1>Pipeline WR semanal</h1>
 <p>Cómo se arma la predicción de recepciones, yardas y touchdowns cada semana: qué archivo hace cada paso, qué recibe, qué contiene y qué entrega.</p>
-<div class="status"><span class="dot"></span>Flujo verificado con las semanas 1 a 4 de 2026 · 3 modelos vigentes</div>
+<div class="status"><span class="dot"></span>Semanas 1 a 4 de 2026 evaluadas · semana 5 emitida · 3 modelos vigentes</div>
 </header>
 
 <div class="zone">Se ejecuta cada semana</div>
@@ -104,7 +104,7 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
 <section class="layer">
   <div class="layer-head"><code>pipeline.py</code><span>orquesta todo el flujo</span></div>
   <div class="pad">
-    <p>Una llamada, <code class="i">ejecutar_semana(season, week)</code>, recorre las capas de abajo en orden y guarda la salida. Detecta sola si la semana ya se jugó. Si está en curso o la alineación está incompleta, se detiene con un mensaje claro en vez de dar una salida parcial.</p>
+    <p>Una llamada, <code class="i">ejecutar_semana(season, week)</code>, recorre las capas de abajo en orden y guarda la salida. Detecta sola si la semana ya se jugó. Antes de los partidos emite la predicción y guarda las variables con que la hizo; cuando terminan, evalúa esa predicción emitida sin modificarla. Si la semana está en curso o un chequeo de calidad invalida la predicción, se detiene con un mensaje claro en vez de dar una salida parcial.</p>
   </div>
 </section>
 
@@ -170,7 +170,30 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
   </div>
 </section>
 
-<div class="link"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0V26M2 21L7 27L12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>tabla de variables de la semana</span></div>
+<div class="link"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0V26M2 21L7 27L12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>tabla de variables de la semana y filas reales anteriores</span></div>
+
+<section class="layer">
+  <div class="layer-head"><code>seguimiento.py</code><span>revisa la calidad y lleva el historial</span></div>
+  <div class="body">
+    <div>
+      <h3>Recibe</h3>
+      <p>La tabla de la semana y las filas reales anteriores. Después de evaluar, las cuatro últimas semanas jugadas y los límites de control de cada modelo.</p>
+    </div>
+    <div>
+      <h3>Contiene</h3>
+      <div class="group"><small>Antes de predecir</small><div class="chips">
+        <span class="chip">chequear_calidad</span><span class="chip">detener_si_bloquea</span><span class="chip">advertencias</span><span class="chip">huella</span></div></div>
+      <div class="group"><small>Al evaluar y registrar</small><div class="chips">
+        <span class="chip">prediccion_emitida</span><span class="chip">metricas_ventana</span><span class="chip">evaluar_alertas</span><span class="chip">registrar_corrida</span><span class="chip">leer_tracking</span><span class="chip">ultimas_corridas</span></div></div>
+    </div>
+    <div>
+      <h3>Entrega</h3>
+      <p>Chequeos en las 6 dimensiones de calidad: lo que invalida la predicción detiene la corrida y lo demás queda como advertencia. Alertas cuando la ventana de 4 semanas sale de los límites, y las filas de <code class="i">tracking.csv</code>.</p>
+    </div>
+  </div>
+</section>
+
+<div class="link"><svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><path d="M7 0V26M2 21L7 27L12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>tabla revisada</span></div>
 
 <section class="layer mdl">
   <div class="layer-head"><code>modeling.py</code><span>aplica los modelos ya evaluados</span></div>
@@ -189,7 +212,7 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
       <div class="chips">
         <span class="chip">cargar_modelos</span><span class="chip">predecir</span><span class="chip">metricas</span><span class="chip">metricas_target</span><span class="chip">evaluar_predicciones</span>
       </div>
-      <p style="margin-top:.7rem">No entrena ni divide nada. Cada modelo usa sus variables en el orden con el que se entrenó, que viene en su metadata.</p>
+      <p style="margin-top:.7rem">No entrena ni divide nada. Cada modelo usa sus variables en el orden con el que se entrenó, que viene en su metadata junto con sus límites de seguimiento.</p>
     </div>
     <div>
       <h3>Entrega</h3>
@@ -203,8 +226,11 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
 <section class="layer">
   <div class="layer-head"><code>salida</code><span>por semana</span></div>
   <div class="items">
-    <div class="item"><code>predicciones_semana_N.csv</code><span>por cada WR activo: recepciones, yardas y touchdowns esperados de esa semana</span></div>
-    <div class="item"><code>metricas_semana_N.csv</code><span>solo si la semana ya se jugó: métrica principal y su referencia, R² fuera de muestra, sesgo y calibración contra lo real</span></div>
+    <div class="item"><code>predicciones_semana_N.csv</code><span>antes de los partidos: la predicción emitida por WR de la alineación; después ya no se modifica</span></div>
+    <div class="item"><code>variables_semana_N.csv</code><span>las 25 variables con que se emitió; con el modelo guardado reproduce la predicción exacta</span></div>
+    <div class="item"><code>evaluacion_semana_N.csv</code><span>cuando la semana se jugó: predicción emitida (o reconstruida) y valor real por WR</span></div>
+    <div class="item"><code>metricas_semana_N.csv</code><span>métrica principal y su referencia, R² fuera de muestra, sesgo y calibración contra lo real</span></div>
+    <div class="item"><code>tracking.csv</code><span>historial de todas las corridas: una fila por corrida y resultado, con la ventana de 4 semanas, alertas y advertencias</span></div>
   </div>
   <div class="run">
     <h3>Corridas de 2026 · métrica principal por semana</h3>
@@ -219,7 +245,7 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
         <tr><td>referencia · prueba 2024-2025</td><td>1.84</td><td>27.93</td><td>0.622</td></tr>
       </tbody>
     </table></div>
-    <p class="cap">151 a 154 WR por semana. Semanas fuera de muestra: los modelos se entrenaron con 2016-2025. Menor = mejor en las tres métricas. La semana 5, todavía sin jugarse, salió con 186 WR de los 30 equipos que juegan.</p>
+    <p class="cap">151 a 154 WR por semana. Semanas fuera de muestra: los modelos se entrenaron con 2016-2025. Menor = mejor en las tres métricas. Las semanas 1 a 4 se evaluaron con predicciones reconstruidas, porque son anteriores al historial. La ventana 1-4 da una alerta suelta en el sesgo de yardas (−3.07 contra un límite de −1.84). La semana 5, todavía sin jugarse, quedó emitida con 186 WR de los 30 equipos que juegan.</p>
   </div>
 </section>
 
@@ -230,7 +256,7 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
     <div class="layer-head"><code>experimentos.py</code><span>decide qué modelo usar</span></div>
     <div class="pad">
       <div class="chips">
-        <span class="chip">dividir_temporal</span><span class="chip">folds_walk_forward</span><span class="chip">entrenar_y_evaluar</span><span class="chip">buscar_hiperparametros</span><span class="chip">entrenar_hurdle</span><span class="chip">evaluar_modelo</span><span class="chip">BaselinePromedioJugador</span><span class="chip">resumen_resultados</span><span class="chip">diferencia_bootstrap</span><span class="chip">cumple_requisitos</span><span class="chip">spearman_semanal</span><span class="chip">eliminacion_recursiva</span><span class="chip">orden_estable</span><span class="chip">elegir_conjunto_no_inferior</span><span class="chip">guardar_modelo</span>
+        <span class="chip">dividir_temporal</span><span class="chip">folds_walk_forward</span><span class="chip">entrenar_y_evaluar</span><span class="chip">buscar_hiperparametros</span><span class="chip">entrenar_hurdle</span><span class="chip">evaluar_modelo</span><span class="chip">BaselinePromedioJugador</span><span class="chip">resumen_resultados</span><span class="chip">diferencia_bootstrap</span><span class="chip">cumple_requisitos</span><span class="chip">spearman_semanal</span><span class="chip">eliminacion_recursiva</span><span class="chip">orden_estable</span><span class="chip">elegir_conjunto_no_inferior</span><span class="chip">ventanas_walk_forward</span><span class="chip">limites_de_seguimiento</span><span class="chip">guardar_modelo</span>
       </div>
     </div>
   </section>
@@ -244,9 +270,9 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
   </section>
 </div>
 
-<p class="note"><i></i>Borde punteado: no corre en el flujo semanal. Los notebooks usan estos módulos para decidir qué modelo y qué variables; <b style="font-weight:500;color:var(--text-primary)">guardar_modelo</b> deja el archivo ya evaluado en <code class="i">weekly/wr/models/</code>, que es lo que <code class="i">modeling.py</code> aplica cada semana. El flujo no reentrena: reentrenar se decide en los notebooks. Cada modelo se elige con la métrica principal en validación y debe cumplir requisitos de calibración (<code class="i">docs/decisions/0004-metricas-de-seleccion.md</code>); las variables, con un orden estable y una regla de no inferioridad (<code class="i">docs/decisions/0005-seleccion-de-variables.md</code>). De las alternativas exploradas, <code class="i">weekly/wr/models/exploratorio/</code> guarda solo los modelos de cuantil y el jerárquico de touchdowns (sin versionar), más la metadata de las que no se adoptaron; ninguna entra al flujo semanal.</p>
+<p class="note"><i></i>Borde punteado: no corre en el flujo semanal. Los notebooks usan estos módulos para decidir qué modelo y qué variables; <b style="font-weight:500;color:var(--text-primary)">guardar_modelo</b> deja el archivo ya evaluado en <code class="i">weekly/wr/models/</code>, que es lo que <code class="i">modeling.py</code> aplica cada semana, con los límites de seguimiento calculados en el walk-forward 2021-2025. El flujo no reentrena: se reentrena al cerrar la temporada regular, o a mitad de temporada si una revisión confirma una alerta persistente, siempre desde el notebook 6.1 (<code class="i">docs/decisions/0006-seguimiento-semanal.md</code>). Cada modelo se elige con la métrica principal en validación y debe cumplir requisitos de calibración (<code class="i">docs/decisions/0004-metricas-de-seleccion.md</code>); las variables, con un orden estable y una regla de no inferioridad (<code class="i">docs/decisions/0005-seleccion-de-variables.md</code>). De las alternativas exploradas, <code class="i">weekly/wr/models/exploratorio/</code> guarda solo los modelos de cuantil y el jerárquico de touchdowns (sin versionar), más la metadata de las que no se adoptaron; ninguna entra al flujo semanal.</p>
 
-<footer>weekly/wr/src · pipeline.py → data.py → features.py → modeling.py · modelos en weekly/wr/models/</footer>
+<footer>weekly/wr/src · pipeline.py → data.py → features.py → seguimiento.py → modeling.py · modelos en weekly/wr/models/ · historial en weekly/wr/outputs/tracking.csv</footer>
 
 </div>
 

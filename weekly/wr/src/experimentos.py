@@ -4,9 +4,10 @@ notebooks, el flujo semanal (pipeline.py) no las usa.
 
 Aqui vive todo lo que ajusta, compara y valida modelos (split temporal, walk-forward,
 comparacion de familias de modelos, busqueda de hiperparametros, modelo de 2 etapas,
-requisitos para que un modelo sea elegible) y guardar_modelo(), que deja el archivo del modelo
-ya evaluado en el formato que lee modeling.cargar_modelos(). Lo que se ejecuta cada semana
-(cargar, predecir, medir) esta en modeling.py.
+requisitos para que un modelo sea elegible, limites de control del seguimiento semanal) y
+guardar_modelo(), que deja el archivo del modelo ya evaluado en el formato que lee
+modeling.cargar_modelos(). Lo que se ejecuta cada semana (cargar, predecir, medir, revisar
+alertas) esta en modeling.py y seguimiento.py.
 
 Reglas de evaluacion (docs/decisions/0004-metricas-de-seleccion.md):
 - Split SIEMPRE temporal, nunca aleatorio -- el pipeline original
@@ -420,13 +421,14 @@ def cumple_requisitos(target, metricas_validacion, metricas_por_anio=None):
 
 
 def guardar_modelo(modelo, carpeta, target, variables, media_entrenamiento, metricas_referencia,
-                   entrenado_con, limitaciones=()):
+                   entrenado_con, limitaciones=(), limites_seguimiento=None):
     """Guarda un XGBRegressor ya evaluado: el archivo del modelo ({target}_xgboost.json, formato
     nativo de XGBoost) y su metadata ({target}_metadata.json): variables en el orden exacto del
     entrenamiento, hiperparametros, media del target en entrenamiento (referencia de R2/D2 fuera
     de muestra cada semana), metrica principal, metricas de referencia (dict con
-    "validacion", "prueba" y "walk_forward"), de que datos salio y las fuentes de la politica de
-    metricas. Es lo unico que modeling.cargar_modelos() necesita para aplicarlo cada semana."""
+    "validacion", "prueba" y "walk_forward"), limites de control del seguimiento semanal
+    (limites_de_seguimiento()), de que datos salio y las fuentes de la politica de metricas. Es lo
+    unico que modeling.cargar_modelos() necesita para aplicarlo cada semana."""
     carpeta = Path(carpeta)
     carpeta.mkdir(parents=True, exist_ok=True)
     modelo.save_model(str(carpeta / f"{target}_xgboost.json"))
@@ -440,6 +442,7 @@ def guardar_modelo(modelo, carpeta, target, variables, media_entrenamiento, metr
         "entrenado_con": entrenado_con,
         "fecha_de_guardado": pd.Timestamp.now(tz="UTC").isoformat(),
         "metricas_referencia": metricas_referencia,
+        "limites_seguimiento": limites_seguimiento,
         "requisitos": REQUISITOS,
         "referencias": REFERENCIAS_METRICAS,
         "limitaciones_conocidas": list(limitaciones),
@@ -589,3 +592,55 @@ def elegir_conjunto_no_inferior(df_val, ys_val, predicciones, tamanos, margen=0.
     elegido = min((n for n in nombres if no_inferior[n]), key=lambda n: tamanos[n])
     tabla["no_inferior_en_los_tres"] = tabla["conjunto"].map(no_inferior)
     return elegido, tabla
+
+
+# --- Limites del seguimiento semanal (docs/decisions/0006-seguimiento-semanal.md) ---
+
+def ventanas_walk_forward(df, X, y, crear_modelo, anios, ancho=4, target=None):
+    """Metricas en ventanas de `ancho` semanas consecutivas de cada temporada de `anios`, con el
+    modelo de cada corte del walk-forward (entrenado con las temporadas anteriores,
+    folds_walk_forward()). Es lo que el flujo semanal mide cada semana: la ventana de las ultimas
+    `ancho` semanas jugadas, con un modelo entrenado antes de la temporada. Las ventanas no cruzan
+    de una temporada a otra. Regresa una fila por ventana: temporada, primera y ultima semana,
+    filas, metrica principal, sesgo y pendiente de calibracion."""
+    target = target or y.name
+    principal = METRICA_PRINCIPAL[target]
+    filas = []
+    for anio, train_fold, test_fold in folds_walk_forward(df, anios):
+        modelo = crear_modelo().fit(X[train_fold], y[train_fold])
+        pred = pd.Series(clip_no_negativo(modelo.predict(X[test_fold])), index=X.index[test_fold])
+        semanas = df.loc[test_fold, "week"]
+        for ultima in range(int(semanas.min()) + ancho - 1, int(semanas.max()) + 1):
+            en_ventana = semanas.between(ultima - ancho + 1, ultima)
+            filas_ventana = semanas.index[en_ventana]
+            m = metricas_target(target, y[filas_ventana], pred[filas_ventana])
+            filas.append({"season": anio, "semana_inicial": ultima - ancho + 1, "semana_final": ultima,
+                          "n": int(en_ventana.sum()), principal: m[principal], "sesgo": m["sesgo"],
+                          "pendiente_calibracion": m["pendiente_calibracion"]})
+    return pd.DataFrame(filas)
+
+
+def limites_de_seguimiento(ventanas, n_series, nivel=0.95):
+    """Limites de control a partir de ventanas_walk_forward(): percentiles de cada metrica sobre
+    todas las ventanas. Como cada semana se vigilan `n_series` series a la vez (resultados x
+    metricas), el (1 - nivel) se reparte entre ellas, igual que la regla de Bonferroni de
+    docs/decisions/0004-metricas-de-seleccion.md: con 9 series y nivel 0.95, percentiles 0.28 y
+    99.72. Con 2.5 y 97.5 por serie, en 2021-2025 todas las temporadas habrian tenido alguna
+    alerta persistente (6.3_seguimiento_semanal.ipynb). Una ventana de la temporada en curso fuera
+    de los limites es una alerta (seguimiento.evaluar_alertas)."""
+    cola = (1 - nivel) / n_series / 2 * 100
+    metricas_ventana = [c for c in ventanas.columns if c not in ("season", "semana_inicial", "semana_final", "n")]
+    ancho = int((ventanas["semana_final"] - ventanas["semana_inicial"]).iloc[0]) + 1
+    return {
+        "ventana_semanas": ancho,
+        "temporadas": sorted(int(a) for a in ventanas["season"].unique()),
+        "nivel": nivel,
+        "n_series": n_series,
+        "percentiles": [cola, 100 - cola],
+        "n_ventanas": len(ventanas),
+        "metricas": {
+            m: {"inferior": float(np.percentile(ventanas[m], cola)),
+                "superior": float(np.percentile(ventanas[m], 100 - cola))}
+            for m in metricas_ventana
+        },
+    }

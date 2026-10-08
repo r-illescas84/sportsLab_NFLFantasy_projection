@@ -355,3 +355,27 @@ implícito de las líneas de apuestas. Detalle en `docs/PLAN.md` (Fase 5.5).
 
 **Pendiente:** Fase 6 (`tracking.csv`) y Fase 7; correr el flujo semanal de la semana 5 de 2026 cuando
 termine.
+
+## 2026-10-08 — Fase 6 completa (seguimiento semanal)
+
+El flujo semanal ya deja historial y se audita (ADR 0006). Detalle en `docs/PLAN.md` (Fase 6).
+
+- `seguimiento.py` nuevo: chequeos de calidad por dimensión en cada corrida, huella de la tabla de
+  variables, ventana de cuatro semanas, alertas y `tracking.csv`. `pipeline.py` guarda la predicción
+  emitida con sus variables y la evalúa sin modificarla; antes la sobrescribía al evaluar.
+- Límites de control calculados en 6.1 con el walk-forward 2021-2025 y guardados con cada modelo (los
+  modelos no cambian, solo su metadata). La primera regla de alertas habría sonado todas las
+  temporadas; se cambió a percentiles con Bonferroni y persistencia sin semanas en común (ver
+  `HALLAZGOS.md`).
+- `6.3_seguimiento_semanal.ipynb` nuevo. Las semanas 1-4 de 2026 se cargaron al historial como
+  reconstruidas (sus `predicciones_semana_N.csv` anteriores eran recálculos y pasan a
+  `evaluacion_semana_N.csv`); la 5 quedó emitida. La ventana 1-4 da una alerta suelta en el sesgo de
+  yardas.
+- `3.3_seleccion_estable.ipynb` usaba en touchdowns la configuración anterior a la etapa 4; con la
+  final se mantiene la selección (sección 7 nueva, ver `HALLAZGOS.md`).
+- Glosario (sección 10), DATASHEET (vigencia auditable), READMEs, ADR 0005 y página de arquitectura al
+  día.
+
+**Pendiente:** evaluar la semana 5 de 2026 cuando termine su último partido (lunes 12 de octubre), la
+primera predicción emitida; emitir la semana 6 antes de sus partidos. Fase 7.
+
