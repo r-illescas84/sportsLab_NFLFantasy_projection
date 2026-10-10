@@ -1,0 +1,91 @@
+player,team,opponent,injury_status,proj_receptions,proj_receiving_yards,proj_receiving_tds,proj_half_ppr,proj_ppr,fantasypros_ppr,ppr_diff
+Puka Nacua,LA,BUF,,6.6,93.3,0.43,15.22,18.52,21.0,-2.48
+Amon-Ra St. Brown,DET,ARI,,6.6,82.32,0.59,15.07,18.37,20.8,-2.43
+CeeDee Lamb,DAL,TB,,6.91,81.35,0.5,14.61,18.06,20.7,-2.64
+Jaxon Smith-Njigba,SEA,SF,,6.41,79.62,0.52,14.28,17.48,21.0,-3.52
+Chris Olave,NO,MIN,,6.17,76.31,0.46,13.45,16.54,16.8,-0.26
+DeVonta Smith,PHI,JAX,Out,5.74,77.1,0.43,13.16,16.03,,
+Davante Adams,LA,BUF,,5.55,72.85,0.49,13.03,15.8,15.3,0.5
+Tee Higgins,CIN,MIA,Questionable,5.57,74.33,0.47,13.02,15.8,6.8,9.0
+Zay Flowers,BAL,ATL,Questionable,5.27,72.35,0.42,12.37,15.0,15.4,-0.4
+Garrett Wilson,NYJ,CLE,,5.42,69.16,0.41,12.11,14.82,15.4,-0.58
+Ja'Marr Chase,CIN,MIA,Questionable,5.34,67.54,0.43,12.01,14.68,8.2,6.48
+Nico Collins,HOU,TEN,,5.16,70.53,0.39,11.99,14.57,17.1,-2.53
+Justin Jefferson,MIN,NO,Questionable,4.88,71.74,0.39,11.93,14.37,10.6,3.77
+Carnell Tate,TEN,HOU,Questionable,5.16,69.06,0.34,11.52,14.1,12.3,1.8
+Michael Wilson,ARI,DET,,4.96,66.14,0.38,11.37,13.86,17.8,-3.94
+Mike Evans,SF,SEA,,4.64,64.3,0.44,11.41,13.73,12.2,1.53
+Drake London,ATL,BAL,,4.64,67.39,0.37,11.28,13.6,19.2,-5.6
+Stefon Diggs,WAS,NYG,Out,4.87,60.5,0.39,10.8,13.23,,
+DK Metcalf,PIT,IND,,4.38,62.57,0.4,10.85,13.04,12.6,0.44
+Terry McLaurin,WAS,NYG,Questionable,4.44,60.13,0.4,10.62,12.84,7.0,5.84
+Malik Nabers,NYG,WAS,,4.95,56.98,0.36,10.35,12.83,15.2,-2.37
+Jaylen Waddle,DEN,LAC,,4.49,60.68,0.36,10.46,12.7,13.4,-0.7
+George Pickens,DAL,TB,,4.52,58.65,0.37,10.32,12.58,15.2,-2.62
+Christian Watson,GB,CHI,,3.94,60.79,0.38,10.31,12.28,14.7,-2.42
+Denzel Boston,CLE,NYJ,,3.8,59.34,0.37,10.04,11.94,11.7,0.24
+Keenan Allen,IND,PIT,Questionable,4.47,54.86,0.28,9.38,11.61,6.6,5.01
+Josh Downs,IND,PIT,,4.33,51.74,0.32,9.25,11.41,12.4,-0.99
+Jordan Addison,MIN,NO,Questionable,3.82,53.23,0.31,9.11,11.02,10.5,0.52
+Parker Washington,JAX,PHI,,3.95,49.81,0.31,8.84,10.81,14.6,-3.79
+Jameson Williams,DET,ARI,,3.6,51.94,0.31,8.88,10.68,12.2,-1.52
+Luther Burden III,CHI,GB,,3.95,48.02,0.31,8.66,10.64,12.4,-1.76
+Matthew Golden,GB,CHI,,3.67,49.22,0.3,8.53,10.37,13.5,-3.13
+Chris Godwin Jr.,TB,DAL,,3.97,46.07,0.27,8.21,10.2,9.2,1.0
+Deebo Samuel,SF,SEA,,3.6,47.71,0.3,8.39,10.19,11.4,-1.21
+Devaughn Vele,NO,MIN,,3.82,46.35,0.29,8.28,10.18,10.8,-0.62
+Jakobi Meyers,JAX,PHI,,3.89,44.96,0.28,8.11,10.06,10.4,-0.34
+Caleb Douglas,MIA,CIN,Out,3.65,48.17,0.25,8.15,9.97,2.2,7.77
+Malik Washington,MIA,CIN,,3.84,46.94,0.23,7.99,9.91,12.2,-2.29
+Romeo Doubs,NE,LV,,3.54,46.42,0.28,8.11,9.88,11.8,-1.92
+Tre Tucker,LV,NE,,3.5,46.59,0.28,8.06,9.81,10.0,-0.19
+Wan'Dale Robinson,TEN,HOU,,3.99,44.16,0.23,7.78,9.77,10.1,-0.33
+Rome Odunze,CHI,GB,,3.53,45.61,0.28,8.0,9.76,10.5,-0.74
+KC Concepcion,CLE,NYJ,,4.15,43.95,0.2,7.68,9.75,11.2,-1.45
+Emeka Egbuka,TB,DAL,,3.55,44.7,0.26,7.82,9.59,10.2,-0.61
+Keon Coleman,BUF,LA,,3.32,43.79,0.27,7.69,9.35,9.8,-0.45
+Rashod Bateman,BAL,ATL,,3.32,44.07,0.26,7.65,9.31,7.7,1.61
+Dontayvion Wicks,PHI,JAX,,3.29,42.86,0.26,7.5,9.14,10.4,-1.26
+DJ Moore,BUF,LA,,3.16,41.99,0.29,7.52,9.1,6.6,2.5
+Khalil Shakir,BUF,LA,,3.29,42.08,0.26,7.43,9.07,11.1,-2.03
+Adonai Mitchell,NYJ,CLE,Out,3.12,43.7,0.26,7.49,9.06,,
+Courtland Sutton,DEN,LAC,,3.21,40.96,0.26,7.23,8.83,9.7,-0.87
+Roman Wilson,PIT,IND,,2.97,42.6,0.27,7.35,8.83,9.5,-0.67
+Ladd McConkey,LAC,DEN,Questionable,3.2,41.42,0.24,7.19,8.79,5.7,3.09
+Brian Thomas Jr.,JAX,PHI,,3.01,40.95,0.26,7.15,8.65,8.8,-0.15
+Cooper Kupp,SEA,SF,,2.98,41.41,0.23,7.02,8.51,7.5,1.01
+Tre' Harris,LAC,DEN,,2.95,41.21,0.22,6.95,8.42,9.8,-1.38
+Mack Hollins,NE,LV,Out,2.93,40.27,0.23,6.89,8.35,,
+Isaac TeSlaa,DET,ARI,,2.56,41.14,0.27,7.02,8.3,7.9,0.4
+Michael Pittman Jr.,PIT,IND,Out,3.01,40.37,0.19,6.68,8.19,3.9,4.29
+Kalif Raymond,CHI,GB,,3.07,36.48,0.22,6.53,8.06,9.3,-1.24
+Antonio Williams,WAS,NYG,,2.9,35.84,0.24,6.45,7.89,8.8,-0.91
+Xavier Hutchinson,HOU,TEN,,2.63,37.87,0.19,6.27,7.58,7.3,0.28
+Malachi Fields,NYG,WAS,,2.43,36.81,0.23,6.26,7.48,8.2,-0.72
+Ted Hurst III,TB,DAL,,2.38,36.16,0.22,6.16,7.35,6.8,0.55
+Quentin Johnston,LAC,DEN,Out,2.5,34.86,0.22,6.08,7.33,7.3,0.03
+Ryan Flournoy,DAL,TB,,2.91,32.83,0.18,5.79,7.24,8.8,-1.56
+Rashid Shaheed,SEA,SF,,2.53,32.76,0.22,5.83,7.1,8.5,-1.4
+Isaiah Williams,NYJ,CLE,,2.55,34.39,0.17,5.74,7.02,8.0,-0.98
+Darnell Mooney,NYG,WAS,,2.34,34.58,0.18,5.69,6.86,5.6,1.26
+Brandin Cooks,SF,SEA,,2.23,34.21,0.19,5.69,6.81,3.1,3.71
+Kayshon Boutte,HOU,TEN,,2.48,31.49,0.18,5.47,6.71,7.7,-0.99
+Marvin Harrison Jr.,ARI,DET,,2.25,33.94,0.17,5.57,6.69,9.7,-3.01
+Makai Lemon,PHI,JAX,,2.74,29.94,0.14,5.22,6.59,9.3,-2.71
+DeMario Douglas,NE,LV,,2.49,29.4,0.17,5.21,6.45,7.8,-1.35
+Kendrick Bourne,ARI,DET,,2.51,28.87,0.16,5.12,6.38,8.0,-1.62
+Elic Ayomanor,TEN,HOU,,2.16,30.76,0.17,5.19,6.27,5.5,0.77
+Laquon Treadwell,IND,PIT,,2.34,27.62,0.15,4.86,6.03,6.4,-0.37
+Jahan Dotson,ATL,BAL,,2.14,28.99,0.16,4.94,6.01,6.0,0.01
+Chris Bell,MIA,CIN,,2.11,30.47,0.13,4.87,5.92,8.6,-2.68
+Jerry Jeudy,CLE,NYJ,,2.05,30.23,0.14,4.87,5.9,5.6,0.3
+Pat Bryant,DEN,LAC,,2.09,27.49,0.17,4.83,5.87,,
+Cody White,LV,NE,,1.81,22.76,0.15,4.1,5.0,5.6,-0.6
+Skyy Moore,GB,CHI,,1.83,19.97,0.14,3.73,4.65,5.1,-0.45
+Jalen Nailor,LV,NE,Out,1.63,19.94,0.15,3.68,4.5,,
+Jauan Jennings,MIN,NO,,1.44,20.93,0.14,3.67,4.38,6.8,-2.42
+Olamide Zaccheaus,ATL,BAL,,1.62,18.59,0.12,3.39,4.2,4.5,-0.3
+Bryce Lance,NO,MIN,,1.52,18.3,0.13,3.37,4.13,5.4,-1.27
+Devontez Walker,BAL,ATL,,1.28,19.84,0.12,3.33,3.97,3.7,0.27
+Jordan Whittington,LA,BUF,,1.31,16.16,0.11,2.92,3.58,3.4,0.18
+Colbie Young,CIN,MIA,Questionable,1.03,14.87,0.1,2.61,3.12,1.3,1.82

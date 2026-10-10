@@ -1,0 +1,13 @@
+target,method,RMSE,MAE,R2,Poisson dev,mean pred,train rows,trees,final_method
+receptions,training average for everyone,2.507,2.044,-0.023,2.138,3.535,,,snap
+receptions,baseline (last 3 avg),2.208,1.702,0.206,1.924,3.314,,,snap
+receptions,snap,2.035,1.608,0.326,1.46,3.354,16959.0,366.0,snap
+receptions,yards,2.122,1.728,0.267,1.617,3.702,13350.0,337.0,snap
+receiving_yards,training average for everyone,36.785,29.98,-0.025,,45.522,,,snap
+receiving_yards,baseline (last 3 avg),34.129,26.006,0.118,,41.699,,,snap
+receiving_yards,snap,31.413,24.78,0.253,,43.035,16959.0,291.0,snap
+receiving_yards,yards,32.951,27.23,0.178,,48.653,13350.0,256.0,snap
+receiving_tds,training average for everyone,0.509,0.406,-0.003,0.789,0.277,,,snap
+receiving_tds,baseline (last 3 avg),0.556,0.361,-0.198,2.646,0.271,,,snap
+receiving_tds,snap,0.496,0.377,0.049,0.733,0.262,16959.0,207.0,snap
+receiving_tds,yards,0.501,0.407,0.028,0.76,0.303,13350.0,262.0,snap
