@@ -1,0 +1,15 @@
+# Weekly projections
+nflreadpy>=0.1.5
+polars>=1.21
+pandas>=1.5
+numpy>=1.26
+pyarrow>=14
+xgboost>=3.0
+scikit-learn>=1.7
+matplotlib>=3.8
+ipykernel
+
+# Draft notebooks (nfl_data_py is deprecated in favour of nflreadpy;
+# its seasonal/weekly stats downloads no longer work)
+nfl_data_py>=0.3.3
+python-dateutil

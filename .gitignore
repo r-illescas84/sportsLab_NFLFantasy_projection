@@ -1,5 +1,9 @@
 # Claude Code local tool state (not project content)
 .claude/
 
-# Duplicate data mirror superseded by data/weekly_data/ - see "Weekly projections" as new project home
-Weekly projections/WR/data/
+# Weekly training table: rebuilt by weekly/notebooks/01_build_training_data
+weekly/data/
+
+# Python and Jupyter caches
+__pycache__/
+.ipynb_checkpoints/
