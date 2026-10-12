@@ -1,5 +1,12 @@
 # Claude Code local tool state (not project content)
 .claude/
 
-# Duplicate data mirror superseded by data/weekly_data/ - see "Weekly projections" as new project home
-Weekly projections/WR/data/
+.ipynb_checkpoints/
+_fase1_replica/
+.Rhistory
+catboost_info/
+.DS_Store
+__pycache__/
+
+# Modelos bayesianos exploratorios: pesan varios MB y se regeneran corriendo su notebook
+weekly/wr/models/exploratorio/*_jerarquico.joblib

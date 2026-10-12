@@ -1,0 +1,175 @@
+{
+  "target": "receiving_tds",
+  "modelo": "XGBRegressor",
+  "hiperparametros": {
+    "objective": "count:poisson",
+    "enable_categorical": false,
+    "learning_rate": 0.03,
+    "max_depth": 3,
+    "missing": NaN,
+    "n_estimators": 400,
+    "n_jobs": -1,
+    "random_state": 0
+  },
+  "features_arbol_en_orden": [
+    "receptions_career_avg",
+    "depth_team",
+    "target_share_last5_avg",
+    "receptions_season_avg",
+    "target_share_last3_avg",
+    "receptions_last3_avg",
+    "fantasy_points_ppr_last5_avg",
+    "total_implicito_equipo",
+    "receiving_yards_after_catch_career_avg",
+    "receiving_yards_career_avg",
+    "wopr_last3_avg",
+    "target_share_season_avg",
+    "receiving_yards_last5_avg",
+    "fantasy_points_ppr_career_avg",
+    "receptions_last5_avg",
+    "fantasy_points_ppr_last3_avg",
+    "wopr_season_avg",
+    "target_share_x_ofensiva_equipo",
+    "targets_season_avg",
+    "draft_pick",
+    "receiving_first_downs_career_avg",
+    "air_yards_share_last3_avg",
+    "receiving_yards_after_catch_season_avg",
+    "targets_last5_avg",
+    "edad"
+  ],
+  "media_entrenamiento": 0.20876747141041932,
+  "metrica_principal": "deviance_poisson",
+  "entrenado_con": "2016-2025 (temporadas completas); configuracion elegida en 4.4_ajuste_hiperparametros.ipynb",
+  "fecha_de_guardado": "2026-10-08T05:35:43.020400+00:00",
+  "metricas_referencia": {
+    "validacion": {
+      "rmse": 0.4329,
+      "mae": 0.3032,
+      "r2": 0.0879,
+      "r2_oos": 0.0903,
+      "sesgo": 0.0196,
+      "sesgo_media_entrenamiento": 0.0234,
+      "media_real": 0.1929,
+      "pendiente_calibracion": 1.0199,
+      "deviance_poisson": 0.6128,
+      "d2_oos": 0.1278,
+      "brier_anota": 0.1292,
+      "auc_anota": 0.719
+    },
+    "prueba": {
+      "rmse": 0.4454,
+      "mae": 0.302,
+      "r2": 0.0907,
+      "r2_oos": 0.0914,
+      "sesgo": -0.0044,
+      "sesgo_media_entrenamiento": 0.013,
+      "media_real": 0.2034,
+      "pendiente_calibracion": 1.0736,
+      "deviance_poisson": 0.6221,
+      "d2_oos": 0.1399,
+      "brier_anota": 0.1328,
+      "auc_anota": 0.7242
+    },
+    "walk_forward": {
+      "2021": {
+        "deviance_poisson": 0.6394,
+        "r2_oos": 0.0926,
+        "d2_oos": 0.1323,
+        "pendiente_calibracion": 1.0205
+      },
+      "2022": {
+        "deviance_poisson": 0.6192,
+        "r2_oos": 0.0835,
+        "d2_oos": 0.1178,
+        "pendiente_calibracion": 0.9944
+      },
+      "2023": {
+        "deviance_poisson": 0.6074,
+        "r2_oos": 0.0947,
+        "d2_oos": 0.1354,
+        "pendiente_calibracion": 1.0262
+      },
+      "2024": {
+        "deviance_poisson": 0.6491,
+        "r2_oos": 0.091,
+        "d2_oos": 0.1374,
+        "pendiente_calibracion": 1.1341
+      },
+      "2025": {
+        "deviance_poisson": 0.5914,
+        "r2_oos": 0.0973,
+        "d2_oos": 0.148,
+        "pendiente_calibracion": 1.0074
+      }
+    },
+    "cumple_requisitos": true,
+    "temporada_2026": {
+      "semanas": "1-4",
+      "rmse": 0.4449,
+      "mae": 0.2842,
+      "r2": 0.0916,
+      "r2_oos": 0.0927,
+      "sesgo": -0.0171,
+      "sesgo_media_entrenamiento": 0.0163,
+      "media_real": 0.1924,
+      "pendiente_calibracion": 1.0664,
+      "deviance_poisson": 0.6288,
+      "d2_oos": 0.1259,
+      "brier_anota": 0.1266,
+      "auc_anota": 0.7061
+    }
+  },
+  "limites_seguimiento": {
+    "ventana_semanas": 4,
+    "temporadas": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "nivel": 0.95,
+    "n_series": 9,
+    "percentiles": [
+      0.277777777777778,
+      99.72222222222223
+    ],
+    "n_ventanas": 75,
+    "metricas": {
+      "deviance_poisson": {
+        "inferior": 0.525055395379263,
+        "superior": 0.691918732712424
+      },
+      "sesgo": {
+        "inferior": -0.057560404065641335,
+        "superior": 0.05502771633761961
+      },
+      "pendiente_calibracion": {
+        "inferior": 0.6597881286453254,
+        "superior": 1.5670427556766418
+      }
+    }
+  },
+  "requisitos": {
+    "sesgo_adicional_maximo": 0.05,
+    "pendiente_minima": 0.9,
+    "pendiente_maxima": 1.1
+  },
+  "referencias": [
+    "Gneiting, T. (2011). Making and evaluating point forecasts. Journal of the American Statistical Association, 106(494), 746-762.",
+    "Czado, C., Gneiting, T. y Held, L. (2009). Predictive model assessment for count data. Biometrics, 65(4), 1254-1261.",
+    "Gneiting, T. y Resin, J. (2023). Regression diagnostics meets forecast evaluation: conditional calibration, reliability diagrams, and coefficient of determination. Electronic Journal of Statistics, 17(2), 3226-3286.",
+    "Campbell, J. Y. y Thompson, S. B. (2008). Predicting excess stock returns out of sample: can anything beat the historical average? Review of Financial Studies, 21(4), 1509-1531.",
+    "Kolassa, S. (2016). Evaluating predictive count data distributions in retail sales forecasting. International Journal of Forecasting, 32(3), 788-803.",
+    "Walsh, C. y Joshi, A. (2024). Machine learning for sports betting: should model selection be based on accuracy or calibration? Machine Learning with Applications.",
+    "Diebold, F. X. y Mariano, R. S. (1995). Comparing predictive accuracy. Journal of Business & Economic Statistics, 13(3), 253-263.",
+    "White, H. (2000). A reality check for data snooping. Econometrica, 68(5), 1097-1126.",
+    "Hansen, P. R. (2005). A test for superior predictive ability. Journal of Business & Economic Statistics, 23(4), 365-380."
+  ],
+  "limitaciones_conocidas": [
+    "predice valores esperados: queda por debajo en semanas de produccion extrema y por encima en semanas sin produccion; no anticipa semanas atipicas (ver 5.3_explicabilidad_y_casos.ipynb)",
+    "depth_team tiene dato en 95.4% de las filas de 2026 ya jugadas; los faltantes son receptores que no aparecen en la alineacion de esa semana (ver 1.3_unificacion_alineaciones.ipynb)",
+    "evento raro (mayoria de semanas en cero): el R2 alcanzable es bajo aun con un modelo calibrado (ver 4.1_preparacion_y_metricas.ipynb)"
+  ]
+}

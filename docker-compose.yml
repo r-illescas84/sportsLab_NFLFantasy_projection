@@ -1,0 +1,30 @@
+name: nflfantasy
+
+services:
+  python:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.python
+    volumes:
+      - .:/workspace
+      - pip_cache:/root/.cache/pip
+      - nfldata_cache:/root/.cache/nfl_data_py
+      - nflreadpy_cache:/root/.cache/nflreadpy
+    working_dir: /workspace
+    ports:
+      - "8888:8888"
+
+  r:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.r
+    volumes:
+      - .:/workspace
+      - renv_cache:/renv/cache
+    working_dir: /workspace
+
+volumes:
+  pip_cache:
+  nfldata_cache:
+  nflreadpy_cache:
+  renv_cache:
