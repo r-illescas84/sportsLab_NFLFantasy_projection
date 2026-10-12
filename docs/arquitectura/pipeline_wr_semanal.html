@@ -105,6 +105,7 @@ footer{margin-top:1rem;font-size:.78rem;color:var(--text-muted);border-top:1px s
   <div class="layer-head"><code>pipeline.py</code><span>orquesta todo el flujo</span></div>
   <div class="pad">
     <p>Una llamada, <code class="i">ejecutar_semana(season, week)</code>, recorre las capas de abajo en orden y guarda la salida. Detecta sola si la semana ya se jugó. Antes de los partidos emite la predicción y guarda las variables con que la hizo; cuando terminan, evalúa esa predicción emitida sin modificarla. Si la semana está en curso o un chequeo de calidad invalida la predicción, se detiene con un mensaje claro en vez de dar una salida parcial.</p>
+    <p>La dispara el workflow <code class="i">.github/workflows/wr_semanal.yml</code> los martes, miércoles y jueves, de septiembre a enero. Con <code class="i">--auto</code>, el flujo decide con el calendario qué toca: evaluar las semanas jugadas sin evaluación y emitir la siguiente. El workflow sube las salidas a <code class="i">main</code> y abre un issue cuando hay que actuar (<code class="i">docs/decisions/0007-corrida-automatica.md</code>). También se puede correr a mano, con <code class="i">--season</code> y <code class="i">--week</code>.</p>
   </div>
 </section>
 
