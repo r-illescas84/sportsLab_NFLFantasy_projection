@@ -40,11 +40,26 @@ y seguimiento de cada corrida con límites de control
 
 ## Correr la semana (WR)
 
-Dos veces por semana, desde la raíz del repositorio, dentro del contenedor del proyecto:
+La corrida es automática ([ADR 0007](../docs/decisions/0007-corrida-automatica.md)). El workflow
+`.github/workflows/wr_semanal.yml` corre martes, miércoles y jueves a las 9:17 de la Ciudad de
+México, de septiembre a enero:
+- decide con el calendario qué toca: evaluar la semana que terminó y emitir la siguiente;
+- sube las salidas a `main`;
+- abre un issue cuando hay que actuar: corrida detenida, estadísticas incompletas, alerta
+  persistente o fin de la temporada regular.
+
+El resumen de cada corrida queda en la pestaña Actions de GitHub. Como el bot hace commits en
+`main`, antes de subir cambios hay que traer lo último con `git pull`.
+
+Para correr una semana a mano, desde la raíz del repositorio, dentro del contenedor del proyecto:
 
 ```bash
 docker compose run --rm python python weekly/wr/src/pipeline.py --season 2026 --week 5
 ```
+
+Con `--auto` en lugar de `--season` y `--week`, decide igual que la corrida programada. También se
+puede lanzar en GitHub, en Actions > Corrida semanal WR > Run workflow. Con `publicar` apagado no
+sube nada ni abre issues.
 
 - **Antes del primer partido** (semana pendiente): guarda la predicción emitida
   (`wr/outputs/{temporada}/predicciones_semana_N.csv`) y las variables con que se hizo
@@ -54,7 +69,7 @@ docker compose run --rm python python weekly/wr/src/pipeline.py --season 2026 --
   los límites de control guardados con cada modelo.
 - **Con la semana a medias**, o si un chequeo de calidad invalida la predicción (un jugador repetido,
   una variable ausente o vacía, un equipo sin alineación, las estadísticas de la semana anterior sin
-  cargar), se detiene sin escribir nada y dice por qué.
+  cargar), se detiene sin escribir nada, dice por qué y sale con el código 3.
 
 Cada corrida agrega una fila por resultado a `wr/outputs/tracking.csv`. Lo que hay que mirar:
 

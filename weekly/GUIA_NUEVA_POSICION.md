@@ -34,6 +34,10 @@ muestra qué recibe, contiene y entrega cada módulo.
    `FEATURES_SELECCIONADAS_ARBOL` de `src/features.py` salen de la etapa 3.
 5. Ejecutar 6.1, que guarda los modelos y sus límites de seguimiento, y correr la semana como
    indica [`weekly/README.md`](README.md).
+6. Agregar la posición a la corrida automática
+   ([ADR 0007](../docs/decisions/0007-corrida-automatica.md)): en
+   `.github/workflows/wr_semanal.yml`, o en una copia para la posición, el paso que corre
+   `weekly/<posicion>/src/pipeline.py --auto` y el `git add` de `weekly/<posicion>/outputs`.
 
 ## 3. Las etapas, con su ejemplo en WR
 
@@ -107,5 +111,7 @@ Los códigos de posición se verificaron en las estadísticas de 2024-2025 y en 
 - Ningún notebook termina con error, y cada cifra de las lecturas sale de una salida ejecutada.
 - 6.1 guarda los modelos y comprueba que, recargados como los carga el flujo, predicen lo mismo.
 - Una semana pendiente corre de punta a punta, y `tracking.csv` tiene sus filas.
+- La corrida automática la incluye: una corrida manual en GitHub con `publicar` apagado termina sin
+  error.
 - Las variables y los resultados nuevos están en el glosario.
 - Si alguna decisión se aparta de los ADR de WR, queda en un ADR propio.

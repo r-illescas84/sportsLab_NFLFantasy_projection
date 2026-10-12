@@ -1,0 +1,116 @@
+# Corrida semanal de WR (docs/decisions/0007-corrida-automatica.md).
+#
+# Programada: martes, miercoles y jueves a las 15:17 UTC (9:17 en la Ciudad de Mexico), de septiembre a
+# enero. `pipeline.py --auto` decide con el calendario que toca hoy: evaluar las semanas jugadas sin
+# evaluacion y emitir la siguiente. Las salidas se suben a la rama y lo que pide atencion abre un issue.
+#
+# Manual: Actions > Corrida semanal WR > Run workflow. Sin season ni week decide con el calendario; con
+# las dos, corre esa semana. Con `publicar` apagado no sube nada ni abre issues: sirve de prueba.
+name: Corrida semanal WR
+
+on:
+  schedule:
+    - cron: "17 15 * 1,9-12 2,3,4"
+  workflow_dispatch:
+    inputs:
+      season:
+        description: "Temporada (vacio: decidir con el calendario)"
+        required: false
+        default: ""
+      week:
+        description: "Semana (vacio: decidir con el calendario)"
+        required: false
+        default: ""
+      publicar:
+        description: "Subir las salidas y abrir issues"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: corrida-semanal-wr
+  cancel-in-progress: false
+
+jobs:
+  semana:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PUBLICAR: ${{ github.event_name == 'schedule' || inputs.publicar }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # La misma imagen que en local (docker/Dockerfile.python, versiones fijadas): con otras versiones de
+      # xgboost o scikit-learn el modelo guardado podria no cargar o predecir distinto. El nombre es el que
+      # docker compose le da al servicio python, asi compose la usa en lugar de construirla otra vez.
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.python
+          tags: nflfantasy-python:latest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Correr el flujo semanal
+        id: corrida
+        env:
+          SEASON: ${{ inputs.season }}
+          WEEK: ${{ inputs.week }}
+        run: |
+          case "$SEASON$WEEK" in *[!0-9]*) echo "season y week tienen que ser numeros"; exit 2 ;; esac
+          if [ -n "$SEASON" ] || [ -n "$WEEK" ]; then
+            if [ -z "$SEASON" ] || [ -z "$WEEK" ]; then echo "season y week van juntas"; exit 2; fi
+            modo="--season $SEASON --week $WEEK"
+          else
+            modo="--auto"
+          fi
+          set +e
+          docker compose run --rm -T python python weekly/wr/src/pipeline.py $modo \
+            --resumen .corrida/resumen.md --eventos .corrida/eventos.json
+          codigo=$?
+          set -e
+          echo "codigo=$codigo" >> "$GITHUB_OUTPUT"
+          # 0: termino o no habia nada que hacer. 3: un chequeo de calidad detuvo la corrida; no es una
+          # falla del workflow, se avisa con un issue. Cualquier otro codigo falla y GitHub manda correo.
+          if [ "$codigo" != "0" ] && [ "$codigo" != "3" ]; then exit "$codigo"; fi
+
+      - name: Resumen
+        if: always()
+        run: |
+          if [ -f .corrida/resumen.md ]; then cat .corrida/resumen.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Subir las salidas
+        if: env.PUBLICAR == 'true'
+        run: |
+          git add weekly/wr/outputs
+          if git diff --cached --quiet; then echo "sin cambios en las salidas"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: $(head -n 1 .corrida/resumen.md | sed 's/^## //')"
+          for intento in 1 2 3; do
+            if git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME"; then exit 0; fi
+            sleep 15
+          done
+          exit 1
+
+      - name: Abrir issues
+        if: env.PUBLICAR == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f .corrida/eventos.json ]; then exit 0; fi
+          abiertos=$(gh issue list --state open --limit 200 --json title)
+          jq -c '.[]' .corrida/eventos.json | while read -r evento; do
+            titulo=$(jq -r '.titulo' <<< "$evento")
+            if jq -e --arg t "$titulo" 'any(.[]; .title == $t)' <<< "$abiertos" > /dev/null; then
+              echo "ya hay un issue abierto: $titulo"
+              continue
+            fi
+            jq -r '.cuerpo' <<< "$evento" > "$RUNNER_TEMP/cuerpo.md"
+            gh issue create --title "$titulo" --body-file "$RUNNER_TEMP/cuerpo.md"
+          done

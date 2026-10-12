@@ -391,3 +391,14 @@ primera predicción emitida; emitir la semana 6 antes de sus partidos. Fase 7.
 **Pendiente:** evaluar la semana 5 cuando termine su último partido (lunes 12 de octubre); emitir la
 semana 6 antes de sus partidos.
 
+## 2026-10-11 — La rama de trabajo entra a `main`; Fase 8 (corrida automática)
+
+- Las fases 1 a 7 quedaron en `main` con el PR #14.
+- `pipeline.py --auto` decide con el calendario qué evaluar y qué emitir. El workflow
+  `.github/workflows/wr_semanal.yml` lo corre martes, miércoles y jueves, sube las salidas y abre
+  issues (ADR 0007). Detalle en `docs/PLAN.md` (Fase 8).
+- Un equipo sin estadísticas al evaluar sigue solo advirtiendo, ahora con un issue para volver a correr
+  la semana.
+
+**Pendiente:** evaluar la semana 5 cuando termine su último partido (lunes 12 de octubre); probar el
+workflow en GitHub con `publicar` apagado antes de la primera corrida programada.

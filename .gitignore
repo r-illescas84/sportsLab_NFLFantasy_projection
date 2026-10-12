@@ -10,3 +10,6 @@ __pycache__/
 
 # Modelos bayesianos exploratorios: pesan varios MB y se regeneran corriendo su notebook
 weekly/wr/models/exploratorio/*_jerarquico.joblib
+
+# Salidas temporales de la corrida semanal (resumen y eventos del workflow)
+.corrida/

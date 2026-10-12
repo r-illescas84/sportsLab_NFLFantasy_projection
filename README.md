@@ -15,5 +15,7 @@ Proyecciones de jugadores de NFL para fantasy football.
   cada cosa), `data/DATASHEET.md` (de dónde salen los datos y qué tan buenos son), y
   `HALLAZGOS.md` (problemas encontrados, pendientes de resolver).
 - **`docker/`** — entorno reproducible (Python + R).
+- **`.github/workflows/`** — la corrida semanal automática de WR, con GitHub Actions (ver
+  `docs/decisions/0007-corrida-automatica.md`).
 
 Cada carpeta de trabajo trae su propio `README.md` con el detalle de lo que contiene.

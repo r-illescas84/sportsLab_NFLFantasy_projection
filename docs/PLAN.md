@@ -31,6 +31,7 @@ sin depender de correr notebooks a mano uno por uno.
 | 5.5 Selección de variables estable | Rehacer la selección de variables con la métrica principal, sin usar la prueba y con un orden estable; evaluar el total implícito de las líneas de apuestas | ADR 0005, `3.3_seleccion_estable.ipynb`, 25 variables en `features.py`, etapas 4 a 6 re-ejecutadas, modelos y salidas de 2026 regenerados | ✅ Cerrada 2026-10-07 |
 | 6. Estabilidad / ciclo de vida | Historial de cada corrida; chequeo de las 6 dimensiones de calidad en cada corrida; predicción emitida guardada y evaluada tal cual; límites de control y política de reentrenamiento | ADR 0006, `seguimiento.py`, `tracking.csv`, límites en la metadata de los modelos, `6.3_seguimiento_semanal.ipynb` | ✅ Cerrada 2026-10-07 |
 | 7. Documentar el patrón | Forma del pipeline en términos genéricos, para adaptarlo a las demás posiciones | `weekly/GUIA_NUEVA_POSICION.md`, enlazada desde `weekly/README.md`; la posición como constante en el código | ✅ Cerrada 2026-10-08 |
+| 8. Corrida automática | El flujo semanal corre solo en GitHub Actions: decide con el calendario qué evaluar y qué emitir, sube las salidas y abre un issue cuando hay que actuar | ADR 0007, `pipeline.py --auto`, `.github/workflows/wr_semanal.yml` | En curso: falta la primera corrida en GitHub |
 | **Entregable final** | — | Predicción semanal real por WR (recepciones, yardas, touchdowns), con las métricas de la semana cuando ya se jugó. El rango P10/P50/P90 se exploró (nb 4.5) y queda fuera del flujo semanal | — |
 
 Las fases 2 a 5.3 se escribieron con la numeración anterior de notebooks (`01` a `26`); los nombres ya se actualizaron en el texto, y la equivalencia completa está en el registro de la Fase 5.4.
@@ -478,4 +479,29 @@ política quedó en `docs/decisions/0006-seguimiento-semanal.md`.
   cambio.
 - No se armó un núcleo compartido entre posiciones: se diseñaría antes de tener una segunda posición
   que lo pruebe.
+
+### Fase 8 — Corrida automática (en curso)
+
+La corrida semanal era manual, dos veces por semana; si se olvidaba la emisión, esa semana solo se
+podía evaluar con una predicción reconstruida. La decisión quedó en
+`docs/decisions/0007-corrida-automatica.md`.
+
+- **Modo automático**: `pipeline.py --auto` toma la temporada de la fecha y, con el calendario y el
+  historial, decide qué toca: evaluar las semanas jugadas sin evaluación y emitir la siguiente
+  pendiente, si la anterior ya se jugó y su primer partido es dentro de cinco días. Corre cada semana
+  con `ejecutar_semana`, igual que la corrida manual.
+- **Workflow** `.github/workflows/wr_semanal.yml`: martes, miércoles y jueves a las 9:17 de la Ciudad
+  de México, de septiembre a enero. Construye la imagen de `docker/Dockerfile.python`, hace commit de
+  `weekly/wr/outputs/` en `main` si cambió algo y abre un issue por corrida detenida, estadísticas
+  incompletas, alerta persistente o fin de la temporada regular. También se lanza a mano, con
+  `publicar` apagado como prueba.
+- **Estadísticas que llegan tarde**: se descartó que un equipo sin estadísticas detuviera la
+  evaluación, porque no se sabe si la fuente publica todos los partidos de una semana a la vez. Se
+  evalúa con lo disponible y el issue pide volver a correr la semana.
+- **Verificación**: 23 casos con calendarios sintéticos (`acciones_pendientes`, eventos y
+  detención); `--auto` sobre una copia de las salidas sin la evaluación de la semana 4 la vuelve a
+  evaluar con archivos idénticos a los guardados; un chequeo bloqueante sale con el código 3 sin
+  escribir nada.
+- **Pendiente**: con el workflow en `main`, una corrida manual con `publicar` apagado y después la
+  primera programada.
 

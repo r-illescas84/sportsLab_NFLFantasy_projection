@@ -113,7 +113,8 @@ emitió es la de la semana 5.
   −1.84). Sería persistente si la ventana 5-8 también quedara fuera.
 - La vigencia del DATASHEET pasa a ser auditable desde la semana 5 de 2026.
 - La corrida sigue siendo manual (`python weekly/wr/src/pipeline.py --season 2026 --week N`), antes
-  de los partidos y después de que terminen.
+  de los partidos y después de que terminen. Desde el ADR 0007 la hace un workflow programado de
+  GitHub Actions, y la manual queda disponible.
 
 ## Referencias
 
