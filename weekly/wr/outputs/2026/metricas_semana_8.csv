@@ -1,0 +1,4 @@
+,n,metrica_principal,rmse,mae,r2,r2_oos,sesgo,sesgo_media_entrenamiento,media_real,pendiente_calibracion,deviance_poisson,d2_oos,referencia_validacion,referencia_prueba,brier_anota,auc_anota
+receptions,122,rmse,1.8513,1.3637,0.4964,0.5008,-0.0262,0.2472,2.4508,1.0907,1.5087,0.4796,1.9315,1.8355,,
+receiving_yards,122,rmse,27.3229,19.7816,0.3817,0.3926,1.4437,4.6554,29.623,0.974,,,29.5002,27.9349,,
+receiving_tds,122,deviance_poisson,0.4084,0.2944,0.1368,0.1387,-0.0348,-0.0207,0.2295,1.1547,0.5704,0.1856,0.6128,0.6221,0.1532,0.7591
